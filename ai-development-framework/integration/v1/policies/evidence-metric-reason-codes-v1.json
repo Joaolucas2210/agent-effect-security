@@ -1,0 +1,10 @@
+{
+  "mapping_version": "1.0",
+  "categories": ["binding_mismatch", "sensitive_path_denied", "invalid_contract", "other"],
+  "h2_reason_codes": {
+    "admit_read": "other", "budget_exceeds_ceiling": "other", "effect_not_allowlisted": "other", "effect_not_supported_in_h2_02": "other", "invalid_arguments": "invalid_contract", "invalid_intent": "invalid_contract", "invalid_policy": "invalid_contract", "invalid_policy_context": "invalid_contract", "invalid_principal": "invalid_contract", "invalid_registry": "invalid_contract", "invalid_scope": "invalid_contract", "pdp_configuration_error": "other", "policy_binding_mismatch": "binding_mismatch", "policy_hash_mismatch": "binding_mismatch", "profile_hash_mismatch": "binding_mismatch", "run_binding_mismatch": "binding_mismatch", "runtime_capability_not_demonstrated": "other", "scope_not_allowlisted": "other", "sensitive_argument_rejected": "other", "unknown_operation": "other", "unknown_policy": "other", "unknown_policy_rule": "other", "unknown_profile": "other", "unknown_tool": "other"
+  },
+  "h3_reason_codes": {
+    "binding_mismatch": "binding_mismatch", "budget_binding_mismatch": "binding_mismatch", "content_encoding_invalid": "other", "invalid_admission": "invalid_contract", "invalid_contract": "invalid_contract", "invalid_path": "other", "invalid_principal": "invalid_contract", "principal_expired": "binding_mismatch", "intent_digest_mismatch": "binding_mismatch", "operation_binding_mismatch": "binding_mismatch", "output_limit_exceeded": "other", "policy_binding_mismatch": "binding_mismatch", "policy_hash_mismatch": "binding_mismatch", "profile_hash_mismatch": "binding_mismatch", "read_delivered": "other", "run_binding_mismatch": "binding_mismatch", "runtime_capability_mismatch": "binding_mismatch", "safe_open_failed": "other", "safe_open_unavailable": "other", "scope_binding_mismatch": "binding_mismatch", "sensitive_path_denied": "sensitive_path_denied", "task_ref_mismatch": "binding_mismatch", "unsafe_file_type": "other", "workspace_binding_mismatch": "binding_mismatch"
+  }
+}

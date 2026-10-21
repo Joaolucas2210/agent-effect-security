@@ -1,0 +1,1 @@
+{"schema_version":"1.0","event_id":"event-1","run_id":"run-1","task_id":"task-1","sequence":1,"timestamp":"2026-09-18T00:00:00Z","type":"run.started","source":{"component":"test","version":"1"},"payload":{"case":"case-1","repo_revision":"r1","instrumentation_version":"1"},"artifact_refs":[]}

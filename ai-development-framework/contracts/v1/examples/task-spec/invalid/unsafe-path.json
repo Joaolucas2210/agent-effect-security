@@ -1,0 +1,1 @@
+{"schema_version":"1.0","task_id":"task-1","revision":"r1","source":{"kind":"issue","ref":"issue-1"},"objective":"x","repo_revision":"x","scope":{"allowed_paths":["../escape"],"forbidden_paths":[]},"acceptance":[{"id":"a","description":"x","grader_ref":"g"}],"constraints":[],"risk":{"level":"low","reasons":[]},"approval_refs":[]}

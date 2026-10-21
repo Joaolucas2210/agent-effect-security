@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/tools/v1/schemas/tool-profile.schema.json",
+  "title": "ToolProfile 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_version", "tool_id", "provider", "provider_version", "source_ref", "source_commit", "profile_sha256", "operations", "provenance"],
+  "properties": {
+    "profile_version": {"const": "1.0"}, "tool_id": {"$ref": "#/definitions/id"}, "provider": {"$ref": "#/definitions/id"}, "provider_version": {"type": "string", "minLength": 1}, "source_ref": {"type": "string", "minLength": 1}, "source_commit": {"$ref": "#/definitions/hash"}, "profile_sha256": {"$ref": "#/definitions/hash"},
+    "operations": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/operation"}}, "provenance": {"$ref": "#/definitions/provenance"}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "path": {"type": "string", "pattern": "^(?!/)(?!.*\\.\\.)(?!.*//)(?!.*\\x00)[A-Za-z0-9][A-Za-z0-9._/-]*(?![\\s\\S])"},
+    "scope": {"oneOf": [{"type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": {"kind": {"const": "filesystem"}, "path": {"$ref": "#/definitions/path"}}}, {"type": "object", "additionalProperties": false, "required": ["kind", "scheme", "hostname", "port"], "properties": {"kind": {"const": "network"}, "scheme": {"enum": ["http", "https"]}, "hostname": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,252}(?![\\s\\S])"}, "port": {"type": "integer", "minimum": 1, "maximum": 65535}}}, {"type": "object", "additionalProperties": false, "required": ["kind", "revision"], "properties": {"kind": {"const": "repository"}, "revision": {"$ref": "#/definitions/hash"}}}]},
+    "effect_class": {"type": "string", "enum": ["read", "write", "network", "secrets", "destructive"]},
+    "risk": {"type": "object", "additionalProperties": false, "required": ["level", "max_output_bytes"], "properties": {"level": {"enum": ["low", "medium", "high"]}, "max_output_bytes": {"type": "integer", "minimum": 0}}},
+    "operation": {"type": "object", "additionalProperties": false, "required": ["operation_id", "input_schema_ref", "effect_classes", "resource_kind", "supported_scopes", "max_risk"], "properties": {"operation_id": {"$ref": "#/definitions/id"}, "input_schema_ref": {"const": "list-files-input.schema.json"}, "effect_classes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/effect_class"}}, "resource_kind": {"enum": ["filesystem", "network", "repository"]}, "supported_scopes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/scope"}}, "max_risk": {"$ref": "#/definitions/risk"}}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["source", "reviewed_revision"], "properties": {"source": {"const": "adf_local_registry"}, "reviewed_revision": {"$ref": "#/definitions/hash"}}}
+  }
+}

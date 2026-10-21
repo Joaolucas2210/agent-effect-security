@@ -1,0 +1,111 @@
+{
+  "invalid/content.json": {
+    "attempt_id": "00000000000000000000000000000000",
+    "content": "forbidden-example",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": 0,
+      "prepare": null,
+      "read": null,
+      "total": 0
+    },
+    "provenance": {
+      "adapter_version": "1.0",
+      "clock": "monotonic_ns",
+      "collector_version": "1.0",
+      "kind": "host_adapter_timing",
+      "total_boundary": "adapter_read_return_or_raise",
+      "unit": "ms"
+    },
+    "return_state": "raised",
+    "run_id": "session-example",
+    "schema_version": "1.0",
+    "start_event_sha256": "1e7afc2b8244580685c71fbae6d8f2ce67fc5b052c08429425ffa0934e16cf52",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "record_sha256": "d7b95a4682e8d7f2d268f119dc6e888cd5f8cbf65bd82f6c9540481620e5dec7"
+    }
+  },
+  "invalid/exceeds-total.json": {
+    "attempt_id": "00000000000000000000000000000000",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": 0,
+      "prepare": null,
+      "read": 1,
+      "total": 0
+    },
+    "provenance": {
+      "adapter_version": "1.0",
+      "clock": "monotonic_ns",
+      "collector_version": "1.0",
+      "kind": "host_adapter_timing",
+      "total_boundary": "adapter_read_return_or_raise",
+      "unit": "ms"
+    },
+    "return_state": "raised",
+    "run_id": "session-example",
+    "schema_version": "1.0",
+    "start_event_sha256": "1e7afc2b8244580685c71fbae6d8f2ce67fc5b052c08429425ffa0934e16cf52",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "record_sha256": "a1d6fc89000d7acbc45ff10f6f8718d1a8d7cbe208ecb4b64ac8174252bb5d3c"
+    }
+  },
+  "invalid/negative-duration.json": {
+    "attempt_id": "00000000000000000000000000000000",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": 0,
+      "prepare": null,
+      "read": -1,
+      "total": 0
+    },
+    "provenance": {
+      "adapter_version": "1.0",
+      "clock": "monotonic_ns",
+      "collector_version": "1.0",
+      "kind": "host_adapter_timing",
+      "total_boundary": "adapter_read_return_or_raise",
+      "unit": "ms"
+    },
+    "return_state": "raised",
+    "run_id": "session-example",
+    "schema_version": "1.0",
+    "start_event_sha256": "1e7afc2b8244580685c71fbae6d8f2ce67fc5b052c08429425ffa0934e16cf52",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "record_sha256": "3e71fef47a27224f70229be5d9f6a57ccabc509d133ed647de3e53246e4aa672"
+    }
+  },
+  "valid/measured-zero.json": {
+    "attempt_id": "00000000000000000000000000000000",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": 0,
+      "prepare": null,
+      "read": null,
+      "total": 0
+    },
+    "provenance": {
+      "adapter_version": "1.0",
+      "clock": "monotonic_ns",
+      "collector_version": "1.0",
+      "kind": "host_adapter_timing",
+      "total_boundary": "adapter_read_return_or_raise",
+      "unit": "ms"
+    },
+    "return_state": "raised",
+    "run_id": "session-example",
+    "schema_version": "1.0",
+    "start_event_sha256": "1e7afc2b8244580685c71fbae6d8f2ce67fc5b052c08429425ffa0934e16cf52",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "record_sha256": "e84f9e549f0788edf4b70dbec96f12fab2d4f19f0d8a4ee53b08e6c1bef815e1"
+    }
+  }
+}

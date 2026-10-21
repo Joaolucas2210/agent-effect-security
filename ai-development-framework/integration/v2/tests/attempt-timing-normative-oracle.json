@@ -1,0 +1,59 @@
+{
+  "oracle_version": "1.0",
+  "source_spec": "docs/specs/p0d-trial-sessions.md",
+  "required_fields": [
+    "schema_version",
+    "attempt_id",
+    "run_id",
+    "start_event_sha256",
+    "return_state",
+    "durations_ms",
+    "provenance",
+    "verification"
+  ],
+  "stages": [
+    "prepare",
+    "decision",
+    "read",
+    "persistence",
+    "cleanup",
+    "total"
+  ],
+  "return_states": [
+    "returned",
+    "raised"
+  ],
+  "provenance": {
+    "kind": "host_adapter_timing",
+    "collector_version": "1.0",
+    "adapter_version": "1.0",
+    "clock": "monotonic_ns",
+    "unit": "ms",
+    "total_boundary": "adapter_read_return_or_raise"
+  },
+  "invariants": [
+    "digest_covers_bindings_and_durations",
+    "stage_duration_never_exceeds_total",
+    "null_means_not_observed",
+    "total_measures_adapter_read_before_observation_export",
+    "only_persistence_spans_are_accumulated"
+  ],
+  "examples": {
+    "valid/measured-zero.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "invalid/negative-duration.json": {
+      "schema_valid": false,
+      "verifies": false
+    },
+    "invalid/content.json": {
+      "schema_valid": false,
+      "verifies": false
+    },
+    "invalid/exceeds-total.json": {
+      "schema_valid": true,
+      "verifies": false
+    }
+  }
+}

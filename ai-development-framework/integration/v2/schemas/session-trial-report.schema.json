@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/integration/v2/session-trial-report.schema.json",
+  "title": "SessionTrialReport 2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "trial_id", "task_id", "session_id", "created_at", "coverage", "task_outcome", "journal_files_total", "journal_invalid_total", "attempts_observed_total", "attempt_complete_total", "attempt_incomplete_total", "attempt_invalid_total", "bundle_files_total", "bundles_valid_total", "bundles_invalid_total", "orphan_bundles_total", "correlation_conflict_total", "verified_bundle_ids", "observations", "durations_ms", "verification"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "trial_id": {"$ref": "#/definitions/id"},
+    "task_id": {"$ref": "#/definitions/id"},
+    "session_id": {"$ref": "#/definitions/id"},
+    "created_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"},
+    "coverage": {"enum": ["observed", "unknown"]},
+    "task_outcome": {"type": "null"},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["agent_name", "agent_version", "revision_sha", "acceptance_sha256"], "properties": {
+      "agent_name": {"enum": ["claude", "codex", "cursor", "other"]},
+      "agent_version": {"$ref": "#/definitions/id"},
+      "revision_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+      "acceptance_sha256": {"$ref": "#/definitions/hash"}
+    }},
+    "journal_files_total": {"$ref": "#/definitions/count"},
+    "journal_invalid_total": {"$ref": "#/definitions/count"},
+    "journal_duplicates_total": {"$ref": "#/definitions/count"},
+    "journal_other_session_total": {"$ref": "#/definitions/count"},
+    "attempts_observed_total": {"$ref": "#/definitions/count"},
+    "attempt_complete_total": {"$ref": "#/definitions/count"},
+    "attempt_incomplete_total": {"$ref": "#/definitions/count"},
+    "attempt_invalid_total": {"$ref": "#/definitions/count"},
+    "bundle_files_total": {"$ref": "#/definitions/count"},
+    "bundles_valid_total": {"$ref": "#/definitions/count"},
+    "bundles_invalid_total": {"$ref": "#/definitions/count"},
+    "bundle_duplicates_total": {"$ref": "#/definitions/count"},
+    "orphan_bundles_total": {"$ref": "#/definitions/count"},
+    "correlation_conflict_total": {"$ref": "#/definitions/count"},
+    "verified_bundle_ids": {"type": "array", "items": {"$ref": "#/definitions/hash"}},
+    "observations": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["attempt_id", "capture_state", "bundle_id", "bundle_status"], "properties": {
+      "attempt_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+      "capture_state": {"enum": ["complete", "incomplete", "invalid"]},
+      "bundle_id": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+      "bundle_status": {"enum": ["none", "verified", "missing_or_invalid", "conflict"]},
+      "start_event_sha256": {"$ref": "#/definitions/hash"},
+      "timing": {"$ref": "attempt-timing.schema.json"}
+    }}},
+    "durations_ms": {"type": "object", "additionalProperties": false, "required": ["prepare", "decision", "read", "persistence", "cleanup", "total"], "properties": {
+      "prepare": {"$ref": "#/definitions/duration"},
+      "decision": {"$ref": "#/definitions/duration"},
+      "read": {"$ref": "#/definitions/duration"},
+      "persistence": {"$ref": "#/definitions/duration"},
+      "cleanup": {"$ref": "#/definitions/duration"},
+      "total": {"$ref": "#/definitions/duration"}
+    }},
+    "decisions": {"type": "object", "additionalProperties": false, "required": ["total", "admit_read", "deny", "approval_required", "runtime_delivered", "runtime_denied"], "properties": {"total": {"$ref": "#/definitions/count"}, "admit_read": {"$ref": "#/definitions/count"}, "deny": {"$ref": "#/definitions/count"}, "approval_required": {"$ref": "#/definitions/count"}, "runtime_delivered": {"$ref": "#/definitions/count"}, "runtime_denied": {"$ref": "#/definitions/count"}}},
+    "timings": {"$ref": "#/definitions/timing-capture"},
+    "verification": {"type": "object", "additionalProperties": false, "required": ["canonicalization", "report_sha256"], "properties": {
+      "canonicalization": {"const": "json-c14n-v1"},
+      "report_sha256": {"$ref": "#/definitions/hash"}
+    }}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "count": {"type": "integer", "minimum": 0},
+    "duration": {"type": ["integer", "null"], "minimum": 0},
+    "stage-summary": {"type": "object", "additionalProperties": false, "required": ["count", "sum", "min", "max"], "properties": {"count": {"$ref": "#/definitions/count"}, "sum": {"$ref": "#/definitions/count"}, "min": {"type": ["integer", "null"], "minimum": 0}, "max": {"type": ["integer", "null"], "minimum": 0}}},
+    "timing-capture": {"type": "object", "additionalProperties": false, "required": ["files_total", "observed_total", "invalid_total", "duplicates_total", "other_session_total", "conflicts_total", "uncorrelated_total", "coverage", "stages"], "properties": {"files_total": {"$ref": "#/definitions/count"}, "observed_total": {"$ref": "#/definitions/count"}, "invalid_total": {"$ref": "#/definitions/count"}, "duplicates_total": {"$ref": "#/definitions/count"}, "other_session_total": {"$ref": "#/definitions/count"}, "conflicts_total": {"$ref": "#/definitions/count"}, "uncorrelated_total": {"$ref": "#/definitions/count"}, "coverage": {"enum": ["observed", "unknown"]}, "stages": {"type": "object", "additionalProperties": false, "required": ["prepare", "decision", "read", "persistence", "cleanup", "total"], "properties": {"prepare": {"$ref": "#/definitions/stage-summary"}, "decision": {"$ref": "#/definitions/stage-summary"}, "read": {"$ref": "#/definitions/stage-summary"}, "persistence": {"$ref": "#/definitions/stage-summary"}, "cleanup": {"$ref": "#/definitions/stage-summary"}, "total": {"$ref": "#/definitions/stage-summary"}}}}}
+  }
+}

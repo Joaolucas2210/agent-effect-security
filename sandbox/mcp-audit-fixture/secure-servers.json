@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "fs-readonly": {
+      "command": "mcp-server-filesystem",
+      "args": ["--readonly", "/workspace"],
+      "env": { "MCP_LOG_LEVEL": "info", "GITHUB_TOKEN": "${GITHUB_TOKEN}" },
+      "description": "Read-only filesystem access scoped to the project workspace.",
+      "allow": {
+        "commands": ["mcp-server-filesystem"],
+        "resources": ["/workspace"],
+        "scopes": ["read"],
+        "env": ["GITHUB_TOKEN"]
+      },
+      "trust": { "private_data": true, "untrusted_content": false, "external_comms": false }
+    }
+  }
+}

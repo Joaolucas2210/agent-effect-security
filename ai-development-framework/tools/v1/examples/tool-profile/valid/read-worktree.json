@@ -1,0 +1,5 @@
+{
+  "profile_version": "1.0", "tool_id": "local-worktree-reader", "provider": "adf-local", "provider_version": "1.0", "source_ref": "tools/v1/examples/tool-profile/valid/read-worktree.json", "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "profile_sha256": "be38e8305f123933bbab8ac3275f8c5d21ad6860e9700115bf46cd498930795e",
+  "operations": [{"operation_id": "read-adr", "input_schema_ref": "list-files-input.schema.json", "effect_classes": ["read"], "resource_kind": "filesystem", "supported_scopes": [{"kind": "filesystem", "path": "docs/architecture-decision-records/0007-runtime-and-tool-policy-boundary.md"}], "max_risk": {"level": "low", "max_output_bytes": 1024}}],
+  "provenance": {"source": "adf_local_registry", "reviewed_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+}

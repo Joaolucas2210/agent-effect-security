@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "caller-principal.schema.json",
+  "title": "CallerPrincipal 1.0",
+  "description": "Who asks (ADR 0014), parallel to ToolCallIntent v1 (what is asked). Built by the A2A gateway after AuthN; never sent by a client; never a credential.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "sub", "scopes", "act", "token_aud", "authn_method", "expires_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "sub": {"$ref": "#/definitions/subject"},
+    "scopes": {"type": "array", "uniqueItems": true, "maxItems": 32, "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9:._-]{0,63}(?![\\s\\S])"}},
+    "act": {"type": "array", "maxItems": 8, "items": {"$ref": "#/definitions/subject"}},
+    "token_aud": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,127}(?![\\s\\S])"},
+    "authn_method": {"enum": ["bearer_jwt_hs256", "bearer_jwt_rs256", "host_harness"]},
+    "expires_at": {"type": "integer", "minimum": 0}
+  },
+  "definitions": {"subject": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.@:-]{0,127}(?![\\s\\S])"}}
+}

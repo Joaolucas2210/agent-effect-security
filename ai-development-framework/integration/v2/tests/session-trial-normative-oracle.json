@@ -1,0 +1,94 @@
+{
+  "oracle_version": "1.0",
+  "source_spec": "docs/specs/p0d-trial-sessions.md",
+  "schema_version": "2.0",
+  "required_fields": [
+    "schema_version",
+    "trial_id",
+    "task_id",
+    "session_id",
+    "created_at",
+    "coverage",
+    "task_outcome",
+    "journal_files_total",
+    "journal_invalid_total",
+    "attempts_observed_total",
+    "attempt_complete_total",
+    "attempt_incomplete_total",
+    "attempt_invalid_total",
+    "bundle_files_total",
+    "bundles_valid_total",
+    "bundles_invalid_total",
+    "orphan_bundles_total",
+    "correlation_conflict_total",
+    "verified_bundle_ids",
+    "observations",
+    "durations_ms",
+    "verification"
+  ],
+  "optional_fields": [
+    "journal_duplicates_total",
+    "journal_other_session_total",
+    "bundle_duplicates_total",
+    "decisions",
+    "timings",
+    "provenance"
+  ],
+  "invariants": [
+    "journal_files_total=attempts_observed_total+journal_invalid_total+journal_duplicates_total+journal_other_session_total",
+    "bundle_files_total=bundles_valid_total+bundles_invalid_total+bundle_duplicates_total",
+    "decisions.total=bundles_valid_total=decisions.admit_read+decisions.deny+decisions.approval_required",
+    "decisions.admit_read=decisions.runtime_delivered+decisions.runtime_denied",
+    "conflicting_duplicate_attempts_have_invalid_capture",
+    "no_journals_means_unknown_coverage",
+    "unmeasured_durations_are_null",
+    "hash_covers_optional_counters",
+    "timing_hash_and_started_event_binding_verify_before_correlation",
+    "timing_files_total=observed+invalid+duplicates+other_session+conflicts+uncorrelated",
+    "stage_summary_uses_only_correlated_non_null_samples",
+    "session_durations_are_not_summed_attempt_durations",
+    "host_provenance_is_optional_complete_closed_and_hash_bound"
+  ],
+  "examples": {
+    "valid/minimum.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "valid/counted.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "valid/measured-zero.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "invalid/negative-duration.json": {
+      "schema_valid": false,
+      "verifies": false
+    },
+    "invalid/counts.json": {
+      "schema_valid": true,
+      "verifies": false
+    },
+    "invalid/content.json": {
+      "schema_valid": false,
+      "verifies": false
+    },
+    "valid/timed.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "valid/provenance.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "invalid/partial-provenance.json": {
+      "schema_valid": false,
+      "verifies": false
+    },
+    "invalid/provenance-digest.json": {
+      "schema_valid": true,
+      "verifies": false
+    }
+  }
+}

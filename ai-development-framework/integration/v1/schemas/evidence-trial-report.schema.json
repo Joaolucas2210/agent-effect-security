@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "evidence-trial-report.schema.json",
+  "title": "EvidenceTrialReport 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "report_id", "created_at", "trial_count", "observations_total", "evidence_bundle_valid_total", "evidence_bundle_invalid_total", "decisions_total", "admit_read_total", "deny_total", "binding_mismatch_total", "sensitive_path_denied_total", "invalid_contract_total", "human_intervention_required_total", "decision_latency_ms", "provenance", "verification"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "report_id": {"$ref": "#/definitions/id"},
+    "created_at": {"$ref": "#/definitions/timestamp"},
+    "trial_count": {"type": "integer", "minimum": 0},
+    "observations_total": {"type": "integer", "minimum": 0},
+    "evidence_bundle_valid_total": {"type": "integer", "minimum": 0},
+    "evidence_bundle_invalid_total": {"type": "integer", "minimum": 0},
+    "decisions_total": {"type": "integer", "minimum": 0},
+    "admit_read_total": {"type": "integer", "minimum": 0},
+    "deny_total": {"type": "integer", "minimum": 0},
+    "binding_mismatch_total": {"type": "integer", "minimum": 0},
+    "sensitive_path_denied_total": {"type": "integer", "minimum": 0},
+    "invalid_contract_total": {"type": "integer", "minimum": 0},
+    "human_intervention_required_total": {"type": "integer", "minimum": 0},
+    "decision_latency_ms": {"type": "object", "additionalProperties": false, "required": ["count", "sum", "min", "max"], "properties": {"count": {"type": "integer", "minimum": 0}, "sum": {"type": "integer", "minimum": 0}, "min": {"type": ["integer", "null"], "minimum": 0}, "max": {"type": ["integer", "null"], "minimum": 0}}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["aggregator_version", "kind"], "properties": {"aggregator_version": {"const": "1.0"}, "kind": {"const": "local_evidence_trial_metrics"}}},
+    "verification": {"type": "object", "additionalProperties": false, "required": ["verification_version", "canonicalization", "report_sha256"], "properties": {"verification_version": {"const": "1.0"}, "canonicalization": {"const": "json-c14n-v1"}, "report_sha256": {"$ref": "#/definitions/hash"}}}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"},
+    "timestamp": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z(?![\\s\\S])"}
+  }
+}

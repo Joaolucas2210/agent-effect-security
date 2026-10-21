@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/modes/v1/resolution-request.schema.json",
+  "title": "ResolutionRequest 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_version", "task_spec", "requested_mode", "execution_context", "requested_overrides"],
+  "properties": {
+    "request_version": {"const": "1.0"},
+    "task_spec": {"$ref": "https://agent-flow.invalid/contracts/v1/task-spec.schema.json"},
+    "requested_mode": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/definitions/id"},
+    "execution_context": {"$ref": "#/definitions/execution_context"},
+    "requested_overrides": {"$ref": "#/definitions/overrides"}
+  },
+  "definitions": {
+    "budget": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/budget"},
+    "model_parameters": {"description": "H2-01 v1 permits only non-text numeric or boolean model parameters.", "type": "object", "additionalProperties": false, "patternProperties": {"^[a-z][a-z0-9_]{0,63}$": {"type": ["number", "boolean"]}}},
+    "model": {"allOf": [{"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/model"}, {"type": "object", "properties": {"parameters": {"$ref": "#/definitions/model_parameters"}}}]},
+    "execution_context": {"type": "object", "additionalProperties": false, "required": ["context_version", "run_id", "task_ref_sha256", "model", "adapter", "toolset", "runtime", "budget", "policy_hash", "seed", "experiment_id", "trial_id", "organizational_constraints", "runtime_capability_ceilings"], "properties": {"context_version": {"const": "1.0"}, "run_id": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/run_id"}, "task_ref_sha256": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/definitions/hash"}, "model": {"$ref": "#/definitions/model"}, "adapter": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/adapter"}, "toolset": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/toolset"}, "runtime": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/runtime"}, "budget": {"$ref": "#/definitions/budget"}, "policy_hash": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/policy_hash"}, "seed": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/seed"}, "experiment_id": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/experiment_id"}, "trial_id": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/trial_id"}, "organizational_constraints": {"$ref": "#/definitions/organizational_constraints"}, "runtime_capability_ceilings": {"$ref": "#/definitions/runtime_ceilings"}}},
+    "organizational_constraints": {"type": "object", "additionalProperties": false, "required": ["version", "allowed_modes", "prohibited_override_paths", "budget_ceiling"], "properties": {"version": {"type": "string", "minLength": 1}, "allowed_modes": {"type": "array", "items": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/definitions/id"}}, "prohibited_override_paths": {"type": "array", "items": {"type": "string", "minLength": 1}}, "budget_ceiling": {"$ref": "#/definitions/budget"}}},
+    "runtime_ceilings": {"type": "object", "additionalProperties": false, "required": ["version", "budget_ceiling"], "properties": {"version": {"type": "string", "minLength": 1}, "budget_ceiling": {"$ref": "#/definitions/budget"}}},
+    "overrides": {"type": "object", "additionalProperties": false, "properties": {"model": {"type": "object", "additionalProperties": false, "properties": {"parameters": {"$ref": "#/definitions/model_parameters"}}}, "seed": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/seed"}, "experiment_id": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/experiment_id"}, "trial_id": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/properties/trial_id"}, "budget": {"type": "object", "additionalProperties": false, "properties": {"tokens": {"type": ["integer", "null"], "minimum": 0}, "seconds": {"type": "integer", "minimum": 0}, "tool_calls": {"type": "integer", "minimum": 0}, "cost_usd": {"type": ["number", "null"], "minimum": 0}}}}}
+  }
+}

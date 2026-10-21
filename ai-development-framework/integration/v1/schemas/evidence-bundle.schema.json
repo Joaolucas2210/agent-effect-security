@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "evidence-bundle.schema.json",
+  "title": "EvidenceBundle 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "bundle_id", "run_id", "adapter_id", "created_at", "decision_id", "decision_outcome", "reason_code", "profile_sha256", "policy_sha256", "intent_digest", "operation_id", "effective_scope", "workspace_id", "snapshot_digest", "read_result_digest", "read_result_classification", "receipt", "verification", "provenance"],
+  "properties": {
+    "schema_version": {"const": "1.0"}, "bundle_id": {"$ref": "#/definitions/hash"}, "run_id": {"$ref": "#/definitions/id"}, "adapter_id": {"$ref": "#/definitions/id"}, "created_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z(?![\\s\\S])"}, "decision_id": {"$ref": "#/definitions/hash"}, "decision_outcome": {"enum": ["deny", "admit_read", "approval_required"]}, "reason_code": {"type": "string", "pattern": "^[a-z0-9_]+$"}, "profile_sha256": {"$ref": "#/definitions/hash"}, "policy_sha256": {"$ref": "#/definitions/hash"}, "intent_digest": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "operation_id": {"$ref": "#/definitions/id"}, "effective_scope": {"type": ["object", "null"], "additionalProperties": false, "required": ["kind", "path"], "properties": {"kind": {"const": "filesystem"}, "path": {"type": "string", "pattern": "^(?!/)(?!.*\\.\\.)(?!.*\\x00)[A-Za-z0-9][A-Za-z0-9._/-]*(?![\\s\\S])"}}}, "workspace_id": {"$ref": "#/definitions/id"}, "snapshot_digest": {"$ref": "#/definitions/hash"}, "read_result_digest": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "read_result_classification": {"type": ["string", "null"], "enum": ["untrusted_workspace_file", null]}, "receipt": {"type": ["object", "null"]},
+    "verification": {"type": "object", "additionalProperties": false, "required": ["verification_version", "canonicalization", "bundle_sha256"], "properties": {"verification_version": {"const": "1.0"}, "canonicalization": {"const": "json-c14n-v1"}, "bundle_sha256": {"$ref": "#/definitions/hash"}}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["adapter_version", "pdp_version", "pep_version", "kind"], "properties": {"adapter_version": {"const": "1.0"}, "pdp_version": {"const": "1.0"}, "pep_version": {"enum": ["1.0", "not_called"]}, "kind": {"const": "local_evidence_composition"}}}
+  },
+  "allOf": [{"if": {"properties": {"decision_outcome": {"const": "admit_read"}}}, "then": {"properties": {"intent_digest": {"type": "string"}, "read_result_digest": {"type": "string"}, "read_result_classification": {"const": "untrusted_workspace_file"}, "receipt": {"type": "object"}}}, "else": {"properties": {"read_result_digest": {"type": "null"}, "read_result_classification": {"type": "null"}, "receipt": {"type": "null"}}}}],
+  "definitions": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}}
+}

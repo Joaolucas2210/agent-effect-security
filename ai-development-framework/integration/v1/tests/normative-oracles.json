@@ -1,0 +1,7 @@
+{
+  "oracle_version": "1.0",
+  "coverage_status": "complete",
+  "source": {"adr": "ai-development-framework/docs/architecture-decision-records/0009-local-control-plane-evidence-integration.md"},
+  "canonicalization": {"algorithm": "sha256", "encoding": "utf-8", "keys": "sorted", "whitespace": "compact", "version": "json-c14n-v1"},
+  "contracts": {"AdapterRequest": {"schema_file": "adapter-request.schema.json", "closed": true, "forbidden_fields": ["prompt", "command", "token", "secret", "network"]}, "EvidenceBundle": {"schema_file": "evidence-bundle.schema.json", "closed": true, "required_fields": ["schema_version", "bundle_id", "run_id", "adapter_id", "created_at", "decision_id", "decision_outcome", "reason_code", "profile_sha256", "policy_sha256", "intent_digest", "operation_id", "effective_scope", "workspace_id", "snapshot_digest", "read_result_digest", "read_result_classification", "receipt", "verification", "provenance"]}}
+}

@@ -1,0 +1,1 @@
+{"policy_version":"1.0","default_outcome":"deny","deny_components":[".env"],"deny_component_prefixes":[".env."],"deny_component_suffixes":[".pem"],"provenance":{"source":"adf_local_policy","adr":"0008"}}

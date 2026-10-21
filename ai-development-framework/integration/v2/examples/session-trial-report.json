@@ -1,0 +1,509 @@
+{
+  "invalid/content.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_duplicates_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "content": "forbidden-example",
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "decisions": {
+      "admit_read": 0,
+      "approval_required": 0,
+      "deny": 0,
+      "runtime_delivered": 0,
+      "runtime_denied": 0,
+      "total": 0
+    },
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_duplicates_total": 0,
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "journal_other_session_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "f3ad6b6042ca975402175e7e47148a355c80205167c1635750774ab53df3df71"
+    },
+    "verified_bundle_ids": []
+  },
+  "invalid/counts.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_duplicates_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "decisions": {
+      "admit_read": 0,
+      "approval_required": 0,
+      "deny": 0,
+      "runtime_delivered": 0,
+      "runtime_denied": 0,
+      "total": 0
+    },
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_duplicates_total": 1,
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "journal_other_session_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "1b86d5d4bba3a9fc0c8b5c8f37e90ed6bfdc028970823fedd2c428ebfe908abd"
+    },
+    "verified_bundle_ids": []
+  },
+  "invalid/negative-duration.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_duplicates_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "decisions": {
+      "admit_read": 0,
+      "approval_required": 0,
+      "deny": 0,
+      "runtime_delivered": 0,
+      "runtime_denied": 0,
+      "total": 0
+    },
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": -1
+    },
+    "journal_duplicates_total": 0,
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "journal_other_session_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "b42209eebba3169a5c69ea0c603e290c74e1de1f9e186f1bda72a8ae797b0113"
+    },
+    "verified_bundle_ids": []
+  },
+  "valid/counted.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_duplicates_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "decisions": {
+      "admit_read": 0,
+      "approval_required": 0,
+      "deny": 0,
+      "runtime_delivered": 0,
+      "runtime_denied": 0,
+      "total": 0
+    },
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_duplicates_total": 0,
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "journal_other_session_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "898e93965f814b6a115037bf4c3dea0f342d1306a0cd5e9d16a64de8e9c654c3"
+    },
+    "verified_bundle_ids": []
+  },
+  "valid/measured-zero.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_duplicates_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "decisions": {
+      "admit_read": 0,
+      "approval_required": 0,
+      "deny": 0,
+      "runtime_delivered": 0,
+      "runtime_denied": 0,
+      "total": 0
+    },
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": 0
+    },
+    "journal_duplicates_total": 0,
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "journal_other_session_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "b2f525d82be2bf04fdda1832e923e6bb7898f33374e226328b793fe7eec43609"
+    },
+    "verified_bundle_ids": []
+  },
+  "valid/minimum.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "4a011f1335bc4be2515a7f32487a5b05c1ae2ac5fe9fefc240970ec46554a1ce"
+    },
+    "verified_bundle_ids": []
+  },
+  "valid/timed.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 1,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 1,
+    "bundle_duplicates_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "observed",
+    "created_at": "2026-10-01T00:00:00Z",
+    "decisions": {
+      "admit_read": 0,
+      "approval_required": 0,
+      "deny": 0,
+      "runtime_delivered": 0,
+      "runtime_denied": 0,
+      "total": 0
+    },
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_duplicates_total": 0,
+    "journal_files_total": 1,
+    "journal_invalid_total": 0,
+    "journal_other_session_total": 0,
+    "observations": [
+      {
+        "attempt_id": "00000000000000000000000000000000",
+        "bundle_id": null,
+        "bundle_status": "none",
+        "capture_state": "incomplete",
+        "start_event_sha256": "1e7afc2b8244580685c71fbae6d8f2ce67fc5b052c08429425ffa0934e16cf52",
+        "timing": {
+          "attempt_id": "00000000000000000000000000000000",
+          "durations_ms": {
+            "cleanup": null,
+            "decision": null,
+            "persistence": 0,
+            "prepare": null,
+            "read": null,
+            "total": 0
+          },
+          "provenance": {
+            "adapter_version": "1.0",
+            "clock": "monotonic_ns",
+            "collector_version": "1.0",
+            "kind": "host_adapter_timing",
+            "total_boundary": "adapter_read_return_or_raise",
+            "unit": "ms"
+          },
+          "return_state": "raised",
+          "run_id": "session-example",
+          "schema_version": "1.0",
+          "start_event_sha256": "1e7afc2b8244580685c71fbae6d8f2ce67fc5b052c08429425ffa0934e16cf52",
+          "verification": {
+            "canonicalization": "json-c14n-v1",
+            "record_sha256": "e84f9e549f0788edf4b70dbec96f12fab2d4f19f0d8a4ee53b08e6c1bef815e1"
+          }
+        }
+      }
+    ],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "timings": {
+      "conflicts_total": 0,
+      "coverage": "observed",
+      "duplicates_total": 0,
+      "files_total": 1,
+      "invalid_total": 0,
+      "observed_total": 1,
+      "other_session_total": 0,
+      "stages": {
+        "cleanup": {
+          "count": 0,
+          "max": null,
+          "min": null,
+          "sum": 0
+        },
+        "decision": {
+          "count": 0,
+          "max": null,
+          "min": null,
+          "sum": 0
+        },
+        "persistence": {
+          "count": 1,
+          "max": 0,
+          "min": 0,
+          "sum": 0
+        },
+        "prepare": {
+          "count": 0,
+          "max": null,
+          "min": null,
+          "sum": 0
+        },
+        "read": {
+          "count": 0,
+          "max": null,
+          "min": null,
+          "sum": 0
+        },
+        "total": {
+          "count": 1,
+          "max": 0,
+          "min": 0,
+          "sum": 0
+        }
+      },
+      "uncorrelated_total": 0
+    },
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "b4213101fe58858a051673b76e87c7ed900bfc17e0ecf469f05ac6ee7ec54191"
+    },
+    "verified_bundle_ids": []
+  },
+  "valid/provenance.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4"
+    },
+    "verified_bundle_ids": [],
+    "provenance": {
+      "agent_name": "codex",
+      "agent_version": "1.2.3",
+      "revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "invalid/partial-provenance.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "7a2aa6cec26d7f8da30d44e5697136345b7e86978f8a9d34a0452e5c745d636c"
+    },
+    "verified_bundle_ids": [],
+    "provenance": {
+      "agent_name": "codex",
+      "agent_version": "1.2.3",
+      "revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  "invalid/provenance-digest.json": {
+    "attempt_complete_total": 0,
+    "attempt_incomplete_total": 0,
+    "attempt_invalid_total": 0,
+    "attempts_observed_total": 0,
+    "bundle_files_total": 0,
+    "bundles_invalid_total": 0,
+    "bundles_valid_total": 0,
+    "correlation_conflict_total": 0,
+    "coverage": "unknown",
+    "created_at": "2026-10-01T00:00:00Z",
+    "durations_ms": {
+      "cleanup": null,
+      "decision": null,
+      "persistence": null,
+      "prepare": null,
+      "read": null,
+      "total": null
+    },
+    "journal_files_total": 0,
+    "journal_invalid_total": 0,
+    "observations": [],
+    "orphan_bundles_total": 0,
+    "schema_version": "2.0",
+    "session_id": "session-example",
+    "task_id": "task-example",
+    "task_outcome": null,
+    "trial_id": "trial-example",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4"
+    },
+    "verified_bundle_ids": [],
+    "provenance": {
+      "agent_name": "codex",
+      "agent_version": "1.2.4",
+      "revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  }
+}

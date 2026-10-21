@@ -1,0 +1,12 @@
+{
+  "pack_id": "effect-security-read-v0",
+  "pack_version": "0.1.0",
+  "effect_classes": ["read"],
+  "max_output_bytes": 1048576,
+  "deny": {
+    "deny_components": [".aws", ".azure", ".docker", ".gnupg", ".kube", ".netrc", ".npmrc", ".pgpass", ".pypirc", ".ssh", "id_dsa", "id_ecdsa", "id_ed25519", "secret", "terraform.tfstate"],
+    "deny_component_prefixes": ["credentials.", "secrets."],
+    "deny_component_suffixes": [".jks", ".keystore", ".p12", ".pfx", ".ppk", ".tfstate", ".tfvars"]
+  },
+  "provenance": {"source": "adf_policy_pack", "adr": "0011"}
+}

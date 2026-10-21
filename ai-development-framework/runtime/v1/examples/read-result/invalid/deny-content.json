@@ -1,0 +1,1 @@
+{"result_version":"1.0","outcome":"deny","reason_code":"output_limit_exceeded","content":"partial","bytes_read":0,"taint":{"classification":"untrusted_workspace_file","cannot_authorize":true},"provenance":{"runtime_version":"1.0","workspace_id":"workspace-1","snapshot_digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}

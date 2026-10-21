@@ -1,0 +1,17 @@
+{
+  "request_version": "1.0",
+  "task_spec": {"schema_version": "1.0", "task_id": "task-1", "revision": "r1", "source": {"kind": "issue", "ref": "issue-1"}, "objective": "Resolve modes", "repo_revision": "d2c0a5a", "scope": {"allowed_paths": ["ai-development-framework/modes"], "forbidden_paths": [".env"]}, "acceptance": [{"id": "a1", "description": "valid config", "grader_ref": "grader://modes/v1"}], "constraints": [], "risk": {"level": "low", "reasons": []}, "approval_refs": []},
+  "requested_mode": "builder",
+  "execution_context": {
+    "context_version": "1.0", "run_id": "run-mode-1", "task_ref_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model": {"provider": "provider", "id": "model", "version": null, "parameters": {}},
+    "adapter": {"id": "adapter", "version": "1", "capabilities_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+    "toolset": {"id": "toolset", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+    "runtime": {"provider": "local", "version": "1", "image_digest": null, "network": {"allowed_hosts": []}, "secret_refs": [], "limits": {}},
+    "budget": {"tokens": 50, "seconds": 60, "tool_calls": 5, "cost_usd": null},
+    "policy_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "seed": null, "experiment_id": null, "trial_id": null,
+    "organizational_constraints": {"version": "1.0", "allowed_modes": ["prototyper", "builder", "grower", "sweeper", "maintainer"], "prohibited_override_paths": [], "budget_ceiling": {"tokens": 100, "seconds": 100, "tool_calls": 10, "cost_usd": null}},
+    "runtime_capability_ceilings": {"version": "1.0", "budget_ceiling": {"tokens": 80, "seconds": 80, "tool_calls": 8, "cost_usd": null}}
+  },
+  "requested_overrides": {}
+}

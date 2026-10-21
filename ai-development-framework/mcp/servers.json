@@ -1,0 +1,26 @@
+{
+  "servers": {
+    "adf-local-read": {
+      "command": "mcp",
+      "args": ["run", "ai-development-framework/integration/mcp_read_server.py:mcp", "--transport", "stdio"],
+      "env": {
+        "ADF_TRUSTED_REPOSITORY": "${ADF_TRUSTED_REPOSITORY}",
+        "ADF_TRUSTED_REVISION": "${ADF_TRUSTED_REVISION}",
+        "ADF_EVIDENCE_DIR": "${ADF_EVIDENCE_DIR}",
+        "ADF_MAX_OUTPUT_BYTES": "${ADF_MAX_OUTPUT_BYTES}",
+        "ADF_RUN_ID": "${ADF_RUN_ID}",
+        "ADF_READ_POLICY_FILE": "${ADF_READ_POLICY_FILE}",
+        "ADF_READ_POLICY_SHA256": "${ADF_READ_POLICY_SHA256}"
+      },
+      "allow": {
+        "commands": ["mcp"],
+        "resources": ["read_snapshot"],
+        "scopes": ["exact filesystem paths in the pinned host policy"],
+        "env": ["ADF_READ_POLICY_SHA256"]
+      },
+      "description": "Opt-in local stdio read tool that returns only verified snapshot text",
+      "trust": {"private_data": true, "untrusted_content": true, "external_comms": false},
+      "human_reviewed": false
+    }
+  }
+}

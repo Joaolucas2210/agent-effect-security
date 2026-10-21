@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/contracts/v1/gate-result.schema.json",
+  "title": "GateResult 1.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gate_id",
+    "run_id",
+    "category",
+    "required",
+    "status",
+    "reason_code",
+    "duration_seconds",
+    "exit_code",
+    "evidence_refs",
+    "checker_version",
+    "input_digest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "gate_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "category": {
+      "enum": ["build", "test", "lint", "types", "architecture", "security", "functional", "llm_review", "human"]
+    },
+    "required": {"type": "boolean"},
+    "status": {"enum": ["pass", "fail", "error", "skipped"]},
+    "reason_code": {"type": "string", "minLength": 1},
+    "duration_seconds": {"type": ["number", "null"], "minimum": 0},
+    "exit_code": {"type": ["integer", "null"]},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "checker_version": {"type": "string", "minLength": 1},
+    "input_digest": {"type": "string", "pattern": "^[0-9a-f]{64}(?![\\s\\S])"},
+    "extensions": {"type": "object"}
+  }
+}

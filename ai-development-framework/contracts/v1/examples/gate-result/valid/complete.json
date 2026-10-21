@@ -1,0 +1,1 @@
+{"schema_version":"1.0","gate_id":"gate-2","run_id":"run-2","category":"security","required":false,"status":"skipped","reason_code":"not_applicable","duration_seconds":null,"exit_code":null,"evidence_refs":["artifact://gate/2"],"checker_version":"1","input_digest":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "a2a-evidence-record.schema.json",
+  "title": "A2AEvidenceRecord 1.0",
+  "description": "Audit of one authenticated A2A request (ADR 0014). Links to the EvidenceBundle; never authorizes, never holds a token.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "record_id", "nonce", "edge_id", "created_at", "skill", "principal", "outcome", "reason_code", "decision_id", "bundle_id"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "record_id": {"$ref": "#/definitions/hash"},
+    "nonce": {"type": "string", "pattern": "^[a-f0-9]{32}(?![\\s\\S])"},
+    "edge_id": {"const": "a2a"},
+    "created_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z(?![\\s\\S])"},
+    "skill": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}(?![\\s\\S])"},
+    "principal": {"type": "object"},
+    "outcome": {"enum": ["delivered", "deny"]},
+    "reason_code": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "decision_id": {"oneOf": [{"$ref": "#/definitions/hash"}, {"type": "null"}]},
+    "bundle_id": {"oneOf": [{"$ref": "#/definitions/hash"}, {"type": "null"}]},
+    "task_id": {"type": "string", "pattern": "^[a-f0-9]{32}(?![\\s\\S])"},
+    "confirmation": {"const": "human_confirmed"},
+    "effect_binding": {"$ref": "#/definitions/hash"}
+  },
+  "dependencies": {"confirmation": ["effect_binding"]},
+  "definitions": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}}
+}

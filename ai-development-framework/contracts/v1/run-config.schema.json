@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/contracts/v1/run-config.schema.json",
+  "title": "RunConfig 1.0", "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "run_id", "task_ref", "model", "adapter", "mode", "context_policy", "toolset", "runtime", "budget", "verification_policy", "policy_hash", "seed", "experiment_id", "trial_id"],
+  "properties": {
+    "schema_version": {"const": "1.0"}, "run_id": {"$ref": "#/definitions/id"},
+    "task_ref": {"$ref": "#/definitions/task_ref"},
+    "model": {"type": "object", "additionalProperties": false, "required": ["provider", "id", "version", "parameters"], "properties": {"provider": {"$ref": "#/definitions/id"}, "id": {"$ref": "#/definitions/id"}, "version": {"type": ["string", "null"], "minLength": 1}, "parameters": {"type": "object"}}},
+    "adapter": {"$ref": "#/definitions/versioned_hash"}, "mode": {"$ref": "#/definitions/versioned"}, "context_policy": {"$ref": "#/definitions/versioned"},
+    "toolset": {"type": "object", "additionalProperties": false, "required": ["id", "sha256"], "properties": {"id": {"$ref": "#/definitions/id"}, "sha256": {"$ref": "#/definitions/hash"}}},
+    "runtime": {"type": "object", "additionalProperties": false, "required": ["provider", "version", "image_digest", "network", "secret_refs", "limits"], "properties": {"provider": {"$ref": "#/definitions/id"}, "version": {"type": "string", "minLength": 1}, "image_digest": {"type": ["string", "null"], "minLength": 1}, "network": {"type": "object", "additionalProperties": false, "required": ["allowed_hosts"], "properties": {"allowed_hosts": {"$ref": "#/definitions/hosts"}}}, "secret_refs": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9+.-]*://[^\\s]+(?![\\s\\S])"}}, "limits": {"type": "object"}}},
+    "budget": {"type": "object", "additionalProperties": false, "required": ["tokens", "seconds", "tool_calls", "cost_usd"], "properties": {"tokens": {"type": ["integer", "null"], "minimum": 0}, "seconds": {"type": "integer", "minimum": 0}, "tool_calls": {"type": "integer", "minimum": 0}, "cost_usd": {"type": ["number", "null"], "minimum": 0}}},
+    "verification_policy": {"$ref": "#/definitions/versioned"}, "policy_hash": {"$ref": "#/definitions/hash"}, "seed": {"type": ["integer", "null"]}, "experiment_id": {"type": ["string", "null"], "minLength": 1}, "trial_id": {"type": ["string", "null"], "minLength": 1}, "extensions": {"type": "object"}
+  },
+  "definitions": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[0-9a-f]{64}(?![\\s\\S])"}, "versioned": {"type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"$ref": "#/definitions/id"}, "version": {"type": "string", "minLength": 1}}}, "versioned_hash": {"type": "object", "additionalProperties": false, "required": ["id", "version", "capabilities_hash"], "properties": {"id": {"$ref": "#/definitions/id"}, "version": {"type": "string", "minLength": 1}, "capabilities_hash": {"$ref": "#/definitions/hash"}}}, "task_ref": {"type": "object", "additionalProperties": false, "required": ["id", "revision", "sha256"], "properties": {"id": {"$ref": "#/definitions/id"}, "revision": {"$ref": "#/definitions/id"}, "sha256": {"$ref": "#/definitions/hash"}}}, "hosts": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9.-]*(?![\\s\\S])"}}}
+}

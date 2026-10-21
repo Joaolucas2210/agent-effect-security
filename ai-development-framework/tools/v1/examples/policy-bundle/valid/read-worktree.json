@@ -1,0 +1,5 @@
+{
+  "policy_version": "1.0", "policy_id": "local-read-policy", "policy_sha256": "b6cac6b2eb0ca1b4255cdc0ac9f87b23d32e52942b8371ef6302f59be25f96c1", "default_outcome": "deny",
+  "rules": [{"rule_id": "allow-local-adr-read", "tool_id": "local-worktree-reader", "profile_sha256": "be38e8305f123933bbab8ac3275f8c5d21ad6860e9700115bf46cd498930795e", "operation_id": "read-adr", "allowed_effect_classes": ["read"], "allowed_scopes": [{"kind": "filesystem", "path": "docs/architecture-decision-records/0007-runtime-and-tool-policy-boundary.md"}], "max_output_bytes": 512}],
+  "provenance": {"source": "adf_local_policy"}
+}

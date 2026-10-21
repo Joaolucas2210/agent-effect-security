@@ -1,0 +1,26 @@
+# Local, editable install only: `make install-dev` / `python3 -m pip install -e ./ai-development-framework`.
+# Not published to PyPI (README non-goals, ADR 0008). One console script, `adf`, dispatching to the clone's
+# existing scripts (ADR 0025); it is an operator CLI, not a published runtime.
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adf-control-plane"
+version = "0.1.0"  # keep aligned with ../VERSION (hooks/test-packaging.sh enforces it)
+description = "Read-only local control plane: PDP, PEP + confined read runtime, evidence bundle and reference adapter"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = ["jsonschema==4.26.0"]
+
+[project.optional-dependencies]
+mcp = ["mcp[cli]==2.3.0"]
+
+[project.scripts]
+adf = "integration.cli:main"
+
+[tool.setuptools]
+packages = ["tools", "runtime", "integration"]
+
+[tool.setuptools.package-data]
+"*" = ["v1/**/*.json", "v2/**/*.json"]

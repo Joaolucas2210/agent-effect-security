@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/contracts/v1/task-spec.schema.json",
+  "title": "TaskSpec 1.0", "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "task_id", "revision", "source", "objective", "repo_revision", "scope", "acceptance", "constraints", "risk", "approval_refs"],
+  "properties": {
+    "schema_version": {"const": "1.0"}, "task_id": {"$ref": "#/definitions/id"}, "revision": {"$ref": "#/definitions/id"},
+    "source": {"type": "object", "additionalProperties": false, "required": ["kind", "ref"], "properties": {"kind": {"$ref": "#/definitions/id"}, "ref": {"type": "string", "minLength": 1}}},
+    "objective": {"type": "string", "minLength": 1}, "repo_revision": {"type": "string", "minLength": 1},
+    "scope": {"type": "object", "additionalProperties": false, "required": ["allowed_paths", "forbidden_paths"], "properties": {"allowed_paths": {"$ref": "#/definitions/paths"}, "forbidden_paths": {"$ref": "#/definitions/paths"}}},
+    "acceptance": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "description", "grader_ref"], "properties": {"id": {"$ref": "#/definitions/id"}, "description": {"type": "string", "minLength": 1}, "grader_ref": {"type": "string", "minLength": 1}}}},
+    "constraints": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "risk": {"type": "object", "additionalProperties": false, "required": ["level", "reasons"], "properties": {"level": {"enum": ["low", "medium", "high"]}, "reasons": {"type": "array", "items": {"type": "string", "minLength": 1}}}},
+    "approval_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}, "extensions": {"type": "object"}
+  },
+  "definitions": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "path": {"type": "string", "pattern": "^(?!/)(?!.*\\.\\.)(?!.*//)[A-Za-z0-9.][A-Za-z0-9._/-]*(?![\\s\\S])"}, "paths": {"type": "array", "items": {"$ref": "#/definitions/path"}}}
+}

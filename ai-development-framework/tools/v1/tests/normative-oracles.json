@@ -1,0 +1,12 @@
+{
+  "oracle_version": "1.0",
+  "source": {"adr": "ai-development-framework/docs/architecture-decision-records/0007-runtime-and-tool-policy-boundary.md", "section": "Contratos H2-02"},
+  "coverage_status": "complete",
+  "contracts": {
+    "ToolProfile": {"schema_file": "tool-profile.schema.json", "checks": [{"pointer": "/additionalProperties", "expected": false}, {"pointer": "/required", "expected": ["profile_version", "tool_id", "provider", "provider_version", "source_ref", "source_commit", "profile_sha256", "operations", "provenance"]}, {"pointer": "/definitions/effect_class/enum", "expected": ["read", "write", "network", "secrets", "destructive"]}]},
+    "ToolCallIntent": {"schema_file": "tool-call-intent.schema.json", "checks": [{"pointer": "/additionalProperties", "expected": false}, {"pointer": "/required", "expected": ["intent_version", "intent_id", "run_id", "task_ref", "tool_ref", "operation_id", "arguments", "resource_scope", "requested_budget", "requested_by", "policy_context_ref", "provenance"]}]},
+    "PolicyBundle": {"schema_file": "policy-bundle.schema.json", "checks": [{"pointer": "/additionalProperties", "expected": false}, {"pointer": "/properties/default_outcome/const", "expected": "deny"}]},
+    "PolicyContext": {"schema_file": "policy-context.schema.json", "checks": [{"pointer": "/additionalProperties", "expected": false}, {"pointer": "/required", "expected": ["context_version", "policy_ref", "resolved_run_config_ref", "organizational_constraints", "repository_constraints", "runtime_capability", "mode_constraints", "provenance"]}]},
+    "AdmissionDecision": {"schema_file": "admission-decision.schema.json", "checks": [{"pointer": "/additionalProperties", "expected": false}, {"pointer": "/properties/outcome/enum", "expected": ["deny", "admit_read", "approval_required"]}, {"pointer": "/properties/bindings/required", "expected": ["profile_sha256", "policy_sha256", "run_id", "operation_id", "effective_scope", "max_output_bytes"]}]}
+  }
+}

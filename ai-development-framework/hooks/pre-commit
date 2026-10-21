@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Git pre-commit hook: fast, local gates before a commit lands.
+# Install: ln -sf ../../ai-development-framework/hooks/pre-commit .git/hooks/pre-commit
+# ponytail: only the cheap checks run here; the full mutation/dependency gates run in CI.
+set -euo pipefail
+
+run() { command -v rtk >/dev/null 2>&1 && rtk "$@" || "$@"; }
+
+echo "▶ pre-commit gates"
+# 1. Refresh graph on staged changes (best-effort).
+command -v graphify >/dev/null 2>&1 && (graphify update 2>/dev/null || true)
+
+# 2. Cheap quality gates (edit tools to match your stack; see skills/quality-gates).
+if command -v lizard >/dev/null 2>&1; then
+  run lizard -C 10 -L 50 $(git diff --cached --name-only --diff-filter=ACM || true) || {
+    echo "✗ complexity/size gate failed (CCN>10 or fn>50 lines)"; exit 1; }
+fi
+
+# 3. Shell complexity — cheap, dependency-free, and the framework's own language.
+staged_sh="$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.sh$' || true)"
+if [ -n "$staged_sh" ]; then
+  # git runs hooks from the repo root, so the framework path is stable here.
+  # shellcheck disable=SC2086
+  ai-development-framework/hooks/shell-complexity.sh $staged_sh \
+    || { echo "✗ shell complexity gate failed"; exit 1; }
+fi
+
+echo "✓ pre-commit gates passed (mutation/dependency/eval gates run in CI)"

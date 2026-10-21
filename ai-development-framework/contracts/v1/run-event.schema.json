@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/contracts/v1/run-event.schema.json",
+  "title": "RunEvent 1.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "run_id",
+    "task_id",
+    "sequence",
+    "timestamp",
+    "type",
+    "source",
+    "payload",
+    "artifact_refs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "event_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "task_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z(?![\\s\\S])"
+    },
+    "type": {"enum": ["run.started", "gate.started", "gate.finished", "run.completed"]},
+    "source": {
+      "type": "object",
+      "required": ["component", "version"],
+      "additionalProperties": false,
+      "properties": {"component": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}}
+    },
+    "payload": {"type": "object"},
+    "artifact_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "extensions": {"type": "object"}
+  },
+  "oneOf": [
+    {"properties": {"type": {"const": "run.started"}, "payload": {"$ref": "#/definitions/run.started"}}},
+    {"properties": {"type": {"const": "gate.started"}, "payload": {"$ref": "#/definitions/gate.started"}}},
+    {"properties": {"type": {"const": "gate.finished"}, "payload": {"$ref": "gate-result.schema.json"}}},
+    {"properties": {"type": {"const": "run.completed"}, "payload": {"$ref": "#/definitions/run.completed"}}}
+  ],
+  "definitions": {
+    "run.started": {
+      "type": "object",
+      "required": ["case", "repo_revision", "instrumentation_version"],
+      "additionalProperties": false,
+      "properties": {
+        "case": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+        "repo_revision": {"type": "string", "minLength": 1},
+        "instrumentation_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "gate.started": {
+      "type": "object",
+      "required": ["gate_id", "category", "required"],
+      "additionalProperties": false,
+      "properties": {
+        "gate_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+        "category": {
+          "enum": ["build", "test", "lint", "types", "architecture", "security", "functional", "llm_review", "human"]
+        },
+        "required": {"type": "boolean"}
+      }
+    },
+    "run.completed": {
+      "type": "object",
+      "required": ["outcome", "duration_seconds", "tokens_in", "tokens_out", "cost_usd"],
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {"enum": ["success", "failure", "skipped", "error"]},
+        "duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "tokens_in": {"type": "null"},
+        "tokens_out": {"type": "null"},
+        "cost_usd": {"type": "null"}
+      }
+    }
+  }
+}

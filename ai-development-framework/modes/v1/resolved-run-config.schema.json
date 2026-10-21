@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/modes/v1/resolved-run-config.schema.json",
+  "title": "ResolvedRunConfig 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resolver_version", "mode_id", "mode_catalog_version", "run_config", "provenance", "applied_restrictions"],
+  "properties": {
+    "resolver_version": {"const": "1.0"},
+    "mode_id": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json#/definitions/id"},
+    "mode_catalog_version": {"const": "1.0"},
+    "run_config": {"$ref": "https://agent-flow.invalid/contracts/v1/run-config.schema.json"},
+    "provenance": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/definitions/provenance"}},
+    "applied_restrictions": {"type": "array", "items": {"$ref": "#/definitions/restriction"}}
+  },
+  "definitions": {
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["source", "policy_id", "policy_version"], "properties": {"source": {"enum": ["runtime_constraint", "mode_default", "explicit_request", "task_derived"]}, "policy_id": {"type": "string", "minLength": 1}, "policy_version": {"type": "string", "minLength": 1}}},
+    "restriction": {"type": "object", "additionalProperties": false, "required": ["id", "source", "version"], "properties": {"id": {"type": "string", "minLength": 1}, "source": {"enum": ["organizational_constraint", "runtime_capability_ceiling", "mode_restriction"]}, "version": {"type": "string", "minLength": 1}}}
+  }
+}

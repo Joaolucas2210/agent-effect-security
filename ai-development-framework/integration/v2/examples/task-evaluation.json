@@ -1,0 +1,116 @@
+{
+  "valid/success.json": {
+    "schema_version": "1.0",
+    "trial_id": "trial-example",
+    "task_id": "task-example",
+    "session_id": "session-example",
+    "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4",
+    "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "initial_revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evaluator_id": "external-review",
+    "evaluator_version": "1.0",
+    "evaluated_revision_sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "task_outcome": "success",
+    "result_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "created_at": "2026-10-04T00:00:00Z",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "evaluation_sha256": "f56519093d11adaeba6b519596b1da3b2d47226452c4b822de28e681eaf5dfb7"
+    }
+  },
+  "valid/failure.json": {
+    "schema_version": "1.0",
+    "trial_id": "trial-example",
+    "task_id": "task-example",
+    "session_id": "session-example",
+    "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4",
+    "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "initial_revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evaluator_id": "external-review",
+    "evaluator_version": "1.0",
+    "evaluated_revision_sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "task_outcome": "failure",
+    "result_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "created_at": "2026-10-04T00:00:00Z",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "evaluation_sha256": "6440bf6683b0bdbd4d035c9a1d09ea761a36c515d9f3131f6f286b95b0632509"
+    }
+  },
+  "valid/skipped.json": {
+    "schema_version": "1.0",
+    "trial_id": "trial-example",
+    "task_id": "task-example",
+    "session_id": "session-example",
+    "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4",
+    "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "initial_revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evaluator_id": "external-review",
+    "evaluator_version": "1.0",
+    "evaluated_revision_sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "task_outcome": "skipped",
+    "result_sha256": null,
+    "created_at": "2026-10-04T00:00:00Z",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "evaluation_sha256": "691ab8eb042e6f78b19865c3a9d81bbea6a54e0b3148c1dcd6e0c8ca3a121b03"
+    }
+  },
+  "invalid/binding.json": {
+    "schema_version": "1.0",
+    "trial_id": "trial-example",
+    "task_id": "task-example",
+    "session_id": "other-session",
+    "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4",
+    "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "initial_revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evaluator_id": "external-review",
+    "evaluator_version": "1.0",
+    "evaluated_revision_sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "task_outcome": "success",
+    "result_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "created_at": "2026-10-04T00:00:00Z",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "evaluation_sha256": "f68c41778b9d14d568673b0d8561484076d2c85ceda7cfe236e9e9d57f6456c2"
+    }
+  },
+  "invalid/digest.json": {
+    "schema_version": "1.0",
+    "trial_id": "trial-example",
+    "task_id": "task-example",
+    "session_id": "session-example",
+    "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4",
+    "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "initial_revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evaluator_id": "external-review",
+    "evaluator_version": "1.0",
+    "evaluated_revision_sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "task_outcome": "failure",
+    "result_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "created_at": "2026-10-04T00:00:00Z",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "evaluation_sha256": "f56519093d11adaeba6b519596b1da3b2d47226452c4b822de28e681eaf5dfb7"
+    }
+  },
+  "invalid/missing-result.json": {
+    "schema_version": "1.0",
+    "trial_id": "trial-example",
+    "task_id": "task-example",
+    "session_id": "session-example",
+    "report_sha256": "66d3c6bd2a85b148cdb8307e6ee3c622d7f080c1eb27e80763bc735e3c7c25d4",
+    "acceptance_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "initial_revision_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evaluator_id": "external-review",
+    "evaluator_version": "1.0",
+    "evaluated_revision_sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "task_outcome": "success",
+    "result_sha256": null,
+    "created_at": "2026-10-04T00:00:00Z",
+    "verification": {
+      "canonicalization": "json-c14n-v1",
+      "evaluation_sha256": "95c6bbc2348b35dad249bac1a10163cf04e86bbbbc717ca5e5d00df4172093cb"
+    }
+  }
+}

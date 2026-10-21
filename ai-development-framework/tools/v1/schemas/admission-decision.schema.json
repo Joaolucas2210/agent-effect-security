@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/tools/v1/schemas/admission-decision.schema.json",
+  "title": "AdmissionDecision 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_version", "decision_id", "outcome", "stable_reason_code", "applied_rule_ids", "intent_digest", "effective_scope", "bindings", "provenance"],
+  "properties": {"decision_version": {"const": "1.0"}, "decision_id": {"$ref": "#/definitions/hash"}, "outcome": {"enum": ["deny", "admit_read", "approval_required"]}, "stable_reason_code": {"type": "string", "pattern": "^[a-z0-9_]+$"}, "applied_rule_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "intent_digest": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "effective_scope": {"type": ["object", "null"]}, "bindings": {"type": "object", "additionalProperties": false, "required": ["profile_sha256", "policy_sha256", "run_id", "operation_id", "effective_scope", "max_output_bytes"], "properties": {"profile_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "policy_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "run_id": {"type": ["string", "null"]}, "operation_id": {"type": ["string", "null"]}, "effective_scope": {"type": ["object", "null"]}, "max_output_bytes": {"type": ["integer", "null"], "minimum": 0}}}, "provenance": {"type": "object", "additionalProperties": false, "required": ["pdp_version", "kind"], "properties": {"pdp_version": {"const": "1.0"}, "kind": {"const": "local_pure_pdp"}}}},
+  "definitions": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}}
+}

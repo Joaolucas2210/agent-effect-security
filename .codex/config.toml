@@ -1,0 +1,14 @@
+# Project-level Codex configuration
+# Keep this file generic.
+# Do not add credentials, tokens or company-sensitive information.
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "high"
+model_reasoning_summary = "concise"
+
+[tools]
+web_search = true
+
+[sandbox_workspace_write]
+network_access = false

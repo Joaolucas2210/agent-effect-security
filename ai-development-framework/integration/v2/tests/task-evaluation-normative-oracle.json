@@ -1,0 +1,44 @@
+{
+  "required_fields": [
+    "schema_version",
+    "trial_id",
+    "task_id",
+    "session_id",
+    "report_sha256",
+    "acceptance_sha256",
+    "initial_revision_sha",
+    "evaluated_revision_sha",
+    "evaluator_id",
+    "evaluator_version",
+    "created_at",
+    "task_outcome",
+    "result_sha256",
+    "verification"
+  ],
+  "examples": {
+    "valid/success.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "valid/failure.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "valid/skipped.json": {
+      "schema_valid": true,
+      "verifies": true
+    },
+    "invalid/binding.json": {
+      "schema_valid": true,
+      "verifies": false
+    },
+    "invalid/digest.json": {
+      "schema_valid": true,
+      "verifies": false
+    },
+    "invalid/missing-result.json": {
+      "schema_valid": false,
+      "verifies": false
+    }
+  }
+}

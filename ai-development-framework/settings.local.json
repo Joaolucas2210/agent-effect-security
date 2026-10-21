@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(graphify build)",
+      "Bash(graphify query:*)"
+    ]
+  },
+  "env": {
+    "PONYTAIL_LEVEL": "full"
+  }
+}

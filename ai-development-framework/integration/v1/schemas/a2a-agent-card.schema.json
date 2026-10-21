@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "a2a-agent-card.schema.json",
+  "title": "A2A AgentCard (ADF closed subset) 1.0",
+  "description": "Discovery only (ADR 0013). Nothing in ADF reads this card to authorize.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocolVersion", "name", "description", "url", "version", "capabilities", "defaultInputModes", "defaultOutputModes", "securitySchemes", "security", "supportsAuthenticatedExtendedCard", "skills"],
+  "properties": {
+    "protocolVersion": {"const": "0.3.0"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 128},
+    "description": {"type": "string", "minLength": 1, "maxLength": 512},
+    "url": {"type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]{1,5}/(?![\\s\\S])"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?![\\s\\S])"},
+    "capabilities": {"type": "object", "additionalProperties": false, "required": ["streaming", "pushNotifications"], "properties": {"streaming": {"const": false}, "pushNotifications": {"const": false}}},
+    "defaultInputModes": {"$ref": "#/definitions/modes"},
+    "defaultOutputModes": {"$ref": "#/definitions/modes"},
+    "securitySchemes": {"type": "object", "additionalProperties": false, "required": ["bearer"], "properties": {"bearer": {"type": "object", "additionalProperties": false, "required": ["type", "scheme", "bearerFormat"], "properties": {"type": {"const": "http"}, "scheme": {"const": "bearer"}, "bearerFormat": {"const": "JWT"}}}}},
+    "security": {"$ref": "#/definitions/security"},
+    "supportsAuthenticatedExtendedCard": {"const": true},
+    "skills": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/skill"}}
+  },
+  "definitions": {
+    "modes": {"type": "array", "minItems": 1, "items": {"const": "application/json"}},
+    "security": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["bearer"], "properties": {"bearer": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z]+:(read|write)(?![\\s\\S])"}}}}},
+    "skill": {"type": "object", "additionalProperties": false, "required": ["id", "name", "description", "tags", "security"], "properties": {"id": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}(?![\\s\\S])"}, "name": {"type": "string", "minLength": 1, "maxLength": 128}, "description": {"type": "string", "minLength": 1, "maxLength": 512}, "tags": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9_-]{1,32}(?![\\s\\S])"}}, "security": {"$ref": "#/definitions/security"}}}
+  }
+}

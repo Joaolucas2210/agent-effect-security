@@ -1,0 +1,8 @@
+{
+  "context_version": "1.0", "policy_ref": {"policy_id": "local-read-policy", "policy_sha256": "b6cac6b2eb0ca1b4255cdc0ac9f87b23d32e52942b8371ef6302f59be25f96c1"}, "resolved_run_config_ref": {"run_id": "run-h2-02", "mode_id": "builder"},
+  "organizational_constraints": {"rule_id": "org-read-only", "allowed_effect_classes": ["read"], "allowed_scopes": [{"kind": "filesystem", "path": "docs/architecture-decision-records/0007-runtime-and-tool-policy-boundary.md"}], "max_output_bytes": 256},
+  "repository_constraints": {"rule_id": "repo-read-only", "allowed_effect_classes": ["read"], "allowed_scopes": [{"kind": "filesystem", "path": "docs/architecture-decision-records/0007-runtime-and-tool-policy-boundary.md"}], "max_output_bytes": 256},
+  "runtime_capability": {"rule_id": "runtime-read-demonstrated", "demonstrated": true, "allowed_effect_classes": ["read"]},
+  "mode_constraints": {"rule_id": "mode-read-only", "allowed_effect_classes": ["read"], "allowed_scopes": [{"kind": "filesystem", "path": "docs/architecture-decision-records/0007-runtime-and-tool-policy-boundary.md"}], "max_output_bytes": 128},
+  "provenance": {"source": "adf_policy_context"}
+}

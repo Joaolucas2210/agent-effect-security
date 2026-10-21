@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/tools/v1/schemas/typed-question.schema.json",
+  "title": "TypedQuestion 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "kind"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
+    "kind": {"enum": ["yes_no", "choice", "score"]},
+    "choices": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}}
+  },
+  "oneOf": [
+    {"properties": {"kind": {"const": "yes_no"}}, "not": {"required": ["choices"]}},
+    {"properties": {"kind": {"const": "choice"}}, "required": ["choices"]},
+    {"properties": {"kind": {"const": "score"}}, "not": {"required": ["choices"]}}
+  ]
+}

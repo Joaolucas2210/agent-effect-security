@@ -1,0 +1,11 @@
+{
+  "oracle_version": "1.0",
+  "source": "J0 typed residual port; no authorization semantics",
+  "kinds": ["yes_no", "choice", "score"],
+  "question_required": ["schema_version", "id", "kind"],
+  "signal_required": ["schema_version", "provider_id", "question_id", "kind", "abstain", "answer"],
+  "abstain_requires_null_answer": true,
+  "confidence_minimum": 0,
+  "confidence_maximum": 1,
+  "authorization_fields": []
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "a2a-request.schema.json",
+  "title": "A2A JSON-RPC request (ADF closed subset) 1.0",
+  "description": "Closed by design (ADR 0013): no credential, decision, bundle or grant can ride in the body.",
+  "oneOf": [
+    {"type": "object", "additionalProperties": false, "required": ["jsonrpc", "id", "method"], "properties": {"jsonrpc": {"const": "2.0"}, "id": {"$ref": "#/definitions/id"}, "method": {"const": "agent/getAuthenticatedExtendedCard"}}},
+    {"type": "object", "additionalProperties": false, "required": ["jsonrpc", "id", "method", "params"], "properties": {"jsonrpc": {"const": "2.0"}, "id": {"$ref": "#/definitions/id"}, "method": {"const": "message/send"}, "params": {"type": "object", "additionalProperties": false, "required": ["message"], "properties": {"message": {"$ref": "#/definitions/message"}}}}}
+  ],
+  "definitions": {
+    "id": {"oneOf": [{"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}(?![\\s\\S])"}, {"type": "integer", "minimum": 0}]},
+    "message": {"type": "object", "additionalProperties": false, "required": ["kind", "role", "messageId", "parts"], "properties": {"kind": {"const": "message"}, "role": {"const": "user"}, "messageId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}(?![\\s\\S])"}, "taskId": {"type": "string", "pattern": "^[a-f0-9]{32}(?![\\s\\S])"}, "parts": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"$ref": "#/definitions/data_part"}}}},
+    "data_part": {"type": "object", "additionalProperties": false, "required": ["kind", "data"], "properties": {"kind": {"const": "data"}, "data": {"type": "object", "additionalProperties": false, "required": ["skill", "arguments"], "properties": {"skill": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}(?![\\s\\S])"}, "arguments": {"type": "object", "additionalProperties": false, "required": ["path"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?!.*\\.\\.)(?!.*//)(?!.*\\x00)[A-Za-z0-9][A-Za-z0-9._/-]{0,511}(?![\\s\\S])"}}}}}}}
+  }
+}

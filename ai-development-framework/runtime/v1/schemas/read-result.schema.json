@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/runtime/v1/schemas/read-result.schema.json",
+  "title": "ReadResult 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["result_version", "outcome", "reason_code", "bytes_read", "taint", "provenance"],
+  "properties": {
+    "result_version": {"const": "1.0"}, "outcome": {"enum": ["delivered", "deny"]}, "reason_code": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "content": {"type": "string"}, "content_sha256": {"$ref": "#/definitions/hash"}, "bytes_read": {"type": "integer", "minimum": 0},
+    "taint": {"type": "object", "additionalProperties": false, "required": ["classification", "cannot_authorize"], "properties": {"classification": {"const": "untrusted_workspace_file"}, "cannot_authorize": {"const": true}}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["runtime_version", "workspace_id", "snapshot_digest"], "properties": {"runtime_version": {"const": "1.0"}, "workspace_id": {"$ref": "#/definitions/id"}, "snapshot_digest": {"$ref": "#/definitions/hash"}}}
+  },
+  "allOf": [{"if": {"properties": {"outcome": {"const": "delivered"}}}, "then": {"required": ["content", "content_sha256"]}, "else": {"not": {"anyOf": [{"required": ["content"]}, {"required": ["content_sha256"]}]}}}],
+  "definitions": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}}
+}

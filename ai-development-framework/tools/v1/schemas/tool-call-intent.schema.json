@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/tools/v1/schemas/tool-call-intent.schema.json",
+  "title": "ToolCallIntent 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intent_version", "intent_id", "run_id", "task_ref", "tool_ref", "operation_id", "arguments", "resource_scope", "requested_budget", "requested_by", "policy_context_ref", "provenance"],
+  "properties": {
+    "intent_version": {"const": "1.0"}, "intent_id": {"$ref": "#/definitions/id"}, "run_id": {"$ref": "#/definitions/id"}, "task_ref": {"$ref": "#/definitions/hash"}, "tool_ref": {"type": "object", "additionalProperties": false, "required": ["tool_id", "profile_sha256"], "properties": {"tool_id": {"$ref": "#/definitions/id"}, "profile_sha256": {"$ref": "#/definitions/hash"}}}, "operation_id": {"$ref": "#/definitions/id"}, "arguments": {"type": "object"}, "resource_scope": {"$ref": "#/definitions/scope"}, "requested_budget": {"type": "object", "additionalProperties": false, "required": ["max_output_bytes"], "properties": {"max_output_bytes": {"type": "integer", "minimum": 0}}}, "requested_by": {"enum": ["agent", "human"]}, "policy_context_ref": {"type": "object", "additionalProperties": false, "required": ["policy_id", "policy_sha256"], "properties": {"policy_id": {"$ref": "#/definitions/id"}, "policy_sha256": {"$ref": "#/definitions/hash"}}}, "provenance": {"type": "object", "additionalProperties": false, "required": ["source"], "properties": {"source": {"enum": ["adf_request"]}}}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}, "path": {"type": "string", "pattern": "^(?!/)(?!.*\\.\\.)(?!.*//)(?!.*\\x00)[A-Za-z0-9][A-Za-z0-9._/-]*(?![\\s\\S])"},
+    "scope": {"oneOf": [{"type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": {"kind": {"const": "filesystem"}, "path": {"$ref": "#/definitions/path"}}}, {"type": "object", "additionalProperties": false, "required": ["kind", "scheme", "hostname", "port"], "properties": {"kind": {"const": "network"}, "scheme": {"enum": ["http", "https"]}, "hostname": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,252}(?![\\s\\S])"}, "port": {"type": "integer", "minimum": 1, "maximum": 65535}}}, {"type": "object", "additionalProperties": false, "required": ["kind", "revision"], "properties": {"kind": {"const": "repository"}, "revision": {"$ref": "#/definitions/hash"}}}]}
+  }
+}

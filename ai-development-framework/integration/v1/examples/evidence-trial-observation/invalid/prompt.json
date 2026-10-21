@@ -1,0 +1,1 @@
+{"schema_version":"1.0","observation_id":"observation-1","trial_id":"trial-1","observed_at":"2026-09-22T12:00:00Z","evidence_bundle":{},"runtime_outcome":"not_attempted","runtime_reason_code":null,"human_intervention_required":false,"decision_latency_ms":0,"provenance":{"collector_version":"1.0","kind":"local_trial_observation"},"prompt":"forbidden"}

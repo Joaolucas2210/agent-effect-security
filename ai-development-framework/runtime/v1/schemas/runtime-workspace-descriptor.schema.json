@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-flow.invalid/runtime/v1/schemas/runtime-workspace-descriptor.schema.json",
+  "title": "RuntimeWorkspaceDescriptor 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workspace_version", "workspace_id", "canonical_root", "task_ref", "snapshot_digest", "ownership", "lifecycle", "provenance"],
+  "properties": {
+    "workspace_version": {"const": "1.0"}, "workspace_id": {"$ref": "#/definitions/id"}, "canonical_root": {"type": "string", "minLength": 1},
+    "task_ref": {"$ref": "#/definitions/hash"}, "snapshot_digest": {"$ref": "#/definitions/hash"},
+    "ownership": {"const": "harness_owned"}, "lifecycle": {"enum": ["ephemeral_prepared", "pending_cleanup", "cleaned"]},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["manager_version", "kind"], "properties": {"manager_version": {"const": "1.0"}, "kind": {"const": "trusted_workspace_manager"}}}
+  },
+  "definitions": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"}, "hash": {"type": "string", "pattern": "^[a-f0-9]{64}(?![\\s\\S])"}}
+}

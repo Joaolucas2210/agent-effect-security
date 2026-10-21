@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/bash \"$(git rev-parse --show-toplevel)/ai-development-framework/hooks/codex-bash-read-gate.wrapper.sh\"",
+            "timeout": 30,
+            "statusMessage": "Checking ADF read policy"
+          }
+        ]
+      }
+    ]
+  }
+}

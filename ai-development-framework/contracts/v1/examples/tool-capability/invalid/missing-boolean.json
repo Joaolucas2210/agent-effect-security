@@ -1,0 +1,1 @@
+{"schema_version":"1.0","name":"files","provider":"local","version":"1","description":"Read files","operations":[{"id":"read","input_schema":{},"write":false,"network":false,"secret_access":false,"destructive":false,"allowed_paths":[],"allowed_hosts":[],"timeout_seconds":0,"max_output_bytes":0,"approval":"never","provenance_required":true}]}

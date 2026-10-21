@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="300" viewBox="0 0 1120 300" role="img" aria-labelledby="title desc">
+  <title id="title">Coleta reproduzível de um trial ADF</title>
+  <desc id="desc">Instalar a ferramenta, fixar a revisão Git, capturar uma sessão em diretório novo, agregar os bundles e comparar os resultados. A suite fixa é um teste separado da sessão real.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#94a3b8"/></marker></defs>
+  <rect width="1120" height="300" rx="20" fill="#0f172a"/>
+  <g font-family="system-ui, sans-serif">
+    <text x="36" y="46" fill="#f8fafc" font-size="25" font-weight="700">Um diretório novo para cada sessão</text>
+    <text x="36" y="75" fill="#94a3b8" font-size="16">Suite fixa = teste de instalação. Sessão real = evidência de uso.</text>
+    <g fill="#1e293b" stroke="#475569"><rect x="36" y="108" width="188" height="106" rx="12"/><rect x="252" y="108" width="188" height="106" rx="12"/><rect x="468" y="108" width="188" height="106" rx="12"/><rect x="684" y="108" width="188" height="106" rx="12"/><rect x="900" y="108" width="184" height="106" rx="12"/></g>
+    <g stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"><path d="M224 161 H247"/><path d="M440 161 H463"/><path d="M656 161 H679"/><path d="M872 161 H895"/></g>
+    <g fill="#34d399" font-size="14" font-weight="700"><text x="54" y="135">01</text><text x="270" y="135">02</text><text x="486" y="135">03</text><text x="702" y="135">04</text><text x="918" y="135">05</text></g>
+    <g fill="#f8fafc" text-anchor="middle" font-size="19" font-weight="650"><text x="130" y="161">Instalar</text><text x="346" y="161">Fixar revisão</text><text x="562" y="161">Capturar</text><text x="778" y="161">Agregar</text><text x="992" y="161">Comparar</text></g>
+    <g fill="#cbd5e1" text-anchor="middle" font-size="13"><text x="130" y="192">make install-metrics</text><text x="346" y="192">Commit + versões</text><text x="562" y="192">Hook + bundles</text><text x="778" y="192">local-evidence-trial</text><text x="992" y="192">Mesma tarefa e condições</text></g>
+    <text x="36" y="261" fill="#94a3b8" font-size="15">Sem tokens inventados · sem latência inferida de bundles · sem misturar coletas anteriores</text>
+  </g>
+</svg>

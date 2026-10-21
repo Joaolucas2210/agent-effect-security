@@ -1,0 +1,103 @@
+{
+  "trial_id": "a2a-live-20261016T163736Z",
+  "commit": "02fdc77",
+  "auth_mode": "hs256_pilot",
+  "cases": {
+    "T1": 401,
+    "T2a": 401,
+    "T2b": 401,
+    "T3": 403,
+    "T4": 403,
+    "T5a": 200,
+    "T5b": 400,
+    "T6": 200,
+    "T7a": 200,
+    "T7b": 200
+  },
+  "reason_codes": {
+    "T1": "auth_missing",
+    "T2a": "token_signature_invalid",
+    "T2b": "token_expired",
+    "T3": "insufficient_scope",
+    "T4": "unknown_skill",
+    "T5a": "scope_not_allowlisted",
+    "T5b": "invalid_request",
+    "T6": "read_delivered",
+    "T7a": "input_required",
+    "T7b": "read_delivered"
+  },
+  "records": 6,
+  "bundles": 3,
+  "verify_record_true": 6,
+  "otel_jaeger": true,
+  "jaeger_spans": 10,
+  "redaction_leaks": 0,
+  "langfuse": "skipped",
+  "benchmark": {
+    "method": "200 sequential requests per case after 10 warm-up, client wall clock, loopback",
+    "otel_off": {
+      "T1 401": {
+        "n": 200,
+        "status": [
+          401
+        ],
+        "p50_ms": 2.36,
+        "p95_ms": 3.31,
+        "p99_ms": 3.89,
+        "mean_ms": 2.38
+      },
+      "T3 403": {
+        "n": 200,
+        "status": [
+          403
+        ],
+        "p50_ms": 2.81,
+        "p95_ms": 3.97,
+        "p99_ms": 4.56,
+        "mean_ms": 2.87
+      },
+      "T6 200": {
+        "n": 200,
+        "status": [
+          200
+        ],
+        "p50_ms": 73.85,
+        "p95_ms": 92.07,
+        "p99_ms": 102.63,
+        "mean_ms": 75.72
+      }
+    },
+    "otel_on": {
+      "T1 401": {
+        "n": 200,
+        "status": [
+          401
+        ],
+        "p50_ms": 3.59,
+        "p95_ms": 4.51,
+        "p99_ms": 4.8,
+        "mean_ms": 3.64
+      },
+      "T3 403": {
+        "n": 200,
+        "status": [
+          403
+        ],
+        "p50_ms": 4.11,
+        "p95_ms": 5.28,
+        "p99_ms": 5.75,
+        "mean_ms": 4.2
+      },
+      "T6 200": {
+        "n": 200,
+        "status": [
+          200
+        ],
+        "p50_ms": 73.47,
+        "p95_ms": 86.75,
+        "p99_ms": 143.91,
+        "mean_ms": 75.33
+      }
+    }
+  }
+}

@@ -1,0 +1,218 @@
+[
+ {
+  "case": "T1",
+  "label": "no Authorization",
+  "status": 401,
+  "reason_code": "auth_missing",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": null,
+  "verify_record": null,
+  "expected": {
+   "status": 401,
+   "reason_code": "auth_missing"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T2a",
+  "label": "bad signature",
+  "status": 401,
+  "reason_code": "token_signature_invalid",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": null,
+  "verify_record": null,
+  "expected": {
+   "status": 401,
+   "reason_code": "token_signature_invalid"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T2b",
+  "label": "expired token",
+  "status": 401,
+  "reason_code": "token_expired",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": null,
+  "verify_record": null,
+  "expected": {
+   "status": 401,
+   "reason_code": "token_expired"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T3",
+  "label": "valid token, missing scope",
+  "status": 403,
+  "reason_code": "insufficient_scope",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": "381c7028e864fce667ebc686e6b5e4b93b358aac93ea3cccc244d61de208b031",
+  "verify_record": true,
+  "expected": {
+   "status": 403,
+   "reason_code": "insufficient_scope"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T4",
+  "label": "unknown skill",
+  "status": 403,
+  "reason_code": "unknown_skill",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": "2e256b3b4df16737f4fb0622ef362c53755b63414c194445fd592be67b0c3064",
+  "verify_record": true,
+  "expected": {
+   "status": 403,
+   "reason_code": "unknown_skill"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T5a",
+  "label": "secrets/ path not approved by host policy",
+  "status": 200,
+  "reason_code": "scope_not_allowlisted",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": "bbe8fff73e743df73641414fcfd0405ff2cb027d7b17b9c4764e7d2496b98767",
+  "bundle_id": "64af7f24415e00f9e5f1d000948afe8162f03de1548058a6f052e1dc4a04e95b",
+  "record_id": "c4dc664eba01709d7bc72f62b56b48481307823db0a128080c47ce74cb8e1ae7",
+  "verify_record": true,
+  "expected": {
+   "status": 200,
+   "reason_code": "scope_not_allowlisted"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T5b",
+  "label": "path outside workspace",
+  "status": 400,
+  "reason_code": "invalid_request",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": null,
+  "verify_record": null,
+  "expected": {
+   "status": 400,
+   "reason_code": "invalid_request"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T5c",
+  "label": "root .env (request schema refuses dotfile)",
+  "status": 400,
+  "reason_code": "invalid_request",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": null,
+  "verify_record": null,
+  "expected": {
+   "status": 400,
+   "reason_code": "invalid_request"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T5d",
+  "label": "nested .env (PDP scope rule)",
+  "status": 200,
+  "reason_code": "invalid_scope",
+  "outcome": "deny",
+  "task_state": null,
+  "content_delivered": false,
+  "decision_id": "e7c4423932f4b9802bb36c83d9747d4c7d7a607df067b95857c7f99f95f7fe6f",
+  "bundle_id": "9fa948623223f71f54278432ad2285c881045071c4dad53cb624dce53427aae2",
+  "record_id": "006345c1f1e432c6d36ece285e61245dee80b74bf8a8a8221a7c3695b53a914a",
+  "verify_record": true,
+  "expected": {
+   "status": 200,
+   "reason_code": "invalid_scope"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T6",
+  "label": "approved path README.md",
+  "status": 200,
+  "reason_code": "read_delivered",
+  "outcome": "delivered",
+  "task_state": null,
+  "content_delivered": true,
+  "decision_id": "1371b26c6449fbb19649d42d74bf8e9841e85ccbcb89e00cbea4da0a49d51b73",
+  "bundle_id": "d95acf9dd4935ce626f399003007be4966d957f452eb43a9c7a90e577a2637e4",
+  "record_id": "74107e4c9205a3826f2f744a9e7d00701b6fb1689eebbc376afec587fd07f4b6",
+  "verify_record": true,
+  "expected": {
+   "status": 200,
+   "reason_code": "read_delivered"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T7a",
+  "label": "input-required pause",
+  "status": 200,
+  "reason_code": "input_required",
+  "outcome": "deny",
+  "task_state": "input-required",
+  "content_delivered": false,
+  "decision_id": null,
+  "bundle_id": null,
+  "record_id": "39ec79d2012f3a8f3b98554f2a7cd4e2dbf59a16eeb06ee7c32c609c64284fed",
+  "verify_record": true,
+  "expected": {
+   "status": 200,
+   "reason_code": "input_required"
+  },
+  "as_expected": true
+ },
+ {
+  "case": "T7b",
+  "label": "human confirm resume",
+  "status": 200,
+  "reason_code": "read_delivered",
+  "outcome": "delivered",
+  "task_state": "completed",
+  "content_delivered": true,
+  "decision_id": "1371b26c6449fbb19649d42d74bf8e9841e85ccbcb89e00cbea4da0a49d51b73",
+  "bundle_id": "bbdd85bf64ec414793eedeaa45219ce55bbe34773801475c9dedc6ac54613754",
+  "record_id": "91d3e4bb5e4281eaba8c32776956673742b5a47f47ef82a32b481dfdfb3b8c1e",
+  "verify_record": true,
+  "expected": {
+   "status": 200,
+   "reason_code": "read_delivered"
+  },
+  "as_expected": true
+ }
+]

@@ -1,0 +1,84 @@
+TRIAL_ID=a2a-live-20261016T163736Z  commit=02fdc77  Linux 6.18.33.2-microsoft-standard-WSL2  Python 3.10.12
+
+$ bash hooks/test-a2a-gateway.sh
+Ran 50 tests in 5.586s
+
+OK
+
+$ bash hooks/test-otel-export.sh
+Ran 44 tests in 4.335s
+
+OK
+
+$ host policy: approve README.md only, pinned by sha256 (ADF_READ_POLICY_FILE / ADF_READ_POLICY_SHA256)
+  pin c9a8835104a61c69…
+
+$ ADF_OTEL_ENABLED=1 python3 -m integration.a2a_gateway serve            # :8765
+
+$ ADF_OTEL_ENABLED=1 ADF_A2A_CONFIRM_SKILLS=read_workspace_file ... serve   # :8766 (T7)
+
+$ curl -s http://127.0.0.1:8765/.well-known/agent-card.json | jq '{name, skills: [.skills[].id]}'
+  {"name": "ADF control plane", "skills": []}
+
+$ python3 trial.py 8765 8766    # T1–T7, real HTTP; prints status/reason/ids only
+  case http outcome    reason_code              task_state      content  record  verify
+  T1   401  deny       auth_missing             None            -        None    None
+  T2a  401  deny       token_signature_invalid  None            -        None    None
+  T2b  401  deny       token_expired            None            -        None    None
+  T3   403  deny       insufficient_scope       None            -        record  True
+  T4   403  deny       unknown_skill            None            -        record  True
+  T5a  200  deny       scope_not_allowlisted    None            -        record  True
+  T5b  400  deny       invalid_request          None            -        None    None
+  T6   200  delivered  read_delivered           None            content  record  True
+  T7a  200  deny       input_required           input-required  -        record  True
+  T7b  200  delivered  read_delivered           completed       content  record  True
+
+$ gateway log (method, route, status only)
+  a2a GET card 200
+  a2a POST rpc 401
+  a2a POST rpc 401
+  a2a POST rpc 401
+  a2a POST rpc 403
+  a2a POST rpc 403
+  a2a POST rpc 200
+  a2a POST rpc 400
+  a2a POST rpc 200
+  a2a POST rpc 200
+  a2a POST rpc 200
+
+$ find $ADF_EVIDENCE_DIR -type f | sort      # evidence written by the edge (gitignored)
+  ./_a2a/6758e95ccee0235713e6b4dd0ae9e636f551620c4cdafd52c38c2284e9f5d060.json
+  ./_a2a/ab144ac62fdb480862b90a2f086bb726926b1e4987333f6fd4c7d2e27950459c.json
+  ./_a2a/acf482d5b1333c0ce2e248533d055cdee6574089b82f0d262fb18850dce3300a.json
+  ./_a2a/b454e71a52d9deb6deb7829019a244bfb38bb91ffb36a06d3cbe1c59332d6b80.json
+  ./_a2a/bb1f0dd09d7484ef3b874612202ae10070fd2d6e22cc980d2b66d66565ecbe06.json
+  ./_a2a/c4620f9e0e2aab4074de6d62af3e79e0e921185c7c868df61f4b8b3823be117d.json
+  ./_attempts/276f8ada10ec45d1bbc217898b84028c.jsonl
+  ./_attempts/d1efaa4909b648fd8fffe992daef09c9.jsonl
+  ./_attempts/f2fc45bebe324e3cb5890fcbeb433a9f.jsonl
+  ./run-trial/350fc616d4433ea428c70e9d609efdba391ac4b33a6bdd332d85f594074c7f89.json
+  ./run-trial/5268bc573cf4d1d8fc34e4e887dd7ccd4457e92e1d258697e2519399fb4485cf.json
+  ./run-trial/bcc5c1af5840c45a2a3863e474e9b8f94960028a2378fc94889720eff0f255d7.json
+
+$ EVIDENCE_DIR=$ADF_EVIDENCE_DIR make local-evidence-trial   # bundle aggregator
+  decisions 3 · admit_read 2 · deny 1 · bundles valid 3 invalid 6 · reads without bundle 0
+  decision_latency_ms: not recorded (persisted bundles carry no latency; metrics hold zero placeholders)
+
+$ Jaeger: GET /api/traces?service=adf-control-plane → spans + redaction scan
+  spans: 10  (cases: 10)
+  leaked: none
+
+$ node shots.cjs   # Jaeger UI screenshots
+  docs/observability/trials/a2a-live/a2a-live-20261016T163736Z/jaeger-delivered-T6.png
+  docs/observability/trials/a2a-live/a2a-live-20261016T163736Z/jaeger-deny-T3.png
+  docs/observability/trials/a2a-live/a2a-live-20261016T163736Z/jaeger-search.png
+
+$ benchmark: 200 sequential requests per case, OTel off vs on (separate evidence dir + service name)
+  otel-off T1 401  n=200 status=[401] p50=  2.36ms p95=  3.31ms p99=  3.89ms
+  otel-off T3 403  n=200 status=[403] p50=  2.81ms p95=  3.97ms p99=  4.56ms
+  otel-off T6 200  n=200 status=[200] p50= 73.85ms p95= 92.07ms p99=102.63ms
+  otel-on  T1 401  n=200 status=[401] p50=  3.59ms p95=  4.51ms p99=  4.80ms
+  otel-on  T3 403  n=200 status=[403] p50=  4.11ms p95=  5.28ms p99=  5.75ms
+  otel-on  T6 200  n=200 status=[200] p50= 73.47ms p95= 86.75ms p99=143.91ms
+
+done: docs/observability/trials/a2a-live/a2a-live-20261016T163736Z

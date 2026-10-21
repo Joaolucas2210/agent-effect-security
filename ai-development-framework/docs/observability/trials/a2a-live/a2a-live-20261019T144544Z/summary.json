@@ -1,0 +1,49 @@
+{
+ "trial_id": "a2a-live-20261019T144544Z",
+ "commit": "504790a",
+ "auth_mode": "hs256_pilot",
+ "policy_pack": "effect-security-read-v0",
+ "cases": {
+  "T1": 401,
+  "T2a": 401,
+  "T2b": 401,
+  "T3": 403,
+  "T4": 403,
+  "T5a": 200,
+  "T5b": 400,
+  "T5c": 400,
+  "T5d": 500,
+  "T6": 200,
+  "T7a": 200,
+  "T7b": 200
+ },
+ "reason_codes": {
+  "T1": "auth_missing",
+  "T2a": "token_signature_invalid",
+  "T2b": "token_expired",
+  "T3": "insufficient_scope",
+  "T4": "unknown_skill",
+  "T5a": "scope_not_allowlisted",
+  "T5b": "invalid_request",
+  "T5c": "invalid_request",
+  "T5d": "a2a_evidence_failed",
+  "T6": "read_delivered",
+  "T7a": "input_required",
+  "T7b": "read_delivered"
+ },
+ "as_expected": 12,
+ "total": 12,
+ "records": 6,
+ "bundles": 3,
+ "verify_record_true": 6,
+ "verify_record_false": 0,
+ "redaction_leaks": 0,
+ "otel": "disabled",
+ "not_measured": [
+  "jaeger_spans",
+  "latency",
+  "rs256_jwks",
+  "tls_proxy",
+  "langfuse"
+ ]
+}

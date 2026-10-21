@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose a change. Boundary changes (new effect, new edge, contract change) need an ADR.
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: pain
+    attributes:
+      label: Market pain
+      description: "Who is hurt today, and how?"
+    validations:
+      required: true
+  - type: input
+    id: effect
+    attributes:
+      label: Effect
+      description: "Which effect does it touch? Today only `read` exists."
+    validations:
+      required: true
+  - type: textarea
+    id: residual
+    attributes:
+      label: Residual risk
+      description: "What stays uncovered even after this change?"
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: "I read docs/product/BOUNDARY.md and the roadmap's Not doing list."
+          required: true

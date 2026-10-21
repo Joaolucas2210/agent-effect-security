@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use or reference ADF, please cite it as below."
+title: "ADF: agent effect security, a local control plane for coding agents"
+abstract: >-
+  A local control plane that decides, enforces and proves which effects a coding agent may perform on the
+  developer's host. A deterministic PDP decides, a PEP revalidates at effect time, a confined runtime performs the
+  minimal effect, and every decision leaves an Evidence Bundle that verifies offline.
+type: software
+authors:
+  - given-names: "João Lucas"
+    family-names: "Camargo"
+repository-code: "https://github.com/Joaolucas2210/agent-effect-security"
+license: MIT
+version: "0.1.0"
+keywords: [ai-agents, coding-agents, security, authorization, policy-enforcement, evidence, a2a, mcp]

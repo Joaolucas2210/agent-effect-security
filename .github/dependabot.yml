@@ -1,0 +1,16 @@
+# Weekly, grouped, small. Workflows are updated in the canonical template (ai-development-framework/.github/workflows);
+# `make ci` copies them to .github/workflows, which is never edited by hand.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /ai-development-framework
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 3
+    groups:
+      python: {patterns: ["*"]}
+  - package-ecosystem: github-actions
+    directory: /ai-development-framework
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 3
+    groups:
+      actions: {patterns: ["*"]}

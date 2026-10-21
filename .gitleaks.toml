@@ -1,0 +1,11 @@
+# gitleaks configuration: the default rules, plus one allowlisted contract value.
+# `bearer_jwt_hs256` / `bearer_jwt_rs256` are enum values of CallerPrincipal.authn_method (ADR 0014), not credentials;
+# the generic-api-key rule matches them because they follow the word "authn". Nothing else is allowlisted.
+title = "ADF gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "CallerPrincipal.authn_method enum values"
+regexes = ['''^bearer_jwt_(hs|rs)256$''']

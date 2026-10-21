@@ -1,0 +1,6 @@
+# Every change is reviewed by the maintainer. The authorization boundary gets an explicit line on purpose.
+*                                         @Joaolucas2210
+/ai-development-framework/tools/          @Joaolucas2210
+/ai-development-framework/runtime/        @Joaolucas2210
+/ai-development-framework/integration/    @Joaolucas2210
+/ai-development-framework/docs/architecture-decision-records/ @Joaolucas2210

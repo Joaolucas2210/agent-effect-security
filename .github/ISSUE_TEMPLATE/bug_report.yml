@@ -1,0 +1,51 @@
+name: Bug report
+description: Something behaves differently from the docs (not a vulnerability; those go to Security).
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste secrets, tokens, raw Evidence Bundles from private repos, or personal data. Redacted output is enough.
+        A suspected vulnerability (a deny that becomes an allow, a leak into evidence or spans) goes to **Security → Report a vulnerability**.
+  - type: input
+    id: version
+    attributes:
+      label: Commit SHA or version
+      description: "Output of `adf version` and `git rev-parse --short HEAD`."
+    validations:
+      required: true
+  - type: dropdown
+    id: edge
+    attributes:
+      label: Edge
+      options:
+        - Claude Code Read
+        - Claude Code Bash
+        - Codex cat
+        - A2A gateway
+        - MCP read server
+        - adf CLI or make targets
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: "Commands and inputs; the smallest reproduction you have."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: "Include the `reason_code` you expected and the one you got."
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: "OS, Python version, agent and agent version."

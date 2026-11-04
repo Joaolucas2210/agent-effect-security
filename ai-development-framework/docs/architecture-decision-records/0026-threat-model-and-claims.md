@@ -1,6 +1,6 @@
 # ADR 0026: threat model and claims
 
-- **Status:** Proposed — awaits human acceptance.
+- **Status:** Accepted — human acceptance on 2026-11-04 (maintainer); previously Proposed.
 - **Date:** 2026-11-04
 - **Deciders:** maintainer.
 - **Depends on:** ADRs 0007, 0008, 0009, 0011, 0012 (Accepted). Cites no Proposed ADR as a mechanism.

@@ -96,4 +96,4 @@ Isso não é uma alegação de conformidade com OWASP nem com qualquer framework
 
 Modelo de atacante, trust boundary e as únicas claims permitidas em texto público:
 [ADR 0026](../../ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md)
-(Proposed). Incidentes reais mapeados para `covered | residual | out_of_scope`: [mapa de cobertura](../knowledge/coverage.md).
+(Accepted). Incidentes reais mapeados para `covered | residual | out_of_scope`: [mapa de cobertura](../knowledge/coverage.md).

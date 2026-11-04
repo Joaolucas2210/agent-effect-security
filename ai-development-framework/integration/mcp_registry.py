@@ -18,6 +18,15 @@ _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,119}\Z")
 _TOOL = re.compile(r"mcp__([A-Za-z0-9][A-Za-z0-9_.-]{0,119})__([A-Za-z0-9][A-Za-z0-9_.-]{0,119})\Z")
 _HASH = re.compile(r"[a-f0-9]{64}\Z")
 
+try:  # Codex config.toml: stdlib on 3.11+, the `tomli` backport on 3.10; neither -> unreadable, never ok
+    import tomllib as _toml
+except ModuleNotFoundError:
+    try:
+        import tomli as _toml
+    except ModuleNotFoundError:
+        _toml = None
+_toml_loads = _toml.loads if _toml is not None else None
+
 
 class RegistryInvalid(ValueError):
     pass
@@ -48,9 +57,29 @@ def _normalise(server):
     return {"command": server["command"], "args": list(args), "env_keys": sorted(str(k) for k in env)}
 
 
-def client_definitions(name, root, home):
-    """Every definition of `name` the Claude Code client would load: user scope and local scope in ~/.claude.json,
-    project scope in <root>/.mcp.json. Unreadable config -> None (unverified), never 'absent'."""
+def _codex_definitions(name, root, home):
+    """`[mcp_servers.<name>]` in ~/.codex/config.toml and <root>/.codex/config.toml (inline or sub-table env)."""
+    if _toml_loads is None:
+        return None
+    found = []
+    for path in (Path(home) / ".codex/config.toml", Path(root) / ".codex/config.toml"):
+        if not path.exists():
+            continue
+        try:
+            servers = _toml_loads(path.read_text(encoding="utf-8")).get("mcp_servers") or {}
+        except Exception:
+            return None
+        if isinstance(servers, dict) and name in servers:
+            found.append(_normalise(servers[name]))
+    return found
+
+
+def client_definitions(name, root, home, client="claude"):
+    """Every definition of `name` the given client would load. Claude Code: user and local scope in ~/.claude.json,
+    project scope in <root>/.mcp.json. Codex: `[mcp_servers.<name>]` in ~/.codex/config.toml and <root>/.codex/config.toml.
+    Unreadable config -> None (unverified), never 'absent'."""
+    if client == "codex":
+        return _codex_definitions(name, root, home)
     found = []
     try:
         user_file = Path(home) / ".claude.json"
@@ -79,6 +108,22 @@ def check_definition(name, entry, root, home):
         return "mcp_server_definition_unverified"
     expected = {"command": pinned["command"], "args": list(pinned["args"]), "env_keys": sorted(pinned["env_keys"])}
     return None if all(item == expected for item in found) else "mcp_server_definition_changed"
+
+
+def drift(registry, root, home):
+    """Offline, both clients: {server: {client: ok | changed | absent | unreadable}} for every pinned definition.
+    A Claude-origin call is judged per call against Claude's scopes only (Codex sends no MCP calls to the hook)."""
+    report = {}
+    for name, entry in validate(registry)["servers"].items():
+        pinned = entry.get("definition")
+        if pinned is None:
+            continue
+        expected = {"command": pinned["command"], "args": list(pinned["args"]), "env_keys": sorted(pinned["env_keys"])}
+        report[name] = {}
+        for client in ("claude", "codex"):
+            found = client_definitions(name, root, home, client=client)
+            report[name][client] = "unreadable" if found is None else ("absent" if not found else ("ok" if all(item == expected for item in found) else "changed"))
+    return report
 
 
 def tools_digest(tools):

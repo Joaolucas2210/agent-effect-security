@@ -197,7 +197,26 @@ def cmd_doctor(argv):
     for label in divergent:
         print(f"  ✗ {label}")
     print("control_plane_tampered" if divergent else "control plane intact")
-    return 1 if divergent else 0
+    mcp_bad = _doctor_mcp(os.environ.get("ADF_TRUSTED_REPOSITORY") or os.getcwd(), os.environ.get("HOME") or str(Path.home()))
+    return 1 if divergent or mcp_bad else 0
+
+
+def _doctor_mcp(root, home):
+    """ADR 0031 follow-up: definition drift in every client config, offline. True when something changed or is unreadable."""
+    from integration.mcp_registry import RegistryInvalid, configured, drift, load
+    try:
+        config = configured()
+        if config is None:
+            return False
+        report = drift(load(*config), root, home)
+    except RegistryInvalid:
+        print("  ✗ mcp registry: mcp_registry_invalid")
+        return True
+    bad = False
+    for name, clients in report.items():
+        print(f"  mcp {name}: " + " ".join(f"{client}={status}" for client, status in clients.items()))
+        bad = bad or any(status in ("changed", "unreadable") for status in clients.values())
+    return bad
 
 
 def cmd_version(argv):

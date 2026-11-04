@@ -1,0 +1,34 @@
+# Assets
+
+| File | What it shows | How it is made |
+| --- | --- | --- |
+| `adf-demo.gif` | A real ADF session: enable a project, create the evidence key, a Claude Code `Read` of `README.md` allowed with a signed bundle, a `Read` of `.env` denied by the PDP with a bundle, `adf verify … --key` passing offline, `adf projects reasons`. ~12 s, ~400 KiB, 1048×410. | `python3 docs/assets/make-demo-gif.py` |
+
+## Regenerating the GIF
+
+`make-demo-gif.py` runs the **real** `adf` CLI and the **real** `PreToolUse` hook against a throwaway repository and
+an isolated `ADF_HOME`, captures their output, and renders terminal frames with Pillow. Nothing in the GIF is typed
+by hand. Two substitutions keep it readable: the temporary repository is shown as `~/dev/my-app` and the temporary
+`ADF_HOME` as `~/.adf`; the bundle path in the `adf verify` line is elided to its first eight hex digits.
+
+```bash
+make install-dev                      # the script calls .venv/bin/adf
+python3 -m pip install Pillow         # on the Python that runs the script (system Python is fine)
+python3 docs/assets/make-demo-gif.py  # rewrites docs/assets/adf-demo.gif; exits 1 above 3 MiB
+```
+
+Regenerate it whenever a line it shows changes (reason codes, `adf verify` output, `project-reasons` format);
+the bundle ids differ on every run, which is expected.
+
+## Live recording (alternative)
+
+For a recording of an interactive terminal instead of rendered frames, with `asciinema` and `agg` installed:
+
+```bash
+asciinema rec docs/assets/adf-demo.cast --cols 92 --rows 17 --idle-time-limit 1.5
+#   then, by hand, the same six steps the script runs (enable, key init, two hook reads, verify, reasons)
+agg --cols 92 --rows 17 --font-size 16 --speed 1.2 docs/assets/adf-demo.cast docs/assets/adf-demo.gif
+```
+
+Keep the same six steps and the same path substitutions so both methods show the same thing. Never record a
+real repository or a real `~/.adf`: evidence paths and project ids are host-specific.

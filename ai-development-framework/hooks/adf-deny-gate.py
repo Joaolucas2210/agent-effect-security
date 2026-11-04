@@ -9,16 +9,25 @@ Root comes from the host (`ADF_TRUSTED_REPOSITORY`, set by adf-read-hook.py), ne
 """
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from integration import mcp_registry  # noqa: E402
+from integration.adapter_attempt import AttemptJournal  # noqa: E402
+from integration.local_read_adapter import schemas as _schemas  # noqa: E402
+from integration.read_gate_host import local_principal  # noqa: E402
 from runtime.local_read_runtime import sensitive_path  # noqa: E402
 
 _READ_TOOLS = {"Grep": "path", "Glob": "path"}
 _WRITE_TOOLS = {"Edit": "file_path", "Write": "file_path", "MultiEdit": "file_path", "NotebookEdit": "notebook_path"}
+_NETWORK_TOOLS = {"WebFetch"}
+_NETWORK_BASH = re.compile(r"(?<![\w./-])(curl|wget)(?![\w-])")
+# ADR 0028 1c: a run that tried to reach a sensitive path may not open a network channel afterwards (trifecta leg 3).
+_TAINTING = {"sensitive_path_denied", "sensitive_argument_rejected", "invalid_scope", "uncovered_read_denied_sensitive", "uncovered_write_denied_sensitive"}
+_RUN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
 _SENSITIVE = json.loads((ROOT / "runtime/v1/policies/sensitive-path-policy-v1.json").read_text(encoding="utf-8"))
 _AGENT_CONFIG = json.loads((ROOT / "runtime/v1/policies/agent-config-policy-v1.json").read_text(encoding="utf-8"))
 
@@ -57,9 +66,61 @@ def _mcp(tool):
     return _decision(reason) if reason else None
 
 
-def gate(payload):
-    """Path-only mapping to `deny` or None; a malformed payload in an enabled project denies."""
+def network_shaped(payload):
+    """True for WebFetch and for Bash whose command names curl/wget; the dispatcher routes those here first."""
     tool = payload.get("tool_name") if isinstance(payload, dict) else None
+    command = (payload.get("tool_input") or {}).get("command") if isinstance(payload, dict) and isinstance(payload.get("tool_input"), dict) else None
+    return tool in _NETWORK_TOOLS or (tool == "Bash" and isinstance(command, str) and _NETWORK_BASH.search(command) is not None)
+
+
+def _run_tainted(evidence_dir, run_id):
+    """Journal-only, path-free: did this run already attempt a sensitive path? Any unreadable journal counts as tainted."""
+    project_dir = Path(evidence_dir).parent  # evidence/<project>/<day>: a session may cross midnight
+    try:
+        for path in project_dir.rglob("_attempts/*.jsonl"):
+            try:
+                events = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            except (OSError, ValueError):
+                return True
+            for event in events:
+                if isinstance(event, dict) and event.get("phase") == "completed" and event.get("run_id") == run_id and (event.get("payload") or {}).get("reason_code") in _TAINTING:
+                    return True
+    except OSError:
+        return True
+    return False
+
+
+def journal_deny(payload, reason):
+    """Two-event attempt journal for a deny that never reached the adapter; failure to journal never turns a deny into an allow."""
+    evidence_dir, run_id = os.environ.get("ADF_EVIDENCE_DIR"), payload.get("session_id") if isinstance(payload, dict) else None
+    if not evidence_dir or not isinstance(run_id, str) or not _RUN.fullmatch(run_id):
+        return
+    principal = local_principal(payload, "claude") if isinstance(payload, dict) else None
+    try:
+        journal = AttemptJournal(evidence_dir, run_id, _schemas()["adapter_attempt_event"], principal, adapter_id="deny-only-gate")
+        try:
+            journal.finish({"outcome": "deny", "reason_code": reason, "bundle_id": None})
+        finally:
+            journal.close()
+    except Exception:
+        pass
+
+
+def gate(payload):
+    """Path-only mapping to `deny` or None; a malformed payload in an enabled project denies. Every deny is journaled."""
+    decision = _decide(payload)
+    if decision is not None:
+        journal_deny(payload, decision["hookSpecificOutput"]["permissionDecisionReason"].removeprefix("adf: "))
+    return decision
+
+
+def _decide(payload):
+    tool = payload.get("tool_name") if isinstance(payload, dict) else None
+    if network_shaped(payload):
+        evidence_dir, run_id = os.environ.get("ADF_EVIDENCE_DIR"), payload.get("session_id")
+        if not evidence_dir or not isinstance(run_id, str):
+            return _decision("host_configuration_invalid")
+        return _decision("uncovered_network_denied_after_sensitive_read") if _run_tainted(evidence_dir, run_id) else None
     if isinstance(tool, str) and tool.startswith("mcp__"):
         return _mcp(tool)
     key = _READ_TOOLS.get(tool) or _WRITE_TOOLS.get(tool)

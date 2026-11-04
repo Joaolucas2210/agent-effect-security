@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 _DENY_ONLY = "hooks/adf-deny-gate.py"  # ADR 0028 slice 1a: path-only deny, never an allow, never evidence
-_GATES = {"Read": "hooks/claude-code-read-gate.py", "Bash": "hooks/codex-bash-read-gate.py", **{tool: _DENY_ONLY for tool in ("Grep", "Glob", "Edit", "Write", "MultiEdit", "NotebookEdit")}}
+_GATES = {"Read": "hooks/claude-code-read-gate.py", "Bash": "hooks/codex-bash-read-gate.py", **{tool: _DENY_ONLY for tool in ("Grep", "Glob", "Edit", "Write", "MultiEdit", "NotebookEdit", "WebFetch")}}
 
 
 def _gate_for(tool):
@@ -69,13 +69,22 @@ def _tampered():
     return divergent is not None and divergent != []
 
 
-def _gate(payload):
+def _load(relative):
     """Import lazily: a broken ADF install must not affect projects that are not enabled."""
     sys.path.insert(0, str(ROOT))
     from importlib.util import module_from_spec, spec_from_file_location
-    spec = spec_from_file_location("adf_edge_gate", ROOT / _gate_for(payload["tool_name"]))
-    gate = module_from_spec(spec); spec.loader.exec_module(gate)
-    return gate.gate(payload)
+    spec = spec_from_file_location("adf_edge_gate", ROOT / relative)
+    module = module_from_spec(spec); spec.loader.exec_module(module)
+    return module
+
+
+def _gate(payload):
+    deny_only = _load(_DENY_ONLY)
+    if payload["tool_name"] == "Bash" and deny_only.network_shaped(payload):  # ADR 0028 1c: network rule before the read gate
+        decision = deny_only.gate(payload)
+        if decision is not None:
+            return decision
+    return _load(_gate_for(payload["tool_name"])).gate(payload)
 
 
 def _project_dir(payload):
@@ -103,16 +112,15 @@ def decide(raw):
             return _deny("project_not_git")
         if not isinstance(payload, dict) or _gate_for(payload.get("tool_name")) is None:
             return _deny("unsupported_tool")
-        if _tampered():
-            return _deny("control_plane_tampered")  # ADR 0027: pinned host, divergent code/host file/registration
         os.environ["ADF_TRUSTED_REPOSITORY"] = root  # host-derived; a stale export for another repo is overridden
         os.environ.setdefault("ADF_TRUSTED_REVISION", "HEAD")
         os.environ.setdefault("ADF_MAX_OUTPUT_BYTES", str(1 << 20))
-        if _gate_for(payload["tool_name"]) == _DENY_ONLY:
-            return _gate(payload)  # no evidence dir: the deny-only gate persists nothing
         evidence = adf_home() / "evidence"
         evidence.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.environ.setdefault("ADF_EVIDENCE_DIR", str(evidence / project_id(root) / datetime.now(timezone.utc).strftime("%Y-%m-%d")))
+        if _tampered():  # ADR 0027: pinned host, divergent code/host file/registration; journaled since ADR 0028 1c
+            _load(_DENY_ONLY).journal_deny(payload, "control_plane_tampered")
+            return _deny("control_plane_tampered")
         return _gate(payload)
     except Exception:  # enabled project: fail closed
         return _deny("adapter_failed")

@@ -37,8 +37,9 @@ registration is checked **semantically** (the sorted matchers under which the AD
 `~/.claude/settings.json`), not by hashing the whole settings file, so unrelated edits do not raise alarms.
 Deviations from the decision text: (1) the shell fail-safe `[ -x "$A" ] || exit 0` is unchanged — without the
 binary nothing can record `control_plane_missing`, so a removed `adf` stays a residual the human sees in
-`adf doctor`; (2) no journal entry or `control_plane_tampered_total` yet: the deny happens before any adapter
-runs (same gap as ADR 0028 1a; 0028 1c adds the journal to pre-adapter denies).
+`adf doctor`; (2) ~~no journal entry yet~~ — since ADR 0028 1c the tamper deny writes a `deny-only-gate` journal entry and
+`make project-reasons` shows it under `attempts=`; a dedicated `control_plane_tampered_total` in the trial
+metrics is still pending the observation-schema bump.
 
 ## Options considered
 

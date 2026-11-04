@@ -75,7 +75,7 @@ class McpRegistryTest(unittest.TestCase):
 
     def test_other_tools_untouched_and_nothing_persisted(self):
         self.assertIsNone(self.run_hook("Grep", {"pattern": "x", "path": str(self.repo / "README.md")}, **self.pinned()))
-        self.assertFalse((self.home / "evidence").exists())
+        self.assertEqual([p for p in (self.home / "evidence").rglob("*") if p.is_file()] if (self.home / "evidence").exists() else [], [], "a pass-through persists nothing")
 
     def test_cli_prints_the_pin(self):
         proc = subprocess.run([sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); from integration.cli import main; raise SystemExit(main(sys.argv[2:]))", str(ROOT), "mcp", "pin", str(self.registry_file)], capture_output=True, text=True)

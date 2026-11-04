@@ -1,6 +1,6 @@
 # ADR 0028: deny-only gates for uncovered tools
 
-- **Status:** Accepted for slice 1a only — human acceptance on 2026-11-04 (maintainer); slices 1b (Bash grammar) and 1c (run-scoped network deny) remain Proposed and need their own acceptance before code.
+- **Status:** Accepted for slices 1a and 1c — human acceptance on 2026-11-04 (maintainer; 1c under the wave-2 approval); slice 1b (Bash read-equivalent grammar) remains Proposed and needs its own acceptance before code.
 - **Date:** 2026-11-04
 - **Depends on:** ADR 0026; ADR 0008 (Accepted). Strengthened by ADR 0027 (tamper detection of this gate's own registration), not blocked by it.
 - **Delivery slices:** (1a) path-only deny for `Grep`, `Glob`, `Edit`, `Write`, `MultiEdit`, `NotebookEdit` on both path policies; (1b) Bash read-equivalent grammar; (1c) run-scoped network deny (needs the attempt journal). Each slice has its own red eval before code.
@@ -64,7 +64,15 @@ was written first and ran red (every tool fell into `unsupported_tool`); it cove
 shapes, symlink and `..` targets, `$ADF_HOME`, malformed input, and asserts no evidence or content access.
 Slice 1a writes no journal entry and no span: a deny is visible only in the client's own output until 1b/1c
 add the journal (`ponytail: journal needs new reason codes in the attempt-event enum; add with 1c`).
-Slices 1b/1c: INC-07, INC-10 evals red before code. `make project-reasons` over the maintainer's own week:
+Slice 1c (delivered 2026-11-04): every deny-only decision, and the pre-gate `control_plane_tampered` deny, writes a
+two-event attempt journal with `adapter_id: deny-only-gate` (reason codes added to the event enum; `make
+project-reasons` counts them under `attempts=`). Run-scoped network rule: `WebFetch`, and Bash whose command
+names `curl`/`wget`, are denied with `uncovered_network_denied_after_sensitive_read` when the same `run_id`
+(session) already has a journaled attempt with reason `sensitive_path_denied`, `sensitive_argument_rejected`,
+`invalid_scope`, `uncovered_read_denied_sensitive` or `uncovered_write_denied_sensitive` — i.e. the agent
+*tried* to reach a secret, regardless of outcome. The signal is the journal, never content or the URL.
+`hooks/test-deny-gate-journal.sh` ran red first (4 failures, 2 errors). Unreadable journals count as tainted.
+Slice 1b: INC-07, INC-10 evals red before code. `make project-reasons` over the maintainer's own week:
 zero `uncovered_*` denies on legitimate work is the acceptance number.
 
 ## Rollback

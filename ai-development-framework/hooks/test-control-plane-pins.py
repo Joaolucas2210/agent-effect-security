@@ -93,7 +93,9 @@ class ControlPlanePinsTest(unittest.TestCase):
     def test_tamper_denies_before_any_gate_including_read(self):
         self.pin(); (self.home / "enabled-projects").write_text(f"{self.repo}\n/tmp/x\n")
         self.assertIn("control_plane_tampered", self.run_hook("Read", {"file_path": str(self.repo / "README.md")}))
-        self.assertFalse((self.home / "evidence").exists(), "no adapter ran: nothing persisted")
+        self.assertEqual([p for p in (self.home / "evidence").rglob("*.json")], [], "no adapter ran: no bundle")
+        journals = list((self.home / "evidence").rglob("_attempts/*.jsonl")); self.assertEqual(len(journals), 1, "ADR 0028 1c: the tamper deny is journaled")
+        self.assertIn("control_plane_tampered", journals[0].read_text())
 
     def test_doctor_pin_writes_and_repins(self):
         code, out = self.doctor("--pin"); self.assertEqual(code, 0, out); self.assertTrue((self.home / "pins.json").exists())

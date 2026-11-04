@@ -95,7 +95,9 @@ class DenyGateTest(unittest.TestCase):
 
     def test_gate_never_reads_content_or_writes_evidence(self):
         self.run_hook("Edit", {"file_path": self.path("config/.env"), "old_string": "a", "new_string": "b"})
-        self.assertFalse((self.home / "evidence").exists(), "slice 1a: deny without bundle, nothing persisted")
+        journals = list((self.home / "evidence").rglob("_attempts/*.jsonl"))
+        self.assertEqual(len(journals), 1, "slice 1c: a deny leaves a journal entry")
+        self.assertEqual([p for p in (self.home / "evidence").rglob("*.json")], [], "still no bundle: nothing was admitted")
         self.assertEqual(git(self.repo, "status", "--short"), "")
 
 

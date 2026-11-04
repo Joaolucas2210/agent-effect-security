@@ -9,7 +9,7 @@
     "schema_version": {"const": "1.0"},
     "canonicalization": {"const": "json-c14n-v1"},
     "attempt_id": {"type": "string", "pattern": "^[0-9a-f]{32}(?![\\s\\S])"},
-    "adapter_id": {"const": "local-read-adapter"},
+    "adapter_id": {"enum": ["local-read-adapter", "deny-only-gate"]},
     "run_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}(?![\\s\\S])"},
     "phase": {"enum": ["started", "completed"]},
     "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z(?![\\s\\S])"},
@@ -38,7 +38,7 @@
             "bundle_id": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}(?![\\s\\S])"},
             "cleanup_outcome": {"enum": ["not_attempted", "succeeded", "failed"]},
             "reason_code": {"enum": [
-              "invalid_run_id", "invalid_scope", "invalid_budget", "invalid_adapter_request", "invalid_referenced_contract", "adapter_failed", "attempt_evidence_failed", "evidence_signing_unavailable", "evidence_bundle_invalid", "host_policy_invalid",
+              "invalid_run_id", "invalid_scope", "invalid_budget", "invalid_adapter_request", "invalid_referenced_contract", "adapter_failed", "attempt_evidence_failed", "evidence_signing_unavailable", "evidence_bundle_invalid", "uncovered_read_denied_sensitive", "uncovered_write_denied_sensitive", "uncovered_write_denied_agent_config", "uncovered_network_denied_after_sensitive_read", "uncovered_bash_ambiguous", "mcp_registry_invalid", "mcp_server_not_registered", "mcp_tool_not_registered", "mcp_tool_name_invalid", "control_plane_tampered", "unsupported_tool", "unexpected_tool_input", "host_configuration_invalid", "host_policy_invalid",
               "workspace_git_unavailable", "workspace_repository_invalid", "workspace_revision_unavailable", "workspace_snapshot_enumeration_failed", "workspace_worktree_prepare_failed", "workspace_worktree_cleanup_failed", "workspace_worktree_prune_failed", "workspace_configuration_invalid", "workspace_run_id_invalid",
               "budget_exceeds_ceiling", "principal_required", "principal_not_allowlisted", "scope_not_allowlisted_for_principal", "effect_not_allowlisted", "effect_not_supported_in_h2_02", "invalid_arguments", "invalid_intent", "invalid_policy", "invalid_policy_context", "invalid_registry", "pdp_configuration_error", "policy_binding_mismatch", "policy_hash_mismatch", "profile_hash_mismatch", "run_binding_mismatch", "runtime_capability_not_demonstrated", "scope_not_allowlisted", "sensitive_argument_rejected", "unknown_operation", "unknown_policy", "unknown_policy_rule", "unknown_profile", "unknown_tool",
               "binding_mismatch", "budget_binding_mismatch", "content_encoding_invalid", "invalid_admission", "invalid_contract", "invalid_path", "intent_digest_mismatch", "operation_binding_mismatch", "output_limit_exceeded", "read_delivered", "runtime_capability_mismatch", "safe_open_failed", "safe_open_unavailable", "scope_binding_mismatch", "sensitive_path_denied", "task_ref_mismatch", "unsafe_file_type", "workspace_binding_mismatch", "invalid_principal", "principal_expired"

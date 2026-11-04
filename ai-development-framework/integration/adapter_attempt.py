@@ -40,12 +40,12 @@ def verify_attempt(events, schema):
 
 class AttemptJournal:
     """One exclusively created two-event stream per attempt; no resume/overwrite."""
-    def __init__(self, evidence_dir, run_id, schema, principal=None):
+    def __init__(self, evidence_dir, run_id, schema, principal=None, adapter_id="local-read-adapter"):
         self.cleanup_outcome = "not_attempted"
         self._completed = False
         self._directory, self._stream = None, None
         self._validator = Draft7Validator(schema, format_checker=FormatChecker(), registry=Registry())
-        self._start = {"schema_version": "1.0", "canonicalization": "json-c14n-v1", "attempt_id": uuid.uuid4().hex, "adapter_id": "local-read-adapter", "run_id": run_id, "phase": "started", "previous_event_sha256": None, "payload": {"principal_sub": principal["sub"]} if isinstance(principal, dict) and isinstance(principal.get("sub"), str) else {}}  # ADR 0023: who asked, never a credential
+        self._start = {"schema_version": "1.0", "canonicalization": "json-c14n-v1", "attempt_id": uuid.uuid4().hex, "adapter_id": adapter_id, "run_id": run_id, "phase": "started", "previous_event_sha256": None, "payload": {"principal_sub": principal["sub"]} if isinstance(principal, dict) and isinstance(principal.get("sub"), str) else {}}  # ADR 0023: who asked, never a credential
         self._name = self._start["attempt_id"] + ".jsonl"
         self._path = Path(evidence_dir) / "_attempts" / self._name
         try:

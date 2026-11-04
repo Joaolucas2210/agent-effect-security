@@ -8,6 +8,7 @@ import uuid
 from jsonschema import Draft7Validator, FormatChecker
 from referencing import Registry
 
+from integration.evidence_signing import sign_if_configured
 from integration.local_evidence_bundle import digest
 
 
@@ -46,6 +47,7 @@ class AttemptJournal:
         self._validator = Draft7Validator(schema, format_checker=FormatChecker(), registry=Registry())
         self._start = {"schema_version": "1.0", "canonicalization": "json-c14n-v1", "attempt_id": uuid.uuid4().hex, "adapter_id": "local-read-adapter", "run_id": run_id, "phase": "started", "previous_event_sha256": None, "payload": {"principal_sub": principal["sub"]} if isinstance(principal, dict) and isinstance(principal.get("sub"), str) else {}}  # ADR 0023: who asked, never a credential
         self._name = self._start["attempt_id"] + ".jsonl"
+        self._path = Path(evidence_dir) / "_attempts" / self._name
         try:
             evidence_dir = Path(evidence_dir)
             evidence_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -88,6 +90,7 @@ class AttemptJournal:
         event = {**self._start, "phase": "completed", "previous_event_sha256": self._start["event_sha256"], "payload": {"outcome": outcome["outcome"], "reason_code": outcome["reason_code"], "bundle_id": outcome["bundle_id"], "cleanup_outcome": self.cleanup_outcome}}
         self._append(event)
         self._completed = True
+        sign_if_configured(self._path)  # ADR 0030: a configured key that cannot sign raises -> attempt_evidence_failed, no delivery
 
     def close(self):
         try:

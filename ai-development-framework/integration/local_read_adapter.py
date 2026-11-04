@@ -16,6 +16,7 @@ from jsonschema import Draft7Validator
 
 from integration.adapter_attempt import AttemptJournal
 from integration.attempt_timing import call_stage
+from integration.evidence_signing import SigningUnavailable, sign_if_configured
 from integration.local_evidence_bundle import compose, digest, verify_offline
 from runtime.local_read_runtime import LocalReadRuntime
 from runtime.pep import PolicyEnforcementPoint
@@ -90,6 +91,7 @@ def persist_bundle(bundle, evidence_dir, run_id):
     fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as handle:
         handle.write(json.dumps(bundle, ensure_ascii=False, separators=(",", ":"), sort_keys=True))
+    sign_if_configured(target)  # ADR 0030: a configured key that cannot sign raises; the caller delivers nothing
     return target
 
 
@@ -167,7 +169,8 @@ class LocalReadAdapter:
         try: bundle = compose(build_request(descriptor, run_id, path, max_output_bytes, host_policy=self._host_policy), self._schemas, pep, decide_fn=partial(timing.call, "decision", decide_fn or decide) if timing is not None else decide_fn)
         except ValueError as exc: return _result("deny", exc.args[0] if exc.args else "invalid_adapter_request")
         latency = int((time.monotonic() - started) * 1000)
-        bundle_path = call_stage(timing, "persistence", persist_bundle, bundle, self._evidence, run_id)  # P2 also counts invalid bundles
+        try: bundle_path = call_stage(timing, "persistence", persist_bundle, bundle, self._evidence, run_id)  # P2 also counts invalid bundles
+        except SigningUnavailable: return _result("deny", "evidence_signing_unavailable", bundle, latency_ms=latency)
         if bundle["decision_outcome"] != "admit_read": return _result("deny", bundle["reason_code"], bundle, bundle_path, latency_ms=latency)
         if not verify_offline(bundle, self._schemas): return _result("deny", "evidence_bundle_invalid", bundle, bundle_path, latency_ms=latency)
         receipt = bundle["receipt"]

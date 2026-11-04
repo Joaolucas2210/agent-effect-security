@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 HOOK = ROOT / "hooks/adf-read-hook.py"
 GATE = ROOT / "hooks/adf-deny-gate.py"
-SECRET = "AKIA-1a-fake-secret"
+MARKER = "AKIA-1a-fake-marker"
 
 
 def git(cwd, *args): return subprocess.run(["git", "-C", str(cwd), *args], check=True, capture_output=True, text=True).stdout
@@ -25,7 +25,7 @@ class DenyGateTest(unittest.TestCase):
         base = Path(self.temp.name).resolve()
         self.home, self.repo = base / "adf-home", base / "proj"
         for path in (self.repo / "config", self.repo / "secrets", self.repo / "src", self.repo / ".claude", self.home): path.mkdir(parents=True)
-        (self.repo / "README.md").write_text("public"); (self.repo / "config/.env").write_text(SECRET); (self.repo / "secrets/token").write_text(SECRET)
+        (self.repo / "README.md").write_text("public"); (self.repo / "config/.env").write_text(MARKER); (self.repo / "secrets/token").write_text(MARKER)
         (self.repo / "src/app.py").write_text("print(1)\n"); (self.repo / ".claude/settings.json").write_text("{}"); (self.repo / "CLAUDE.md").write_text("# rules")
         os.symlink(self.repo / "config/.env", self.repo / "link")
         git(self.repo, "init", "-q"); git(self.repo, "config", "user.email", "m@example.invalid"); git(self.repo, "config", "user.name", "m")
@@ -45,7 +45,7 @@ class DenyGateTest(unittest.TestCase):
         self.assertIsNotNone(decision, f"{tool} {tool_input} should be denied")
         self.assertEqual(decision["permissionDecision"], "deny")
         self.assertIn(reason, decision["permissionDecisionReason"])
-        self.assertNotIn(SECRET, json.dumps(decision))
+        self.assertNotIn(MARKER, json.dumps(decision))
 
     def path(self, rel): return str(self.repo / rel)
 

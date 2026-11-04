@@ -21,6 +21,7 @@ from pathlib import Path
 
 from jsonschema import Draft7Validator
 
+from integration.evidence_signing import SigningUnavailable, sign_if_configured
 from integration.local_evidence_bundle import canonical, digest, verify_offline
 from integration.local_read_adapter import LocalReadAdapter, load_host_policy, schemas
 from integration.otel_export import emit_span
@@ -271,9 +272,15 @@ def persist_record(record, evidence_dir):
     """evidence_dir/_a2a/<record_id>.json, owner-only, never overwriting (same law as bundles)."""
     directory = Path(evidence_dir) / "_a2a"
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    fd = os.open(directory / f"{record['record_id']}.json", os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    target = directory / f"{record['record_id']}.json"
+    fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as handle:
         handle.write(canonical(record))
+    try:
+        sign_if_configured(target)  # ADR 0030: unsigned evidence is not evidence once a key is configured
+    except SigningUnavailable:
+        os.unlink(target)
+        raise
 
 
 def verify_record(record, bundle, contract_schemas):

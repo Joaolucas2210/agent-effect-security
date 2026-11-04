@@ -467,6 +467,17 @@ roubado continua valendo até `exp` (≤ 1 h). DPoP/mTLS (A2A-8b) exigem ADR pr�
 adiados. O card continua anunciando `url` loopback; o cliente remoto usa a URL do proxy. O
 proxy é um componente exposto novo: patch, certificados e rate limit são do host.
 
+## Autenticidade da evidência (ADR 0030)
+
+[ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md) (Accepted). Desligado por
+padrão. Com `ADF_EVIDENCE_KEY_FILE` apontando para uma chave criada por `adf key init` (`0400`, 32 bytes), cada
+bundle, record A2A e journal de tentativa concluído ganha um `<arquivo>.sig` destacado (HMAC-SHA256, stdlib).
+Uma chave configurada que não consegue assinar não entrega nada (`evidence_signing_unavailable`,
+`a2a_evidence_failed`, `attempt_evidence_failed`). `adf verify FILE --key KEYFILE` acrescenta
+`authenticity=valid|invalid|unsigned` ao veredito de integridade. Residual: o agente roda como o usuário e pode
+ler a chave a menos que o gate da ADR 0028 negue `~/.adf/`; HMAC não dá não-repúdio para terceiros (Ed25519 é o
+caminho de upgrade).
+
 ## Observabilidade (OTel, ADR 0020)
 
 [ADR 0020](architecture-decision-records/0020-control-plane-otel-export.md) (Accepted). Desligado

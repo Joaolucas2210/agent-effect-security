@@ -469,6 +469,16 @@ token remains valid until `exp` (≤ 1 h). DPoP/mTLS (A2A-8b) require their own 
 deferred. The card still announces a loopback `url`; the remote client uses the proxy URL. The
 proxy is a new exposed component: patching, certificates, and rate limiting belong to the host.
 
+## Evidence authenticity (ADR 0030)
+
+[ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md) (Accepted). Off by
+default. With `ADF_EVIDENCE_KEY_FILE` pointing at a key created by `adf key init` (`0400`, 32 bytes), every
+bundle, A2A record and completed attempt journal gets a detached `<file>.sig` (HMAC-SHA256, stdlib). A
+configured key that cannot sign delivers nothing (`evidence_signing_unavailable`, `a2a_evidence_failed`,
+`attempt_evidence_failed`). `adf verify FILE --key KEYFILE` adds `authenticity=valid|invalid|unsigned` to the
+integrity verdict. Residual: the agent runs as the user and can read the key unless the ADR 0028 gate denies
+`~/.adf/`; HMAC gives no third-party non-repudiation (Ed25519 is the upgrade path).
+
 ## Observability (OTel, ADR 0020)
 
 [ADR 0020](architecture-decision-records/0020-control-plane-otel-export.md) (Accepted). Off

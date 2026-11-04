@@ -5,7 +5,8 @@
   adf hook-snippet [claude|codex]                            print the hook registration for this clone, fail-safe included
   adf policy build --run-id ID --allow PATH ... --out FILE   build a pinned host policy (policy pack effect-security-read-v0)
   adf a2a serve | a2a mint SUB SCOPE [...]                    loopback A2A gateway and its pilot-only HS256 token double
-  adf verify FILE                                            verify an EvidenceBundle or an A2AEvidenceRecord offline
+  adf verify FILE [--key KEYFILE]                            verify an EvidenceBundle or an A2AEvidenceRecord offline; --key also checks the host signature (ADR 0030)
+  adf key init [KEYFILE]                                     create the host evidence key (0400, never overwritten); default $ADF_HOME/evidence.key
   adf version
 
 Arguments after the command go to the underlying script unchanged. Editable install only (`make install-dev`):
@@ -75,9 +76,19 @@ def cmd_a2a(argv):
 
 def cmd_verify(argv):
     """Offline, no network, no LLM. Exit 0 verified, 1 not verified, 2 unusable input."""
+    key = None
+    if len(argv) == 3 and argv[1] == "--key":
+        from integration.evidence_signing import SigningUnavailable, load_key
+        try:
+            key = load_key(Path(argv[2]))
+        except SigningUnavailable as exc:
+            print(f"adf: key unusable ({exc})", file=sys.stderr)
+            return 2
+        argv = argv[:1]
     if len(argv) != 1:
         return _usage()
     from integration.a2a_gateway import verify_record
+    from integration.evidence_signing import verify_file
     from integration.local_evidence_bundle import verify_offline
     from integration.local_read_adapter import schemas
     path = Path(argv[0])
@@ -99,8 +110,27 @@ def cmd_verify(argv):
         ok, kind = verify_record(data, bundle, schemas()), "a2a_record"
     else:
         ok, kind = verify_offline(data, schemas()), "evidence_bundle"
-    print(f"{'verified' if ok else 'NOT verified'}  {kind}  reason_code={data.get('reason_code')}")
+    authenticity = verify_file(path, key)  # integrity (above) and authenticity are reported separately; both must hold with --key
+    ok = ok and authenticity in ("valid", "not_checked")
+    print(f"{'verified' if ok else 'NOT verified'}  {kind}  reason_code={data.get('reason_code')}  authenticity={authenticity}")
     return 0 if ok else 1
+
+
+def cmd_key(argv):
+    """`adf key init [KEYFILE]`: a human creates the host evidence key; refuses to overwrite."""
+    if not argv or argv[0] != "init" or len(argv) > 2:
+        return _usage()
+    import os
+    from integration.evidence_signing import init_key
+    target = Path(argv[1]) if len(argv) == 2 else Path(os.environ.get("ADF_HOME") or Path.home() / ".adf") / "evidence.key"
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        init_key(target)
+    except FileExistsError:
+        print(f"adf: {target} exists; a key is never overwritten", file=sys.stderr)
+        return 1
+    print(f"export ADF_EVIDENCE_KEY_FILE={target}")
+    return 0
 
 
 def cmd_version(argv):
@@ -111,7 +141,7 @@ def cmd_version(argv):
     return 1
 
 
-COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "version": cmd_version}
+COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "key": cmd_key, "version": cmd_version}
 
 
 def main(argv=None):

@@ -80,8 +80,8 @@ class AdfCliTest(unittest.TestCase):
         evidence = self.base / "evidence"
         adapter = LocalReadAdapter(repo, "HEAD", evidence)
         allowed, denied = adapter.read("run-cli", "README.md", 64), adapter.read("run-cli", "config/.env", 64)
-        self.assertEqual(run("verify", allowed["bundle_path"])[:2], (0, "verified  evidence_bundle  reason_code=admit_read\n"))
-        self.assertEqual(run("verify", denied["bundle_path"])[1], "verified  evidence_bundle  reason_code=invalid_scope\n")
+        self.assertEqual(run("verify", allowed["bundle_path"])[:2], (0, "verified  evidence_bundle  reason_code=admit_read  authenticity=not_checked\n"))
+        self.assertEqual(run("verify", denied["bundle_path"])[1], "verified  evidence_bundle  reason_code=invalid_scope  authenticity=not_checked\n")
         tampered = json.loads(Path(denied["bundle_path"]).read_text()); tampered["reason_code"] = "admit_read"
         (self.base / "tampered.json").write_text(json.dumps(tampered))
         self.assertEqual(run("verify", str(self.base / "tampered.json"))[0], 1)
@@ -90,7 +90,7 @@ class AdfCliTest(unittest.TestCase):
         record = a2a.evidence_record(principal, "read_workspace_file", "deny", "invalid_scope", bundle["decision_id"], bundle["bundle_id"])
         a2a.persist_record(record, evidence)
         record_path = evidence / "_a2a" / f"{record['record_id']}.json"
-        self.assertEqual(run("verify", str(record_path))[:2], (0, "verified  a2a_record  reason_code=invalid_scope\n"))
+        self.assertEqual(run("verify", str(record_path))[:2], (0, "verified  a2a_record  reason_code=invalid_scope  authenticity=not_checked\n"))
         orphan = a2a.evidence_record(principal, "read_workspace_file", "deny", "invalid_scope", "d" * 64, "e" * 64)
         a2a.persist_record(orphan, evidence)
         self.assertEqual(run("verify", str(evidence / "_a2a" / f"{orphan['record_id']}.json"))[0], 1, "a record whose bundle is missing never verifies")

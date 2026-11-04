@@ -31,7 +31,7 @@ def manifest(): return json.loads((PACK / "pack.json").read_text(encoding="utf-8
 
 
 def denylist():
-    builtin, extra = _load("runtime/v1/policies/sensitive-path-policy-v1.json"), manifest()["deny"]
+    builtin, extra = _load("runtime/v1/policies/sensitive-path-policy-v2.json"), manifest()["deny"]
     return {key: sorted({item.lower() for item in builtin[key] + extra[key]}) for key in _KEYS}
 
 

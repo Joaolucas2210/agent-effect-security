@@ -59,8 +59,8 @@ class PolicyPackTest(unittest.TestCase):
         adapter, _, _ = self.built()
         delivered = adapter.read("session-1", "README.md", 64)
         self.assertEqual((delivered["outcome"], delivered["content"]), ("delivered", PUBLIC))
-        # Layered: v1 path contract (root dotfile) -> PDP scope rules (.env/.git) -> pinned allowlist.
-        for run_id, path, reason in (("session-1", ".env", "invalid_referenced_contract"), ("session-1", "config/.env", "invalid_scope"), ("session-1", "secrets/db.txt", "scope_not_allowlisted"), ("other-session", "README.md", "run_binding_mismatch"), ("session-1", "README.md", "budget_exceeds_ceiling")):
+        # Layered: PDP scope rules (.env/.git, root or nested, ADR 0036) -> pinned allowlist.
+        for run_id, path, reason in (("session-1", ".env", "invalid_scope"), ("session-1", "config/.env", "invalid_scope"), ("session-1", "secrets/db.txt", "scope_not_allowlisted"), ("other-session", "README.md", "run_binding_mismatch"), ("session-1", "README.md", "budget_exceeds_ceiling")):
             result = adapter.read(run_id, path, 65 if reason == "budget_exceeds_ceiling" else 64)
             self.assertEqual((result["outcome"], result["reason_code"]), ("deny", reason)); self.assertNotIn(SECRET, json.dumps(result))
 
@@ -78,7 +78,7 @@ class PolicyPackTest(unittest.TestCase):
             allowed = gate.gate(payload("README.md"))
             denied = {path: gate.gate(payload(path))["hookSpecificOutput"] for path in (".env", "config/.env", "secrets/db.txt")}
         self.assertTrue(allowed == {} or allowed["hookSpecificOutput"]["permissionDecision"] == "allow")
-        for path, reason in ((".env", "invalid_referenced_contract"), ("config/.env", "invalid_scope"), ("secrets/db.txt", "scope_not_allowlisted")):
+        for path, reason in ((".env", "invalid_scope"), ("config/.env", "invalid_scope"), ("secrets/db.txt", "scope_not_allowlisted")):
             self.assertEqual(denied[path]["permissionDecision"], "deny"); self.assertIn(reason, denied[path]["permissionDecisionReason"])
 
 

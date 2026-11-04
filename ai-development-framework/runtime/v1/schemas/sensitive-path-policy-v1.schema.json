@@ -6,10 +6,10 @@
   "additionalProperties": false,
   "required": ["policy_version", "default_outcome", "deny_components", "deny_component_prefixes", "deny_component_suffixes", "provenance"],
   "properties": {
-    "policy_version": {"const": "1.0"}, "default_outcome": {"const": "allow"},
+    "policy_version": {"enum": ["1.0", "2.0"]}, "default_outcome": {"const": "allow"},
     "deny_components": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "deny_component_prefixes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "deny_component_suffixes": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-    "provenance": {"type": "object", "additionalProperties": false, "required": ["source", "adr"], "properties": {"source": {"const": "adf_local_policy"}, "adr": {"const": "0008"}}}
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["source", "adr"], "properties": {"source": {"const": "adf_local_policy"}, "adr": {"enum": ["0008", "0036"]}}}
   }
 }

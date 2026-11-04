@@ -7,7 +7,7 @@ from jsonschema import Draft7Validator
 
 
 _HASH = re.compile(r"[a-f0-9]{64}\Z")
-_PATH = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/-]*\Z")
+_PATH = re.compile(r"\.?[A-Za-z0-9][A-Za-z0-9._-]*(?:/\.?[A-Za-z0-9][A-Za-z0-9._-]*)*\Z")  # ADR 0036: path rule 1.1
 _HOST = re.compile(r"[a-z0-9][a-z0-9.-]{0,252}\Z")
 _SENSITIVE = re.compile(r"(?:secret|password|credential|api[_-]?key|token)", re.I)
 

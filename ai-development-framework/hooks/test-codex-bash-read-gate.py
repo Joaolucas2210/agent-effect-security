@@ -41,7 +41,7 @@ class CodexGateTest(unittest.TestCase):
                 self.assertEqual(len(list((evidence / "codex-p4").glob("*.json"))), 1)
                 self.assertEqual(gate.gate({**base, "tool_input": {"command": "cat README.md", "workdir": str(repo), "description": "Read the file", "max_output_tokens": 100}}), {})
                 self.assertEqual(len(list((evidence / "codex-p4").glob("*.json"))), 2)
-                for command, code in ((f"cat {repo / '.env'}", "invalid_referenced_contract"), ("cat /etc/passwd", "path_outside_trusted_root"), ("cat README.md | wc", "unsafe_read_command")):
+                for command, code in ((f"cat {repo / '.env'}", "invalid_scope"), ("cat /etc/passwd", "path_outside_trusted_root"), ("cat README.md | wc", "unsafe_read_command")):
                     output = gate.gate({**base, "tool_input": {"command": command}})["hookSpecificOutput"]
                     self.assertEqual(output["permissionDecision"], "deny")
                     self.assertIn(code, output["permissionDecisionReason"])

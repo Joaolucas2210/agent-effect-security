@@ -1,8 +1,6 @@
-# ADF · Agent Effect Security
+# <img src="docs/assets/brand/adf-mark.svg" alt="ADF mark: a decision boundary and a separate evidence record" width="40" height="40"> ADF · Agent Effect Security
 
 **English** · [Português (Brasil)](README.pt-BR.md)
-
-![ADF mark: an agent request crosses a decision boundary and leaves a separate record](docs/assets/brand/adf-mark.svg)
 
 **Decisions at the boundary.** A local control plane for reads through supported, installed agent edges. Experimental `0.x`; this checkout reports its version from [`VERSION`](VERSION).
 

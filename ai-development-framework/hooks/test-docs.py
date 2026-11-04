@@ -25,6 +25,30 @@ class DocsCheckTest(unittest.TestCase):
         code, out = check(ROOT.parent)
         self.assertEqual(code, 0, out)
 
+    def test_product_entry_points_keep_the_same_contract(self):
+        repo = ROOT.parent
+        version = (repo / "VERSION").read_text().strip()
+        for name in ("README.md", "README.pt-BR.md"):
+            text = (repo / name).read_text()
+            for token in ("adf hook-snippet claude", "adf hook-snippet codex", "adf projects enable",
+                          "adf doctor --pin", "adf verify", "gate_only", "mediated", "HMAC",
+                          "ADF_READ_POLICY_FILE", "ADF_READ_POLICY_SHA256", "make e2e"):
+                self.assertIn(token, text, (name, token))
+            self.assertLess(text.index("adf hook-snippet"), text.index("adf doctor --pin"), name)
+            self.assertIn("0.x", text, name)
+            self.assertNotIn(f"version-{version}", text, "version badge must not hard-code a release")
+            for overclaim in ("decide every read", "protects every read", "publicly verifiable",
+                              "enterprise-grade", "production-ready"):
+                self.assertNotIn(overclaim, text.lower(), (name, overclaim))
+        for name in ("QUICKSTART.md", "QUICKSTART.pt-BR.md"):
+            text = (repo / "docs/product" / name).read_text()
+            self.assertEqual(text.count("```") % 2, 0, name)
+            self.assertGreaterEqual(text.count("```bash"), 3, name)
+            for token in ("python3 -m venv .venv", "make install-dev", "adf version", "adf hook",
+                          "adf verify", "adf hook-snippet claude", "adf doctor --pin"):
+                self.assertIn(token, text, (name, token))
+            self.assertLess(text.index("adf hook-snippet"), text.index("adf doctor --pin"), name)
+
     def test_checker_catches_each_class_of_problem(self):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)

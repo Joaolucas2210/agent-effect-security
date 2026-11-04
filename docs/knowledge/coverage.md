@@ -8,7 +8,7 @@ that column is delivered. Eval ids are placeholders until the case exists in `do
 | Incident | Threat | Legs | Today | After | Eval |
 | --- | --- | --- | --- | --- | --- |
 | [INC-01](incidents/INC-01-rules-file-backdoor.md) Rules File Backdoor | THR-02 | 2 | covered (write) since 0028 1a | — | `test-adf-deny-gate.sh` |
-| [INC-02](incidents/INC-02-github-mcp-exfil.md) GitHub MCP exfil | THR-03, THR-06 | 1,2,3 | residual (server must be registered; exfil via an MCP *write* tool after a sensitive attempt is not yet denied) | 1c extension to MCP write tools | `eval-inc-02` |
+| [INC-02](incidents/INC-02-github-mcp-exfil.md) GitHub MCP exfil | THR-03, THR-06 | 1,2,3 | covered since 0031 `effects` + 0028 1c (server and tools registered; a declared write/network tool is denied once the session attempted a sensitive path) | — | `test-mcp-effects.sh`, `test-mcp-registry.sh` |
 | [INC-03](incidents/INC-03-supabase-mcp-sql-exfil.md) Supabase MCP SQL exfil | THR-03 | 1,2,3 | out_of_scope | out_of_scope (demand needed) | — |
 | [INC-04](incidents/INC-04-amazon-q-extension.md) Amazon Q extension | THR-07 | — | out_of_scope | out_of_scope | — |
 | [INC-05](incidents/INC-05-cursor-curxecute-mcpoison.md) CurXecute / MCPoison | THR-02, THR-06 | 2 | covered since 0028 1a + 0031 1–2 (config write denied; unregistered server/tool denied; an approved server whose definition changed in any client scope denied at the call) | — | `test-adf-deny-gate.sh`, `test-mcp-registry.sh`, `test-mcp-registry-2.sh` |
@@ -20,7 +20,7 @@ that column is delivered. Eval ids are placeholders until the case exists in `do
 | [INC-11](incidents/INC-11-codex-mcp-config-loading.md) Codex MCP config loading | THR-02, THR-06 | 2 | covered since 0031 1 (unregistered server denied at the call; the client's own server *start* stays residual) | — | `test-mcp-registry.sh` |
 | [INC-12](incidents/INC-12-replit-prod-db-deletion.md) Replit prod DB deletion | THR-08 | execution | out_of_scope | out_of_scope (anti-goal) | — |
 
-Totals today (0027, 0028 complete, 0029, 0030, 0031 slice 1 delivered): covered 7 · residual 1 (INC-02) · out_of_scope 4.
+Totals today (0027–0031 and 0036 delivered): covered 8 · residual 0 · out_of_scope 4 (INC-03 database read, INC-04 and INC-09 host/vendor compromise, INC-12 destructive effect — all outside the ADR 0026 boundary by design).
 
 `covered` here means the Claude Code edge with the project enabled; Codex sees only `Bash` and is not
 covered by slice 1a.

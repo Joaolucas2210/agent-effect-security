@@ -17,6 +17,7 @@ from integration.local_evidence_bundle import digest
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,119}\Z")
 _TOOL = re.compile(r"mcp__([A-Za-z0-9][A-Za-z0-9_.-]{0,119})__([A-Za-z0-9][A-Za-z0-9_.-]{0,119})\Z")
 _HASH = re.compile(r"[a-f0-9]{64}\Z")
+EFFECTS = frozenset({"write", "network"})  # declared by the host per tool; a tool without an entry is a read
 _STAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z")
 
 try:  # Codex config.toml: stdlib on 3.11+, the `tomli` backport on 3.10; neither -> unreadable, never ok
@@ -38,7 +39,7 @@ def validate(registry):
     if not isinstance(registry, dict) or set(registry) != {"schema_version", "servers"} or registry["schema_version"] != "1.0" or not isinstance(registry["servers"], dict):
         raise RegistryInvalid("mcp_registry_invalid")
     for server, entry in registry["servers"].items():
-        if not _NAME.fullmatch(server) or not isinstance(entry, dict) or not {"tools"} <= set(entry) <= {"tools", "definition", "tools_sha256", "probed_at"} or not isinstance(entry["tools"], list) or not all(isinstance(tool, str) and _NAME.fullmatch(tool) for tool in entry["tools"]):
+        if not _NAME.fullmatch(server) or not isinstance(entry, dict) or not {"tools"} <= set(entry) <= {"tools", "definition", "tools_sha256", "probed_at", "effects"} or not isinstance(entry["tools"], list) or not all(isinstance(tool, str) and _NAME.fullmatch(tool) for tool in entry["tools"]):
             raise RegistryInvalid("mcp_registry_invalid")
         definition = entry.get("definition")
         if definition is not None and not (isinstance(definition, dict) and set(definition) == {"command", "args", "env_keys"} and isinstance(definition["command"], str) and definition["command"] and isinstance(definition["args"], list) and all(isinstance(a, str) for a in definition["args"]) and isinstance(definition["env_keys"], list) and all(isinstance(k, str) and k for k in definition["env_keys"])):
@@ -46,6 +47,9 @@ def validate(registry):
         if "tools_sha256" in entry and not (isinstance(entry["tools_sha256"], str) and _HASH.fullmatch(entry["tools_sha256"])):
             raise RegistryInvalid("mcp_registry_invalid")
         if "probed_at" in entry and (definition is None or not (isinstance(entry["probed_at"], str) and _STAMP.fullmatch(entry["probed_at"]))):
+            raise RegistryInvalid("mcp_registry_invalid")
+        effects = entry.get("effects")  # INC-02: the host says which registered tools write or reach the network; reads need no entry
+        if effects is not None and not (isinstance(effects, dict) and effects and all(tool in entry["tools"] and effect in EFFECTS for tool, effect in effects.items())):
             raise RegistryInvalid("mcp_registry_invalid")
     return registry
 
@@ -219,6 +223,15 @@ def load(path, fingerprint):
     if digest(registry) != fingerprint:
         raise RegistryInvalid("mcp_registry_invalid")
     return registry
+
+
+def effect_of(tool_name, registry):
+    """'write' | 'network' when the host declared it for a registered tool, else None (read)."""
+    match = _TOOL.fullmatch(tool_name) if isinstance(tool_name, str) else None
+    if match is None:
+        return None
+    server, tool = match.groups()
+    return ((registry["servers"].get(server) or {}).get("effects") or {}).get(tool)
 
 
 def decide(tool_name, registry):

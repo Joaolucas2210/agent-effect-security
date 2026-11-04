@@ -86,6 +86,12 @@ Slice 2 (delivered 2026-11-04), in two parts because the `PreToolUse` payload st
 `hooks/test-mcp-registry-2.sh` ran red first (6 failures, 2 errors) and probes the repository's own
 `mcp_read_server` as the live target.
 
+- **Effects (follow-up, 2026-11-04, INC-02).** A registry entry may declare `effects: {<tool>: "write" | "network"}`
+  for registered tools (keys must be registered tools; a tool without an entry is a read). After the session
+  attempted a sensitive path (the ADR 0028 1c journal signal), a declared write/network tool is denied with
+  `uncovered_network_denied_after_sensitive_read`; read tools and clean sessions are untouched. The host's
+  declaration is the authority — tool descriptions still authorize nothing. `hooks/test-mcp-effects.sh` ran red first.
+
 ## Rollback
 
 Delete the registry; gate returns nothing.

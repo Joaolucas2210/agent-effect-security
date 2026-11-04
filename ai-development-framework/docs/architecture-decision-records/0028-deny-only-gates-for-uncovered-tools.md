@@ -90,7 +90,9 @@ segment; `echo "x; head .env"` is not a read); per-command tables of options tha
 (`-e -m -A -t -g -n -d -k …`) stop treating those arguments as paths; an explicit pattern option (`-e`, `--regexp`,
 `-f`, `--expression`) makes every positional a path; a pattern or program *file* (`grep -f`, `rg -f`, `sed -f`,
 `awk -f`, `sort -o`) is itself a read operand. Globs stay ambiguous only in path operands. `hooks/test-bash-grammar-2.sh`
-ran red first (17 failures). `make project-reasons` over the maintainer's own week:
+ran red first (17 failures).
+Slice 1c extension (2026-11-04, INC-02): the run-scoped network rule also covers MCP tools the host registry
+declares as `write`/`network` (ADR 0031 `effects`). `make project-reasons` over the maintainer's own week:
 zero `uncovered_*` denies on legitimate work is the acceptance number.
 
 ## Rollback

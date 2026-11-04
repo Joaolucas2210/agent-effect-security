@@ -56,8 +56,12 @@ def cmd_hook_snippet(argv):
     agent = argv[0] if argv else "claude"
     if agent not in ("claude", "codex") or len(argv) > 1:
         return _usage()
+    import os
     adf = Path(sys.executable).parent / "adf"
     command = f'A={adf}; [ -x "$A" ] || exit 0; exec "$A" hook'  # missing binary: no decision, never a blocked tool
+    key = os.environ.get("ADF_EVIDENCE_KEY_FILE") or (lambda p: str(p) if p.is_file() else None)(Path(os.environ.get("ADF_HOME") or Path.home() / ".adf") / "evidence.key")
+    if key:
+        command = f"export ADF_EVIDENCE_KEY_FILE={key}; " + command  # ADR 0030: the env travels with the registration, no shell profile needed
     hook = {"type": "command", "timeout": 30, "command": command}
     entries = [{"matcher": "Read", "hooks": [hook]}, {"matcher": "Bash", "hooks": [hook]}, {"matcher": "Grep|Glob|Edit|Write|MultiEdit|NotebookEdit|WebFetch", "hooks": [hook]}, {"matcher": "mcp__.*", "hooks": [hook]}] if agent == "claude" else [{"matcher": "^Bash$", "hooks": [{**hook, "statusMessage": "Checking ADF read policy"}]}]
     target = "~/.claude/settings.json" if agent == "claude" else "~/.codex/hooks.json"
@@ -178,7 +182,7 @@ def _mcp_probe(path, write):
 def cmd_doctor(argv):
     """ADR 0027. A human pins; the gates only compare. Not pinned is exit 3, never green."""
     import os
-    from integration.control_plane_pins import check, snapshot, write_manifest
+    from integration.control_plane_pins import check, clone_line, snapshot, write_manifest
     if argv not in ([], ["--pin"]):
         return _usage()
     adf_home = Path(os.environ.get("ADF_HOME") or Path.home() / ".adf")
@@ -188,6 +192,7 @@ def cmd_doctor(argv):
         write_manifest(adf_home / "pins.json", snap)
         print(f"pinned {len(snap['files'])} file(s), registration {snap['registration']} -> {adf_home / 'pins.json'}")
         return 0
+    print(f"clone: {clone_line(ROOT)}")
     divergent = check(ROOT, adf_home)
     if divergent is None:
         print("not pinned: run `adf doctor --pin` after reviewing the install (ADR 0027)")

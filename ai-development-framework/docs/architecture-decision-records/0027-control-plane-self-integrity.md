@@ -39,7 +39,10 @@ Deviations from the decision text: (1) the shell fail-safe `[ -x "$A" ] || exit 
 binary nothing can record `control_plane_missing`, so a removed `adf` stays a residual the human sees in
 `adf doctor`; (2) ~~no journal entry yet~~ — since ADR 0028 1c the tamper deny writes a `deny-only-gate` journal entry and
 `make project-reasons` shows it under `attempts=`; a dedicated `control_plane_tampered_total` in the trial
-metrics is still pending the observation-schema bump.
+metrics is still pending the observation-schema bump. Pilot follow-ups (2026-11-04): the deny reason names the
+divergent labels (`control_plane_tampered: integration/cli.py, registration (human: adf doctor)`), never a host
+path; `adf doctor` prints `clone: <branch> @ <sha>` and takes host env files from the registered hook command
+when the shell lacks them, so a terminal and the hook compute the same snapshot.
 
 ## Options considered
 

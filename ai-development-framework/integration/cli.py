@@ -55,7 +55,7 @@ def cmd_hook_snippet(argv):
     adf = Path(sys.executable).parent / "adf"
     command = f'A={adf}; [ -x "$A" ] || exit 0; exec "$A" hook'  # missing binary: no decision, never a blocked tool
     hook = {"type": "command", "timeout": 30, "command": command}
-    entries = [{"matcher": "Read", "hooks": [hook]}, {"matcher": "Bash", "hooks": [hook]}] if agent == "claude" else [{"matcher": "^Bash$", "hooks": [{**hook, "statusMessage": "Checking ADF read policy"}]}]
+    entries = [{"matcher": "Read", "hooks": [hook]}, {"matcher": "Bash", "hooks": [hook]}, {"matcher": "Grep|Glob|Edit|Write|MultiEdit|NotebookEdit", "hooks": [hook]}] if agent == "claude" else [{"matcher": "^Bash$", "hooks": [{**hook, "statusMessage": "Checking ADF read policy"}]}]
     target = "~/.claude/settings.json" if agent == "claude" else "~/.codex/hooks.json"
     print(f"// add to hooks.PreToolUse in {target}; existing hooks keep running (they add up)", file=sys.stderr)
     print(json.dumps({"hooks": {"PreToolUse": entries}}, indent=2))

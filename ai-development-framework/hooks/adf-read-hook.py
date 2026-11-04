@@ -19,7 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-_GATES = {"Read": "hooks/claude-code-read-gate.py", "Bash": "hooks/codex-bash-read-gate.py"}
+_DENY_ONLY = "hooks/adf-deny-gate.py"  # ADR 0028 slice 1a: path-only deny, never an allow, never evidence
+_GATES = {"Read": "hooks/claude-code-read-gate.py", "Bash": "hooks/codex-bash-read-gate.py", **{tool: _DENY_ONLY for tool in ("Grep", "Glob", "Edit", "Write", "MultiEdit", "NotebookEdit")}}
 
 
 def adf_home(): return Path(os.environ.get("ADF_HOME") or Path.home() / ".adf")
@@ -92,6 +93,8 @@ def decide(raw):
         os.environ["ADF_TRUSTED_REPOSITORY"] = root  # host-derived; a stale export for another repo is overridden
         os.environ.setdefault("ADF_TRUSTED_REVISION", "HEAD")
         os.environ.setdefault("ADF_MAX_OUTPUT_BYTES", str(1 << 20))
+        if _GATES[payload["tool_name"]] == _DENY_ONLY:
+            return _gate(payload)  # no evidence dir: the deny-only gate persists nothing
         evidence = adf_home() / "evidence"
         evidence.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.environ.setdefault("ADF_EVIDENCE_DIR", str(evidence / project_id(root) / datetime.now(timezone.utc).strftime("%Y-%m-%d")))

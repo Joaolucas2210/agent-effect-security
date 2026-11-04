@@ -1,0 +1,1 @@
+{"policy_version":"1.0","default_outcome":"allow","deny_components":[".claude",".codex",".cursor",".mcp.json","CLAUDE.md","AGENTS.md"],"deny_paths":[".vscode/settings.json",".vscode/tasks.json",".github/workflows",".git/hooks"],"provenance":{"source":"adf_local_policy","adr":"0028"}}

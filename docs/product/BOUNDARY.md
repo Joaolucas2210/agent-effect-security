@@ -35,7 +35,7 @@ Outside this table, assume **residual risk**: ADF neither sees nor blocks those 
 
 | Edge | Covered surface | Validated version | AuthN modes | Not covered (residual) |
 | --- | --- | --- | --- | --- |
-| Claude Code | `PreToolUse` hook, `Read` matcher | Version not recorded in the trials (`na`): revalidate the payload format on the installed version | None (local process, trusted host) | `Bash`, `Grep`, `Glob`, third-party MCP, subagents with other tools |
+| Claude Code | `PreToolUse` hook, `Read` matcher; deny-only on `Grep`/`Glob` (sensitive paths) and `Edit`/`Write`/`MultiEdit`/`NotebookEdit` (sensitive + agent-config paths, ADR 0028 slice 1a) | Version not recorded in the trials (`na`): revalidate the payload format on the installed version | None (local process, trusted host) | `Bash`, `Grep`/`Glob` without `path`, third-party MCP, subagents with other tools; deny-only gates leave no bundle |
 | Codex CLI | `PreToolUse` `Bash` with a single allowlisted `cat <file>`; host activation through the same list as Claude (REQ-MP-01) | 0.157.0 (global hook: `na`) | None (local process) | `head`, `sed`, `rg`, `python -c`, pipes, redirections, any other command |
 | A2A (HTTP) | `read_workspace_file` skill via `message/send` | This repo's gateway, HTTP only on `127.0.0.1` | HS256 (**pilot only**: whoever holds the secret can issue any token); RS256 with a JWKS pinned by SHA-256 (real IdP, no automatic rotation; [runbook](../../ai-development-framework/docs/runbooks/a2a-rs256-jwks.md)) | A stolen token is valid until `exp` (≤ 1 h; no DPoP/mTLS); public bind only through a host TLS proxy; tasks in memory |
 | MCP stdio | Mediated read tool | Not validated on a real Claude/Codex client | None | Same as the row of the client that uses it |

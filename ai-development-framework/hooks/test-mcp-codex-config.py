@@ -45,7 +45,8 @@ class McpCodexConfigTest(unittest.TestCase):
         git(self.repo, "init", "-q"); git(self.repo, "config", "user.email", "m@example.invalid"); git(self.repo, "config", "user.name", "m"); git(self.repo, "add", "."); git(self.repo, "commit", "-qm", "f")
         (self.home / "enabled-projects").write_text(f"{self.repo}\n")
         self.definition = {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"], "env_keys": ["GITHUB_TOKEN"]}
-        self.registry = {"schema_version": "1.0", "servers": {"github": {"tools": ["get_issue"], "definition": self.definition}, "other": {"tools": ["x"], "definition": {"command": "node", "args": ["srv.js"], "env_keys": ["A"]}}}}
+        fresh = {"tools_sha256": "0" * 64, "probed_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}  # probe age is a separate doctor finding
+        self.registry = {"schema_version": "1.0", "servers": {"github": {"tools": ["get_issue"], "definition": self.definition, **fresh}, "other": {"tools": ["x"], "definition": {"command": "node", "args": ["srv.js"], "env_keys": ["A"]}, **fresh}}}
         self.registry_file = self.home / "mcp-registry.json"; self.registry_file.write_text(json.dumps(self.registry)); self.pin = mcp_registry.pin(self.registry)
         (self.user_home / ".codex/config.toml").write_text(CODEX_OK)
         (self.user_home / ".claude.json").write_text(json.dumps({"mcpServers": {"github": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"], "env": {"GITHUB_TOKEN": "t"}}}}))

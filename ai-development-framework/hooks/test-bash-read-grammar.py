@@ -57,6 +57,13 @@ class BashReadGrammarTest(unittest.TestCase):
         for command in ("head README.md", "tail -f src/app.py", "grep -n def src/app.py", "rg TODO src", "sed -n 1p README.md", "ls -la", "npm test", "git status", "python3 -m pytest", "echo hello", "head -n 5 README.md src/app.py"):
             with self.subTest(command): self.assertEqual(self.bash(command), {}, command)
 
+    def test_scripts_that_read_a_sensitive_file_remain_unobserved(self):
+        (self.repo / "src/read-env.sh").write_text("cat config/.env\n")
+        (self.repo / "src/read_env.py").write_text("from pathlib import Path\nPath('config/.env').read_text()\n")
+        for command in ("bash src/read-env.sh", "python3 src/read_env.py", "python3 -c \"from pathlib import Path; Path('config/.env').read_text()\""):
+            with self.subTest(command):
+                self.assertEqual(self.bash(command), {}, "the hook does not inspect a script's body or arbitrary interpreter APIs")
+
     def test_cat_gate_contract_is_preserved(self):
         self.assertIn("invalid_scope", self.bash("cat config/.env", codex=True), "single cat still goes through PDP and leaves a bundle")
         self.assertEqual(self.bash("cat README.md", codex=True), {})

@@ -47,10 +47,10 @@ call entered the hook (ADR 0037 proposed).
 
 | # | Claim | Mechanism | Evidence | Eval / test |
 | --- | --- | --- | --- | --- |
-| C1 | A `read` on a covered edge is admitted only by the host-pinned policy; content never widens it | PDP pure, `cannot_authorize` taint | `AdmissionDecision`, bundle | `test-tool-admission.sh`, `test-principal-policy.sh` |
+| C1 | A `read` on a covered edge enters the PDP under the effective host-side policy; tool content cannot widen a supplied pinned allowlist. The reference demo's per-request policy is not a reviewed host allowlist | PDP pure, `cannot_authorize` taint | `AdmissionDecision`; bundle when composition and persistence succeed | `test-tool-admission.sh`, `test-local-read-adapter.sh`, `test-principal-policy.sh` |
 | C2 | A decision is consumed once, at the effect, with every binding revalidated | PEP, `intent_digest`, `task_ref` | receipt | `test-runtime-read.sh` |
-| C3 | A sensitive path that reaches the runtime is denied at the effect even if the policy admitted it | `sensitive_path_policy_v2` | `sensitive_path_denied` bundle | `test-local-read-adapter.sh`, `test-root-dotfiles.sh` |
-| C4 | A composed decision on a covered read edge leaves a bundle that verifies offline; pre-adapter contract and deny-only gate attempts leave a journal entry instead | `compose`, `verify_offline`, attempt journal | bundle or journal, by stage | `test-local-evidence-bundle.sh`, `test-deny-gate-journal.sh` |
+| C3 | A sensitive path that reaches the runtime is denied at the effect even if the policy admitted it | `sensitive_path_policy_v2` | `sensitive_path_denied` in a bundle when persistence succeeds | `test-local-read-adapter.sh`, `test-root-dotfiles.sh` |
+| C4 | A persisted bundle records a composed decision and verifies offline. Pre-adapter contract and deny-only gate attempts can leave a journal entry instead, subject to journal persistence; a missing hook leaves no ADF record | `compose`, `verify_offline`, attempt journal | bundle or journal, by stage and persistence outcome | `test-local-read-adapter.sh`, `test-local-evidence-bundle.sh`, `test-deny-gate-journal.sh` |
 | C5 | On mediated edges ADF returns snapshot bytes; on `gate_only` edges (Claude `Read`, Codex `cat`) the bundle proves the decision and a confined snapshot read, never the bytes the native tool delivered | ADRs 0012, 0029 | `delivery_mode` in bundle 1.1 | `test-delivery-mode.sh` |
 | C6 | A2A identity is verified at the transport and revalidated at the effect | ADRs 0013–0017 | `A2AEvidenceRecord` | `test-a2a-gateway.sh` |
 

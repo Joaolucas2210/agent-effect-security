@@ -10,6 +10,7 @@ Root comes from the host (`ADF_TRUSTED_REPOSITORY`, set by adf-read-hook.py), ne
 import json
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -28,6 +29,17 @@ _NETWORK_BASH = re.compile(r"(?<![\w./-])(curl|wget)(?![\w-])")
 # ADR 0028 1c: a run that tried to reach a sensitive path may not open a network channel afterwards (trifecta leg 3).
 _TAINTING = {"sensitive_path_denied", "sensitive_argument_rejected", "invalid_scope", "uncovered_read_denied_sensitive", "uncovered_write_denied_sensitive"}
 _RUN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
+# ADR 0028 1b: a closed grammar of Bash read-equivalents. Path only; everything the parser cannot see through is ambiguous.
+_READ_COMMANDS = {"cat", "head", "tail", "less", "more", "sed", "awk", "grep", "egrep", "fgrep", "rg", "strings", "xxd", "hexdump", "od", "nl", "tac", "cut", "sort", "uniq", "wc", "diff", "cmp", "file", "stat", "bat"}
+_PATTERN_FIRST = {"sed", "awk", "grep", "egrep", "fgrep", "rg"}  # first operand is a script/pattern, not a path
+_INTERPRETERS = {"python", "python3", "python2", "node", "perl", "ruby", "php", "deno", "bun"}
+_OPAQUE = {"eval", "sh", "bash", "zsh", "dash", "ksh", "fish", "xargs", "source", "."}
+_WRAPPERS = {"env", "nice", "nohup", "command", "exec", "builtin", "sudo", "doas", "stdbuf", "time"}
+_WRAPPERS_ARG = {"timeout", "nice", "ionice"}  # may take one numeric/flag operand before the real command
+_EXPANSION = re.compile(r"[$`<>]")  # checked outside single quotes: substitution, expansion, redirection
+_GLOB = re.compile(r"[*?\[\]~{}]")  # checked on path operands only
+_SINGLE_QUOTED = re.compile(r"'[^']*'")
+_SEGMENT = re.compile(r"\|\||&&|[;|&\n]|\(|\)")
 _SENSITIVE = json.loads((ROOT / "runtime/v1/policies/sensitive-path-policy-v1.json").read_text(encoding="utf-8"))
 _AGENT_CONFIG = json.loads((ROOT / "runtime/v1/policies/agent-config-policy-v1.json").read_text(encoding="utf-8"))
 
@@ -90,6 +102,75 @@ def _run_tainted(evidence_dir, run_id):
     return False
 
 
+def _segments(command):
+    return [part.strip() for part in _SEGMENT.split(command) if part and part.strip()]
+
+
+def _strip_wrappers(tokens):
+    while tokens:
+        head = tokens[0].rsplit("/", 1)[-1]
+        if head in _WRAPPERS_ARG:
+            tokens = tokens[1:]
+            while tokens and (tokens[0].startswith("-") or re.fullmatch(r"[0-9]+[smhd]?", tokens[0])):
+                tokens = tokens[1:]
+        elif head in _WRAPPERS:
+            tokens = tokens[1:]
+            while tokens and (tokens[0].startswith("-") or "=" in tokens[0]):
+                tokens = tokens[1:]
+        else:
+            return tokens
+    return tokens
+
+
+def _operands(tokens):
+    """Non-option operands after the command; `--` ends options; a bare `-` is stdin."""
+    out, options_done = [], False
+    for token in tokens[1:]:
+        if not options_done and token == "--":
+            options_done = True
+        elif options_done or not token.startswith("-") or token == "-":
+            if token != "-":
+                out.append(token)
+    return out
+
+
+def bash_read(payload):
+    """-> deny (sensitive path or ambiguous) or None (benign read, or not a read at all). Never admits."""
+    command = (payload.get("tool_input") or {}).get("command") if isinstance(payload, dict) and isinstance(payload.get("tool_input"), dict) else None
+    if not isinstance(command, str):
+        return None
+    root = os.environ.get("ADF_TRUSTED_REPOSITORY") or "/"
+    cwd = payload.get("cwd") if isinstance(payload.get("cwd"), str) and payload["cwd"].startswith("/") else root
+    for segment in _segments(command):
+        try:
+            tokens = _strip_wrappers(shlex.split(segment, posix=True))
+        except ValueError:
+            return _decision("uncovered_bash_ambiguous")
+        if not tokens:
+            continue
+        name = tokens[0].rsplit("/", 1)[-1]
+        mentions_read = any(part.rsplit("/", 1)[-1] in _READ_COMMANDS for token in tokens[1:] for part in re.split(r"[\s;|&()]+", token) if part)
+        if name in _OPAQUE and (mentions_read or any(("open(" in token or "readFile" in token or "File." in token) for token in tokens[1:])):
+            return _decision("uncovered_bash_ambiguous")
+        if name in _INTERPRETERS and any(flag in tokens[1:] for flag in ("-c", "-e", "-r", "--eval")) and any(("open(" in token or "readFile" in token or "File." in token or "IO." in token) for token in tokens[1:]):
+            return _decision("uncovered_bash_ambiguous")
+        if name not in _READ_COMMANDS:
+            continue
+        if _EXPANSION.search(_SINGLE_QUOTED.sub("", segment)):
+            return _decision("uncovered_bash_ambiguous")
+        operands = _operands(tokens)
+        if name in _PATTERN_FIRST:
+            operands = operands[1:]
+        if any(_GLOB.search(operand) for operand in operands):
+            return _decision("uncovered_bash_ambiguous")
+        for operand in operands:
+            absolute = os.path.normpath(operand if operand.startswith("/") else os.path.join(cwd, operand))
+            candidates = {absolute, os.path.realpath(absolute)}
+            if any(sensitive_path(candidate.lstrip("/"), _SENSITIVE) for candidate in candidates):
+                return _decision("uncovered_read_denied_sensitive")
+    return None
+
+
 def journal_deny(payload, reason):
     """Two-event attempt journal for a deny that never reached the adapter; failure to journal never turns a deny into an allow."""
     evidence_dir, run_id = os.environ.get("ADF_EVIDENCE_DIR"), payload.get("session_id") if isinstance(payload, dict) else None
@@ -121,6 +202,8 @@ def _decide(payload):
         if not evidence_dir or not isinstance(run_id, str):
             return _decision("host_configuration_invalid")
         return _decision("uncovered_network_denied_after_sensitive_read") if _run_tainted(evidence_dir, run_id) else None
+    if tool == "Bash":
+        return bash_read(payload)  # ADR 0028 1b: after the cat gate passed the command through
     if isinstance(tool, str) and tool.startswith("mcp__"):
         return _mcp(tool)
     key = _READ_TOOLS.get(tool) or _WRITE_TOOLS.get(tool)

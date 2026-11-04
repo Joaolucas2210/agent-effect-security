@@ -215,4 +215,4 @@ OAuth AS ou endpoint de Token Exchange; UI ou registry de agentes; token gerido 
 
 | Data | Partner | Pedido | WP |
 | --- | --- | --- | --- |
-| — | — | Nenhuma registrada ainda | — |
+| 2026-11-04 | Partner #0 — o próprio host do mantenedor (piloto, **não** um partner externo) | Medir falsos denies, tentativas descobertas e fricção do operador por uma semana em quatro repositórios de trabalho com todos os controles entregues ligados; **nenhum efeito novo pedido**. Não desbloqueia WP6/ADR 0032. Ver [PILOT-20261104](PILOT-20261104.pt-BR.md). | — |

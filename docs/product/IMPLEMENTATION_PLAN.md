@@ -215,4 +215,4 @@ OAuth AS or Token Exchange endpoint; agent UI or registry; token managed by the 
 
 | Date | Partner | Request | WP |
 | --- | --- | --- | --- |
-| — | — | None registered yet | — |
+| 2026-11-04 | Partner #0 — the maintainer's own host (pilot, **not** an external partner) | Measure false denies, uncovered attempts and operator friction for one week on four working repositories with every delivered control on; **no new effect requested**. Does not unblock WP6/ADR 0032. See [PILOT-20261104](PILOT-20261104.md). | — |

@@ -21,6 +21,9 @@ The PDP already requires an exact `ToolProfile` match; MCP servers are not profi
 - A `PreToolUse` deny-only gate (ADR 0028 family) denies any `mcp__*` call whose server is absent from the
   registry (`mcp_server_not_registered`) or whose live tool list digest differs (`mcp_tool_list_changed`).
   Re-pin is a human action (`adf mcp pin`).
+- Slices: (1) server and tool **names** from the `mcp__<server>__<tool>` tool name, pinned per host — needs
+  nothing from the client; (2) `tools_sha256` over `inputSchema`, only once a client exposes the live tool
+  list to the hook (today the `PreToolUse` payload does not carry it: slice 2 is `skipped`, never assumed).
 - Project-level `.mcp.json` / `.cursor/mcp.json` are in `agent_config_policy_v1` (ADR 0028): writes denied.
 
 ## Options considered

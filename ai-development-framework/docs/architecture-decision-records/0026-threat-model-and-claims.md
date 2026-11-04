@@ -2,7 +2,8 @@
 
 - **Status:** Proposed — awaits human acceptance.
 - **Date:** 2026-11-04
-- **Depends on:** ADRs 0007, 0008, 0009, 0011 (Accepted).
+- **Deciders:** maintainer.
+- **Depends on:** ADRs 0007, 0008, 0009, 0011, 0012 (Accepted). Cites no Proposed ADR as a mechanism.
 - **Scope:** normative. Names the attacker, the trust boundary and every claim the product may make. No code.
 - **Threats:** [THR-01..THR-06](../../../docs/knowledge/threats/README.md).
 
@@ -20,8 +21,10 @@ reference model.
 
 The attacker is **untrusted content that reaches the agent**: workspace files (including instruction and
 configuration files), MCP tool output and tool descriptions, A2A peer messages, dependencies' install scripts,
-web content. The attacker can make the model request any tool call. The attacker **cannot** run code on the
-host outside what the agent's tools allow.
+web content. The attacker can make the model request **any** tool call, including `Bash`. The attacker reaches
+the host only through the agent's tools; on an uncovered tool that is arbitrary code as the user. Every claim
+below therefore holds **per covered edge**: an attacker who reaches an uncovered tool is a declared residual
+(BOUNDARY support matrix), not a counter-example to the claim.
 
 Out of the model, declared residual: the agent runtime itself (IDE/CLI vendor CVEs), the OS, a compromised
 host or user account, a malicious ADF install, root.
@@ -31,8 +34,11 @@ host or user account, a malicious ADF install, root.
 | Trusted | Not trusted |
 | --- | --- |
 | Host operator: pinned policy + pin, `~/.adf/enabled-projects`, hook registration, repository + revision, evidence directory, host-held keys | Tool payload fields, file content, tool descriptions/annotations, model output, A2A body, environment variables set by the agent |
-| ADF code at the installed revision | ADF code or config after the agent could write to it (ADR 0027) |
+| ADF code at the installed revision, **assumed** intact (integrity is not verified until ADR 0027) | ADF code or config after the agent could write to it |
 | Git snapshot digest computed by `WorkspaceManager` | The live checkout |
+
+Claims apply only while the host activation holds: project listed in `~/.adf/enabled-projects` and the hook
+registered for the session. Outside that, ADF decides nothing (REQ-MP-01).
 
 ### Claims (the only ones allowed in public text)
 
@@ -42,7 +48,7 @@ host or user account, a malicious ADF install, root.
 | C2 | A decision is consumed once, at the effect, with every binding revalidated | PEP, `intent_digest`, `task_ref` | receipt | `test-runtime-read.sh` |
 | C3 | A sensitive path is denied at the effect even if the policy admitted it | `sensitive_path_policy_v1` | `sensitive_path_denied` | `test-local-read-adapter.sh` |
 | C4 | Every decision on a covered edge leaves a bundle that verifies offline | `compose`, `verify_offline` | bundle | `test-local-evidence-bundle.sh` |
-| C5 | On `mediated` edges the bytes delivered are the snapshot bytes; on `gate_only` edges only the decision is proven | ADR 0012, ADR 0029 | `delivery_mode` | `test-local-evidence-pilot.sh` |
+| C5 | On the mediated MCP stdio edge the bytes delivered are the snapshot bytes; on the `gate_only` edges (Claude `Read`, Codex `cat`) only the decision and a confined snapshot read are proven, never the bytes the native tool delivered | ADR 0012 | coverage matrix (docs); in the bundle only after ADR 0029 | `test-local-evidence-pilot.sh` |
 | C6 | A2A identity is verified at the transport and revalidated at the effect | ADRs 0013–0017 | `A2AEvidenceRecord` | `test-a2a-gateway.sh` |
 
 Forbidden claims: "prevents prompt injection", "sandbox", "covers Bash", "incidents prevented", "compliant
@@ -58,6 +64,9 @@ non-root agent).
 | 3. Exfiltration | Nothing | Deny-only on `WebFetch`/`curl`-shaped Bash when a sensitive read happened in the run (**not** by content) | `network` admit path |
 
 ### OWASP Top 10 for Agentic Applications 2026 mapping
+
+⚠ Category titles are paraphrased from the 2026 list; verify ids and wording against the published document
+before any public use (ADR 0035 rule).
 
 | ASI | ADF position |
 | --- | --- |

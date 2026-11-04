@@ -2,7 +2,8 @@
 
 - **Status:** Proposed — awaits human acceptance.
 - **Date:** 2026-11-04
-- **Depends on:** ADRs 0026, 0027; ADR 0008 (Accepted).
+- **Depends on:** ADR 0026; ADR 0008 (Accepted). Strengthened by ADR 0027 (tamper detection of this gate's own registration), not blocked by it.
+- **Delivery slices:** (1a) path-only deny for `Grep`, `Glob`, `Edit`, `Write`, `MultiEdit`, `NotebookEdit` on both path policies; (1b) Bash read-equivalent grammar; (1c) run-scoped network deny (needs the attempt journal). Each slice has its own red eval before code.
 - **Scope:** `PreToolUse` hooks that can only answer `deny` or nothing. **No admit path, no byte delivery, no new effect class.**
 - **Threats:** THR-01 (read-equivalent bypass), THR-02 (config-as-code execution), THR-03 (exfiltration channel).
 
@@ -48,7 +49,10 @@ explicit anti-goal. Denying is cheaper than admitting and covers most of the Let
 
 ## Residual risks
 
-Path-only matching: a secret at an unlisted path is not denied. The run-scoped network rule depends on the
+Path-only matching: a secret at an unlisted path is not denied. `Grep`/`Glob` **without** a `path` argument
+search the whole root and can surface lines from `.env`; denying them would deny most legitimate searches, so
+they pass through and stay a documented residual (mitigation is the client's ignore list, outside ADF). The
+run-scoped network rule depends on the
 journal, so a run with journal disabled does not trigger it. Codex `PreToolUse` sees only `Bash`. Denying
 writes to `.github/workflows/` blocks legitimate CI edits; operators opt the path out per project.
 

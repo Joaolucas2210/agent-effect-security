@@ -2,7 +2,7 @@
 
 - **Status:** Proposed — awaits human acceptance.
 - **Date:** 2026-11-04
-- **Depends on:** ADRs 0009, 0010 (Accepted), 0027.
+- **Depends on:** ADRs 0009, 0010 (Accepted), 0026; ADR 0028 slice 1a (denies agent reads of `~/.adf/`, where the key lives). Strengthened by ADR 0027, not blocked by it.
 - **Scope:** signature over bundles, attempt journal events and A2A records. Offline verification keeps working without the key (integrity only).
 - **Threats:** THR-04, THR-05; OWASP ASI10.
 

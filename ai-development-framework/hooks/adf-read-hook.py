@@ -117,10 +117,13 @@ def decide(raw):
         evidence = adf_home() / "evidence"
         evidence.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.environ.setdefault("ADF_EVIDENCE_DIR", str(evidence / project_id(root) / datetime.now(timezone.utc).strftime("%Y-%m-%d")))
+        start_ns = __import__("time").time_ns()
         divergent = _tampered()
-        if divergent:  # ADR 0027: pinned host, divergent code/host file/registration; journaled since ADR 0028 1c
+        if divergent:  # ADR 0027: pinned host, divergent code/host file/registration; journaled since ADR 0028 1c, spanned since ADR 0021 ext.
             from integration.control_plane_pins import describe
-            _load(_DENY_ONLY).journal_deny(payload, "control_plane_tampered")
+            deny_only = _load(_DENY_ONLY)
+            deny_only.journal_deny(payload, "control_plane_tampered")
+            deny_only.emit_decision(payload, "control_plane_tampered", start_ns)
             return _deny(f"control_plane_tampered: {describe(divergent)} (human: adf doctor)")
         return _gate(payload)
     except Exception:  # enabled project: fail closed

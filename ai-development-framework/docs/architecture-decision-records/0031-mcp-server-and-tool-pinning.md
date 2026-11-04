@@ -1,6 +1,6 @@
 # ADR 0031: MCP server and tool admission pinning
 
-- **Status:** Proposed — awaits human acceptance.
+- **Status:** Accepted for slice 1 only — human acceptance on 2026-11-04 (maintainer); slice 2 (tool-list digest) stays Proposed until a client exposes the live tool list to the hook.
 - **Date:** 2026-11-04
 - **Depends on:** ADRs 0007, 0011 (Accepted), 0026.
 - **Scope:** host registry for MCP servers consumed by the agent; tool descriptions as untrusted input. No new effect.
@@ -42,6 +42,16 @@ The PDP already requires an exact `ToolProfile` match; MCP servers are not profi
 
 A registered server can still return malicious *output*; that is leg 2 of the trifecta and stays tainted, not blocked.
 Servers started outside the agent's hook path are unseen.
+
+## Validation
+
+Slice 1 (delivered 2026-11-04): `integration/mcp_registry.py`, the `mcp__*` branch of `hooks/adf-deny-gate.py`,
+`_gate_for` in `hooks/adf-read-hook.py`, the `mcp__.*` matcher in `adf hook-snippet`, `adf mcp pin`.
+Registry env: `ADF_MCP_REGISTRY_FILE` + `ADF_MCP_REGISTRY_SHA256` (json-c14n-v1, as ADR 0011). Shape is
+closed to `{schema_version, servers: {name: {tools: [...]}}}`: `command`, `args` and `env` from the decision
+text are **not** pinned in slice 1 because the hook cannot observe them; listing them would be documentation
+pretending to be a control. `hooks/test-mcp-registry.sh` was written first and ran red (9 failures): unconfigured
+= no decision, partial/wrong/swapped pin = deny all, exact names only, malformed names deny, closed shape.
 
 ## Rollback
 

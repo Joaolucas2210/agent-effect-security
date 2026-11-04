@@ -56,7 +56,7 @@ class AdfCliTest(unittest.TestCase):
         with patch.object(cli, "_script", side_effect=RuntimeError("broken clone")):
             self.assertEqual(run("hook", stdin=payload)[:2], (0, ""), "a broken install is no decision, not a blocked tool")
         self.assertEqual(run("hook", "extra")[0], 2)
-        for agent, matchers in (("claude", ["Read", "Bash"]), ("codex", ["^Bash$"])):
+        for agent, matchers in (("claude", ["Read", "Bash", "Grep|Glob|Edit|Write|MultiEdit|NotebookEdit"]), ("codex", ["^Bash$"])):
             code, out, _ = run("hook-snippet", agent)
             entries = json.loads(out)["hooks"]["PreToolUse"]
             self.assertEqual((code, [entry["matcher"] for entry in entries]), (0, matchers))

@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from integration import mcp_registry  # noqa: E402
 from runtime.local_read_runtime import sensitive_path  # noqa: E402
 
 _READ_TOOLS = {"Grep": "path", "Glob": "path"}
@@ -44,9 +45,23 @@ def _agent_config(rel):
     return any(part in _AGENT_CONFIG["deny_components"] for part in rel.split("/")) or any(_under(rel, deny) for deny in _AGENT_CONFIG["deny_paths"])
 
 
+def _mcp(tool):
+    """ADR 0031 slice 1: names only, against the host-pinned registry; unconfigured -> no decision."""
+    try:
+        config = mcp_registry.configured()
+        if config is None:
+            return None
+        reason = mcp_registry.decide(tool, mcp_registry.load(*config))
+    except mcp_registry.RegistryInvalid:
+        return _decision("mcp_registry_invalid")
+    return _decision(reason) if reason else None
+
+
 def gate(payload):
     """Path-only mapping to `deny` or None; a malformed payload in an enabled project denies."""
     tool = payload.get("tool_name") if isinstance(payload, dict) else None
+    if isinstance(tool, str) and tool.startswith("mcp__"):
+        return _mcp(tool)
     key = _READ_TOOLS.get(tool) or _WRITE_TOOLS.get(tool)
     if key is None:
         return _decision("unsupported_tool")

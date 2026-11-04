@@ -7,6 +7,7 @@
   adf a2a serve | a2a mint SUB SCOPE [...]                    loopback A2A gateway and its pilot-only HS256 token double
   adf verify FILE [--key KEYFILE]                            verify an EvidenceBundle or an A2AEvidenceRecord offline; --key also checks the host signature (ADR 0030)
   adf key init [KEYFILE]                                     create the host evidence key (0400, never overwritten); default $ADF_HOME/evidence.key
+  adf mcp pin FILE                                           validate a host MCP registry and print its pin (ADR 0031); export ADF_MCP_REGISTRY_FILE/_SHA256
   adf version
 
 Arguments after the command go to the underlying script unchanged. Editable install only (`make install-dev`):
@@ -56,7 +57,7 @@ def cmd_hook_snippet(argv):
     adf = Path(sys.executable).parent / "adf"
     command = f'A={adf}; [ -x "$A" ] || exit 0; exec "$A" hook'  # missing binary: no decision, never a blocked tool
     hook = {"type": "command", "timeout": 30, "command": command}
-    entries = [{"matcher": "Read", "hooks": [hook]}, {"matcher": "Bash", "hooks": [hook]}, {"matcher": "Grep|Glob|Edit|Write|MultiEdit|NotebookEdit", "hooks": [hook]}] if agent == "claude" else [{"matcher": "^Bash$", "hooks": [{**hook, "statusMessage": "Checking ADF read policy"}]}]
+    entries = [{"matcher": "Read", "hooks": [hook]}, {"matcher": "Bash", "hooks": [hook]}, {"matcher": "Grep|Glob|Edit|Write|MultiEdit|NotebookEdit", "hooks": [hook]}, {"matcher": "mcp__.*", "hooks": [hook]}] if agent == "claude" else [{"matcher": "^Bash$", "hooks": [{**hook, "statusMessage": "Checking ADF read policy"}]}]
     target = "~/.claude/settings.json" if agent == "claude" else "~/.codex/hooks.json"
     print(f"// add to hooks.PreToolUse in {target}; existing hooks keep running (they add up)", file=sys.stderr)
     print(json.dumps({"hooks": {"PreToolUse": entries}}, indent=2))
@@ -133,6 +134,20 @@ def cmd_key(argv):
     return 0
 
 
+def cmd_mcp(argv):
+    """`adf mcp pin FILE`: the human computes the pin once, after review; the gate never recomputes it."""
+    if len(argv) != 2 or argv[0] != "pin":
+        return _usage()
+    from integration.mcp_registry import RegistryInvalid, pin
+    try:
+        fingerprint = pin(json.loads(Path(argv[1]).read_text(encoding="utf-8")))
+    except (OSError, ValueError, RegistryInvalid) as exc:
+        print(f"adf: registry rejected ({exc})", file=sys.stderr)
+        return 1
+    print(f"export ADF_MCP_REGISTRY_FILE={Path(argv[1]).resolve()}\nexport ADF_MCP_REGISTRY_SHA256={fingerprint}")
+    return 0
+
+
 def cmd_version(argv):
     for candidate in (ROOT / "VERSION", ROOT.parent / "VERSION"):
         if candidate.is_file():
@@ -141,7 +156,7 @@ def cmd_version(argv):
     return 1
 
 
-COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "key": cmd_key, "version": cmd_version}
+COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "key": cmd_key, "mcp": cmd_mcp, "version": cmd_version}
 
 
 def main(argv=None):

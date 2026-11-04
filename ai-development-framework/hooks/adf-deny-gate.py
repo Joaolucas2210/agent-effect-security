@@ -91,9 +91,22 @@ def _mcp(tool):
         if reason is None:  # ADR 0031 slice 2: the client's definition of the server must still be the pinned one
             server = tool.split("__", 2)[1]
             reason = mcp_registry.check_definition(server, registry["servers"][server], os.environ.get("ADF_TRUSTED_REPOSITORY", "/"), os.environ.get("HOME") or str(Path.home()))
+        if reason is None and mcp_registry.effect_of(tool, registry) in mcp_registry.EFFECTS:  # INC-02: a write/network tool is leg 3 of the trifecta
+            evidence_dir, run_id = os.environ.get("ADF_EVIDENCE_DIR"), payload_run_id()
+            if not evidence_dir or run_id is None:
+                reason = "host_configuration_invalid"
+            elif _run_tainted(evidence_dir, run_id):
+                reason = "uncovered_network_denied_after_sensitive_read"
     except mcp_registry.RegistryInvalid:
         return _decision("mcp_registry_invalid")
     return _decision(reason) if reason else None
+
+
+_CURRENT = {}
+
+
+def payload_run_id():
+    return _CURRENT.get("run_id")
 
 
 def network_shaped(payload):
@@ -274,6 +287,7 @@ def _decide(payload):
     if tool == "Bash":
         return bash_read(payload)  # ADR 0028 1b: after the cat gate passed the command through
     if isinstance(tool, str) and tool.startswith("mcp__"):
+        _CURRENT["run_id"] = payload.get("session_id") if isinstance(payload.get("session_id"), str) else None
         return _mcp(tool)
     key = _READ_TOOLS.get(tool) or _WRITE_TOOLS.get(tool)
     if key is None:

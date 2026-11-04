@@ -1,6 +1,6 @@
 # ADR 0028: deny-only gates for uncovered tools
 
-- **Status:** Accepted for slices 1a and 1c — human acceptance on 2026-11-04 (maintainer; 1c under the wave-2 approval); slice 1b (Bash read-equivalent grammar) remains Proposed and needs its own acceptance before code.
+- **Status:** Accepted — slices 1a, 1b and 1c, human acceptance on 2026-11-04 (maintainer; 1b and 1c under the wave-2 approval). Fully delivered.
 - **Date:** 2026-11-04
 - **Depends on:** ADR 0026; ADR 0008 (Accepted). Strengthened by ADR 0027 (tamper detection of this gate's own registration), not blocked by it.
 - **Delivery slices:** (1a) path-only deny for `Grep`, `Glob`, `Edit`, `Write`, `MultiEdit`, `NotebookEdit` on both path policies; (1b) Bash read-equivalent grammar; (1c) run-scoped network deny (needs the attempt journal). Each slice has its own red eval before code.
@@ -72,7 +72,19 @@ names `curl`/`wget`, are denied with `uncovered_network_denied_after_sensitive_r
 `invalid_scope`, `uncovered_read_denied_sensitive` or `uncovered_write_denied_sensitive` — i.e. the agent
 *tried* to reach a secret, regardless of outcome. The signal is the journal, never content or the URL.
 `hooks/test-deny-gate-journal.sh` ran red first (4 failures, 2 errors). Unreadable journals count as tainted.
-Slice 1b: INC-07, INC-10 evals red before code. `make project-reasons` over the maintainer's own week:
+Slice 1b (delivered 2026-11-04): a closed grammar in `hooks/adf-deny-gate.py` (`bash_read`), run after the
+Codex `cat` gate passed a command through, on both Claude Code and Codex. Segments split on `; && || | & ( )`
+and newlines; `shlex` tokenises; wrappers (`env`, `nice`, `nohup`, `timeout N`, `sudo`, …) are stripped. A
+segment whose command is a read-equivalent (`cat head tail less more sed awk grep egrep fgrep rg strings xxd
+hexdump od nl tac cut sort uniq wc diff cmp file stat bat`) has its path operands checked against
+`sensitive_path_policy_v1` (lexical and realpath, inside or outside the root) → `uncovered_read_denied_sensitive`.
+Anything the parser cannot see through → `uncovered_bash_ambiguous`: command/variable substitution or
+redirection outside single quotes, globs or `~`/`{}` in a path operand, unbalanced quotes, `eval`/`sh -c`/
+`xargs`/`source` that mention a read command, interpreters with `-c`/`-e` that mention `open(`/`readFile`.
+Unknown commands are not ADF's call. The single-operand `cat PATH` keeps its admit path and bundle; a
+multi-operand `cat` keeps the cat gate's `unsafe_read_command`. `hooks/test-bash-read-grammar.sh` ran red first
+(39 failures). Ceiling, stated: this is a denylist of *shapes*, not a shell parser; `ponytail: a new
+read-equivalent binary or an unlisted interpreter passes until the list grows through ADR 0034's process`. `make project-reasons` over the maintainer's own week:
 zero `uncovered_*` denies on legitimate work is the acceptance number.
 
 ## Rollback

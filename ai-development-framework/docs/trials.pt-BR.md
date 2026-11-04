@@ -196,25 +196,25 @@ Para usar o gate em outros repositórios sem instalar o ADF em cada um (e sem in
 o Claude Code não herda `.claude/` de pastas pai e `install-metrics` recusa um destino que contém
 o clone), registre **uma vez** o wrapper no settings global e ative projetos numa lista do host:
 
-```jsonc
-// ~/.claude/settings.json — acrescente ao array hooks.PreToolUse; os outros hooks continuam (eles somam)
-{ "matcher": "Read", "hooks": [{ "type": "command", "timeout": 30,
-  "command": "H=/abs/agent-effect-security/ai-development-framework/hooks/adf-read-hook.py; P=/abs/agent-effect-security/.venv/bin/python3; [ -f \"$H\" ] && [ -x \"$P\" ] || exit 0; exec \"$P\" \"$H\"" }] }
+```bash
+adf hook-snippet claude     # imprime JSON para ~/.claude/settings.json; não instala
+adf hook-snippet codex      # imprime JSON para ~/.codex/hooks.json; não instala
 ```
 
-Mais simples: `adf hook-snippet claude` (ou `codex`) imprime esse bloco já com os caminhos deste clone e o
-fail-safe, nos matchers `Read` e `Bash` ([ADR 0025](architecture-decision-records/0025-adf-operator-cli.md)).
+Crie a chave de evidência antes se quiser assinar, então revise e mescle as entradas `hooks.PreToolUse`
+impressas nas settings globais sem substituir hooks existentes. Reinicie o cliente, habilite o projeto e
+execute `adf doctor --pin` **depois** do registro. Se a chave for criada após imprimir o snippet, regenere-o
+para que o comando exporte o path da chave. A [ADR 0025](architecture-decision-records/0025-adf-operator-cli.md)
+define a CLI. O wrapper fornecido retorna 0 sem decisão ADF quando o executável falta; `adf hook` também suprime
+exceções inesperadas da CLI. O fallback do cliente para saída vazia, exit não zero ou timeout não foi verificado
+numa versão de cliente registrada ([ADR 0037](architecture-decision-records/0037-hook-bootstrap-failure-contract.md)).
 
-O teste `[ -f … ] || exit 0` é obrigatório: se o clone mudar para uma branch sem o wrapper, o Python sai com
-código 2, e no `PreToolUse` código 2 **bloqueia** a tool, ou seja, todo `Read` em todos os projetos.
-
-O mesmo wrapper atende o Codex: registre-o no arquivo de hooks global do Codex (`~/.codex/hooks.json` na
-0.157.0; confirme o caminho na versão instalada, `na` nos trials) com `matcher: "^Bash$"` e a mesma linha de
-comando com fail-safe. O hook identifica o projeto pelo `cwd` que o Codex envia no payload (Claude exporta
-`CLAUDE_PROJECT_DIR`) e aplica o gate P4: só `cat PATH` allowlisted decide (`{}` = entregue, deny com
-`reason_code`); qualquer outro comando devolve `{}` e segue a política do Codex. Mesma lista, mesma raiz
-git, mesma pasta de evidência que o Claude. Codex não é cobertura de todo acesso a arquivo: `head`, `sed`,
-`rg`, pipes e redirecionamentos ficam fora, como no P4.
+Para o Codex, o matcher emitido é `^Bash$`; o arquivo de hooks global foi documentado para 0.157.0, mas o
+comportamento do hook global nessa versão não foi registrado num trial vivo. Confirme o path das settings na
+versão instalada. O hook usa o `cwd` do payload (Claude exporta `CLAUDE_PROJECT_DIR`), admite apenas um
+`cat PATH` único e suportado, e aplica checagens deny-only a outras formas Bash selecionadas de leitura.
+Outros comandos podem passar para a policy do próprio cliente. Não cobre scripts, interpretadores ou acesso
+arbitrário ao disco.
 
 ```bash
 make project-enable PROJECT=/home/voce/dev/MEU_PROJETO   # caminho absoluto canônico; raiz git recomendada
@@ -236,7 +236,7 @@ diretamente continua válido (uma linha por path absoluto).
 | Linha relativa, com `..`, `//` ou `/` no fim | Ignorada (não ativa nada) |
 | Projeto listado e repositório git (inclusive aberto numa subpasta) | Gate do clone, com raiz = topo git do projeto; um `ADF_TRUSTED_REPOSITORY` exportado para outro repo é sobrescrito |
 | Projeto listado sem git | `deny project_not_git` (o gate só lê snapshot git) |
-| Projeto listado e falha interna, payload malformado ou tool fora de `Read`/`Bash` | `deny adapter_failed` / `unsupported_tool` (fail closed) |
+| Projeto listado com raiz conhecida e falha interna capturada, payload malformado ou tool não suportada | `deny adapter_failed` / `unsupported_tool` explícito na fixture do hook local; tratamento pelo cliente ainda precisa de validação |
 
 A evidência vai para `~/.adf/evidence/<projeto>-<hash>/<AAAA-MM-DD>/<session_id>/`, fora do repo
 do cliente. Revisão, budget, policy pinada (`ADF_READ_POLICY_*`) e OTel (`ADF_OTEL_*`) vêm do ambiente

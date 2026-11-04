@@ -1,84 +1,44 @@
 # Policy pack `effect-security-read-v0`
 
-A host read policy focused on secrets, for design partners. It produces the **existing** pinned host
-policy from [ADR 0011](../../docs/architecture-decision-records/0011-pinned-host-read-policy.md). There is
-no new engine: the PDP, the PEP and the runtime's `sensitive-path-policy-v1` decide exactly as before.
+**English** · [Português (Brasil)](README.pt-BR.md)
 
-## What it does
+This builder creates an **exact, session-bound host read policy** for the existing PDP and PEP ([ADR 0011](../../docs/architecture-decision-records/0011-pinned-host-read-policy.md)). It adds no effect or execution engine. The runtime still applies the versioned [sensitive-path policy v2](../../runtime/v1/policies/sensitive-path-policy-v2.json) at the read. ADF only decides requests seen at [installed edges](../../../docs/product/BOUNDARY.md#support-matrix).
 
-`build.py` takes an **exact** allowlist of repo-relative files and a run/session ID. It writes the host
-policy JSON, then reloads it through the adapter's own `load_host_policy` before it prints the pin.
-It refuses to allowlist any path that matches the runtime denylist or the extras in `pack.json`. The
-check ignores case, so `config/.ENV` is refused too.
+## What it checks
 
-| Source | Denies (path component) |
-| --- | --- |
-| Runtime (`runtime/v1/policies/sensitive-path-policy-v1.json`) | `.env`, `.env.*`, `.git`, `secrets`, `credentials`, `id_rsa`, `*.pem`, `*.key` |
-| Pack (`pack.json`) | `.ssh`, `.aws`, `.azure`, `.gnupg`, `.kube`, `.docker`, `.netrc`, `.npmrc`, `.pypirc`, `.pgpass`, `id_ed25519`, `id_ecdsa`, `id_dsa`, `secret`, `terraform.tfstate`, `secrets.*`, `credentials.*`, `*.p12`, `*.pfx`, `*.jks`, `*.keystore`, `*.ppk`, `*.tfstate`, `*.tfvars` |
+`adf policy build` takes `--run-id`, one or more exact `--allow` paths and an output file. It refuses paths covered by the runtime policy or pack extras in [`pack.json`](pack.json), then reloads the generated policy before printing its pin. Wildcards and a free-form policy DSL are not supported. A denied path can still be denied by the PDP (`invalid_scope` or `scope_not_allowlisted`) before the runtime. Neither the pack nor a successful local trial proves that a host has installed and reviewed this policy.
 
-Anything not on the allowlist is denied anyway (`scope_not_allowlisted`). The denylist is there so a
-reviewer cannot approve a secret by mistake, and the runtime still denies one that slips through.
+## Build and pin for a real session
 
-## Install on another repo
+After [local installation](../../../docs/product/QUICKSTART.md), from the ADF clone:
 
 ```bash
-make install-metrics DEST=/abs/other-repo     # copies ai-development-framework/, including this pack
-cd /abs/other-repo && python3 -m venv .venv-adf && export ADF_CONTRACTS_PYTHON="$PWD/.venv-adf/bin/python3"
-make -f Makefile.adf install-dev
-git -C /abs/other-repo rev-parse HEAD          # record the SHA you trial against
-
-"$ADF_CONTRACTS_PYTHON" ai-development-framework/policy-packs/effect-security-read-v0/build.py \
-  --run-id "<session_id>" --allow README.md --allow docs/architecture.md \
-  --out /abs/host-policy.json
-# prints: export ADF_READ_POLICY_FILE=/abs/host-policy.json ADF_READ_POLICY_SHA256=<pin>
+adf policy build --run-id '<client-session-id>' --allow README.md --out /absolute/host-policy.json
+# prints: export ADF_READ_POLICY_FILE=/absolute/host-policy.json ADF_READ_POLICY_SHA256=<pin>
 ```
 
-Then put those two variables, plus `ADF_TRUSTED_REPOSITORY` and `ADF_EVIDENCE_DIR`, in the hook's
-environment. The hook setup is in [trials.md](../../docs/trials.md#4-habilitar-o-hook-de-leitura).
+The host must set `ADF_READ_POLICY_FILE` and `ADF_READ_POLICY_SHA256` in the hook environment for that session, review the file and retain the printed SHA-256 pin. The policy's `run_id` must match the client's session ID. Keep the pin fixed within a session; review any new allowlist between sessions. Without a configured policy, the reference demo can synthesize a grant for the requested path; do not treat that as a reviewed host allowlist. A missing, incomplete or wrong configured pin yields `host_policy_invalid`, never a fallback to demo mode. [Host activation and trials](../../docs/trials.md#many-projects-one-hook-req-mp-01).
 
-**Pinning rules:** the policy is bound to the run ID. For Claude Code that is the hook's `session_id`, so
-you build one policy per session. Keep the pin fixed during a session, review a new version between
-sessions, and commit `pack.json` changes through a reviewed PR. Whoever can change the host's
-environment can change the authority; the pin only detects drift.
-
-## Per-principal allowlists (ADR 0024)
+## Per-principal paths
 
 ```bash
-"$ADF_CONTRACTS_PYTHON" ai-development-framework/policy-packs/effect-security-read-v0/build.py \
-  --run-id "<session_id>" --allow README.md --allow src/backend/app.py --allow config/settings.yaml \
-  --principal claude:backend-reviewer=src/backend/app.py,README.md \
-  --principal claude:security-reviewer=config/settings.yaml \
-  --out /abs/host-policy.json
+adf policy build --run-id '<client-session-id>' --allow README.md --allow src/app.py \
+  --principal claude:main=README.md \
+  --principal claude:backend-reviewer=src/app.py \
+  --out /absolute/host-policy.json
 ```
 
-Any `--principal` closes the policy: a principal that is not named is denied (`principal_not_allowlisted`), a
-request without a principal is denied (`principal_required`), and a named principal only gets its own paths
-(`scope_not_allowlisted_for_principal`). `--allow` stays the ceiling; a principal path outside it is refused at
-build time. Local edges get their principal from the hook payload (`claude:<agent_type>`, ADR 0023); the A2A
-edge uses the token's `sub`.
+Naming any principal closes the policy to unnamed principals. A named principal receives only its listed paths, inside the top-level `--allow` ceiling; `--max-act-depth` can further cap a principal's delegation depth ([ADRs 0024](../../docs/architecture-decision-records/0024-principal-rules-in-pinned-policy.md), [0033](../../docs/architecture-decision-records/0033-subagent-principal-propagation.md)). The local hook asserts `claude:<agent_type>` from the client payload; it is not OS identity.
 
-## Reason codes you will see
+## Expected reasons and limits
 
-| Request | Gate result | Layer |
+| Request | Expected reason | Stage / record |
 | --- | --- | --- |
-| `README.md` (allowlisted) | allow · `read_delivered` | — |
-| `.env` (repo root) | deny · `invalid_referenced_contract` | v1 path contract: root dotfiles never validate |
-| `config/.env` | deny · `invalid_scope` | PDP: no `.env`/`.git` component |
-| `secrets/db.txt` (not allowlisted) | deny · `scope_not_allowlisted` | PDP: pinned allowlist |
-| a secret allowlisted by hand-editing the JSON | deny · `sensitive_path_denied` | Runtime |
-| wrong or missing pin | deny · `host_policy_invalid` | Adapter; never falls back to the demo |
-| path of another principal, unnamed principal, no principal (policy with `--principal`) | deny · `scope_not_allowlisted_for_principal`, `principal_not_allowlisted`, `principal_required` | PDP (ADR 0024) |
+| Allowlisted `README.md` | `read_delivered` | Composed read; bundle |
+| Root or nested `.env` | `invalid_scope` | PDP deny; bundle since ADR 0036 |
+| Valid path outside the allowlist | `scope_not_allowlisted` | PDP deny; bundle |
+| Hand-edited policy with wrong pin | `host_policy_invalid` | Adapter reject; attempt journal, no fallback |
+| Invalid traversal (`..`) | `invalid_referenced_contract` | Contract reject; attempt journal, no bundle |
+| Unlisted principal | `principal_not_allowlisted` | PDP deny; bundle |
 
-Every row with a bundle verifies offline, including `invalid_scope`: before 2026-10-19 that
-bundle did not verify, and the A2A edge answered 500 (WP1b in the
-[implementation plan](../../../docs/product/IMPLEMENTATION_PLAN.md)).
-
-## Not covered
-
-- Reads that do not go through a gated edge: Claude `Bash`/`Grep`/`Glob`; Codex `head`, `sed`, `rg`,
-  `python -c`, pipes; any other process. See the [support matrix](../../../docs/product/BOUNDARY.md#matriz-de-suporte).
-- Bugs or permission bypasses in the agent or IDE itself (vendor CVEs).
-- Wildcards: the allowlist is exact paths by design (ADR 0011).
-- Writes, network and every effect other than `read`.
-
-Test: `bash ai-development-framework/hooks/test-policy-pack.sh`.
+An admitted path can still be denied by the runtime with `sensitive_path_denied`. The bundle's `delivery_mode` matters: `gate_only` on a native tool does not prove its delivered bytes; `mediated` returns controlled snapshot bytes. See the [evidence boundary](../../../docs/product/BOUNDARY.md#evidence-is-the-record-telemetry-only-visualizes). The pack does not intercept scripts, arbitrary Bash or processes outside the installed edge. Test: `bash ai-development-framework/hooks/test-policy-pack.sh`.

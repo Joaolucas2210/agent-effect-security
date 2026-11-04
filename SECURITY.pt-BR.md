@@ -44,13 +44,17 @@ São metas de um projeto com um mantenedor, não um SLA contratual.
   `human:confirm`, `effect_binding`).
 - Segredos, tokens, conteúdo de arquivo ou paths absolutos vazando para evidência, logs ou spans OpenTelemetry.
 - Uma falha do ADF que bloqueia as tools do agente em projetos que não estão ativados.
+- Uma chamada coberta e registrada no hook que prossiga após um deny explícito do ADF, com versão do cliente e
+  reprodução sintética. O [contrato de bootstrap](ai-development-framework/docs/architecture-decision-records/0037-hook-bootstrap-failure-contract.md)
+  registra o que ainda não foi verificado sobre executável ausente e fallback do cliente.
 
 ## Fora do escopo
 
 São limites documentados, não vulnerabilidades. Veja a
 [matriz de suporte](docs/product/BOUNDARY.pt-BR.md#matriz-de-suporte):
 
-- Leituras por tools ou comandos que o ADF não intermedia (`python -c`, `head`, `sed`, pipes, outros servidores MCP).
+- Leituras por rotas não observadas, como scripts, interpretadores arbitrários ou servidores MCP fora do hook.
+  A gramática Bash nega formas selecionadas de `head`/`sed`/pipes, mas não é um sandbox.
 - Um agente editando `~/.adf/enabled-projects` ou as próprias settings via `Bash`.
 - Qualquer coisa que exija o segredo HS256 do piloto, ou um bearer roubado usado antes de `exp` (sem DPoP/mTLS ainda).
 - Vulnerabilidades do próprio Claude Code, Codex ou outros agentes. Reporte aos fornecedores.

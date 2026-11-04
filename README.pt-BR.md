@@ -80,6 +80,6 @@ O repositório é experimental `0.x`. O efeito de leitura e gates deny-only sele
 ## Documentação e contribuição
 
 - **Integre:** [início rápido isolado](docs/product/QUICKSTART.pt-BR.md), [guia de host/trials](ai-development-framework/docs/trials.pt-BR.md), [policy pack](ai-development-framework/policy-packs/effect-security-read-v0/README.md).
-- **Opere e verifique:** [boundary](docs/product/BOUNDARY.pt-BR.md), [control plane](ai-development-framework/docs/CONTROL_PLANE.pt-BR.md), [ameaças e claims](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md).
+- **Opere e verifique:** [boundary](docs/product/BOUNDARY.pt-BR.md), [control plane](ai-development-framework/docs/CONTROL_PLANE.pt-BR.md), [ameaças e claims](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md), [autoavaliação OSPS Baseline](docs/security/OSPS-BASELINE-2026-08-28.pt-BR.md).
 - **Contribua:** [CONTRIBUTING](CONTRIBUTING.pt-BR.md), [Código de Conduta](CODE_OF_CONDUCT.pt-BR.md), [Licença MIT](LICENSE), [assets da marca](docs/brand/BRAND_GUIDELINES.pt-BR.md).
 - **Reporte falha:** use o [canal privado de segurança](SECURITY.pt-BR.md); não abra issue pública com segredos.

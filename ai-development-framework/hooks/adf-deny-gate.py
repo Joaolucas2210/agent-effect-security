@@ -39,7 +39,19 @@ _WRAPPERS_ARG = {"timeout", "nice", "ionice"}  # may take one numeric/flag opera
 _EXPANSION = re.compile(r"[$`<>]")  # checked outside single quotes: substitution, expansion, redirection
 _GLOB = re.compile(r"[*?\[\]~{}]")  # checked on path operands only
 _SINGLE_QUOTED = re.compile(r"'[^']*'")
-_SEGMENT = re.compile(r"\|\||&&|[;|&\n]|\(|\)")
+_SEPARATORS = set(";|&\n()")
+# Options that take the next token as an argument (never a path) and options whose argument IS a path (a read).
+_OPT_ARG = {
+    "grep": {"-e", "--regexp", "-m", "--max-count", "-A", "-B", "-C", "-d", "--directories", "--include", "--exclude", "--exclude-dir", "--color"},
+    "rg": {"-e", "--regexp", "-t", "--type", "-T", "-g", "--glob", "--iglob", "-m", "--max-count", "-A", "-B", "-C", "--after-context", "--before-context", "--context", "-j", "--threads", "--max-depth", "--color"},
+    "sed": {"-e", "--expression", "-l"}, "awk": {"-v", "-F"}, "head": {"-n", "-c", "--lines", "--bytes"}, "tail": {"-n", "-c", "--lines", "--bytes", "--pid"},
+    "cut": {"-d", "-f", "-b", "-c"}, "sort": {"-k", "-t", "-S", "-T"}, "od": {"-j", "-N", "-t", "-w", "-A"}, "xxd": {"-l", "-s", "-c", "-g"}, "strings": {"-n", "-t"},
+    "diff": {"-U", "-C", "-I", "-x"}, "uniq": {"-f", "-s", "-w"}, "wc": set(), "nl": {"-b", "-n", "-s", "-w"},
+}
+_OPT_PATH = {"grep": {"-f", "--file"}, "egrep": {"-f", "--file"}, "fgrep": {"-f", "--file"}, "rg": {"-f", "--file"}, "sed": {"-f", "--file"}, "awk": {"-f", "--file"}, "sort": {"-o", "--output"}}
+_PATTERN_OPTS = {"-e", "--regexp", "-f", "--file", "--expression"}  # given one of these, every positional is a path
+for alias in ("egrep", "fgrep"):
+    _OPT_ARG[alias] = _OPT_ARG["grep"]
 _SENSITIVE = json.loads((ROOT / "runtime/v1/policies/sensitive-path-policy-v2.json").read_text(encoding="utf-8"))
 _AGENT_CONFIG = json.loads((ROOT / "runtime/v1/policies/agent-config-policy-v1.json").read_text(encoding="utf-8"))
 
@@ -107,7 +119,28 @@ def _run_tainted(evidence_dir, run_id):
 
 
 def _segments(command):
-    return [part.strip() for part in _SEGMENT.split(command) if part and part.strip()]
+    """Split on ; | & ( ) and newlines *outside* quotes; a backslash outside quotes escapes the next char.
+    Unbalanced quotes propagate as a segment shlex will refuse (-> ambiguous)."""
+    out, buf, quote, i = [], [], None, 0
+    while i < len(command):
+        ch = command[i]
+        if quote:
+            buf.append(ch)
+            if ch == quote:
+                quote = None
+            elif ch == "\\" and quote == '"' and i + 1 < len(command):
+                buf.append(command[i + 1]); i += 1
+        elif ch in ("'", '"'):
+            quote = ch; buf.append(ch)
+        elif ch == "\\" and i + 1 < len(command):
+            buf.append(ch); buf.append(command[i + 1]); i += 1
+        elif ch in _SEPARATORS:
+            out.append("".join(buf)); buf = []
+        else:
+            buf.append(ch)
+        i += 1
+    out.append("".join(buf))
+    return [part.strip() for part in out if part.strip()]
 
 
 def _strip_wrappers(tokens):
@@ -127,15 +160,34 @@ def _strip_wrappers(tokens):
 
 
 def _operands(tokens):
-    """Non-option operands after the command; `--` ends options; a bare `-` is stdin."""
-    out, options_done = [], False
-    for token in tokens[1:]:
-        if not options_done and token == "--":
-            options_done = True
-        elif options_done or not token.startswith("-") or token == "-":
+    """-> (path operands, pattern given by option). `--` ends options; a bare `-` is stdin; an option that takes an
+    argument consumes the next token (never a path) unless it is a path-taking option (then the argument is a read);
+    `--opt=value` forms likewise."""
+    name = tokens[0].rsplit("/", 1)[-1]
+    takes, paths = _OPT_ARG.get(name, set()), _OPT_PATH.get(name, set())
+    out, options_done, pattern_given, i = [], False, False, 1
+    while i < len(tokens):
+        token = tokens[i]
+        if options_done or not token.startswith("-") or token == "-":
             if token != "-":
                 out.append(token)
-    return out
+        elif token == "--":
+            options_done = True
+        elif "=" in token and token.startswith("--"):
+            opt, value = token.split("=", 1)
+            if opt in paths:
+                out.append(value)
+            if opt in _PATTERN_OPTS:
+                pattern_given = True
+        elif token in paths or token in takes:
+            if token in _PATTERN_OPTS:
+                pattern_given = True
+            if i + 1 < len(tokens):
+                if token in paths:
+                    out.append(tokens[i + 1])
+                i += 1
+        i += 1
+    return out, pattern_given
 
 
 def bash_read(payload):
@@ -162,9 +214,9 @@ def bash_read(payload):
             continue
         if _EXPANSION.search(_SINGLE_QUOTED.sub("", segment)):
             return _decision("uncovered_bash_ambiguous")
-        operands = _operands(tokens)
-        if name in _PATTERN_FIRST:
-            operands = operands[1:]
+        operands, pattern_given = _operands(tokens)
+        if name in _PATTERN_FIRST and not pattern_given:
+            operands = operands[1:]  # the first positional is the pattern/script
         if any(_GLOB.search(operand) for operand in operands):
             return _decision("uncovered_bash_ambiguous")
         for operand in operands:

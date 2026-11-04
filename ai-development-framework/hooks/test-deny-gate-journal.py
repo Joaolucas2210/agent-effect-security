@@ -51,7 +51,7 @@ class DenyGateJournalTest(unittest.TestCase):
     def test_a_deny_only_decision_is_journaled_and_verifies_offline(self):
         self.assertIn("uncovered_write_denied_sensitive", self.run_hook("Edit", {"file_path": self.path("config/.env"), "old_string": "a", "new_string": "b"}, agent_type="worker"))
         (start, end), = self.journals()
-        self.assertEqual((start["adapter_id"], start["run_id"], start["payload"]), ("deny-only-gate", "sess-1c", {"principal_sub": "claude:worker"}))
+        self.assertEqual((start["adapter_id"], start["run_id"], start["payload"]), ("deny-only-gate", "sess-1c", {"principal_sub": "claude:worker", "act_depth": 1}))  # ADR 0033: a subagent acts for main (depth 1)
         self.assertEqual(end["payload"], {"outcome": "deny", "reason_code": "uncovered_write_denied_sensitive", "bundle_id": None, "cleanup_outcome": "not_attempted"})
         self.assertFalse(any(p.suffix == ".json" for p in (self.home / "evidence").rglob("*") if "_attempts" not in p.parts), "still no bundle: nothing was admitted")
         self.assertNotIn("config/.env", json.dumps([start, end]), "the journal never carries the path")

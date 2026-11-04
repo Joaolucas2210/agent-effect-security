@@ -79,12 +79,10 @@ def _load(relative):
 
 
 def _gate(payload):
-    deny_only = _load(_DENY_ONLY)
-    if payload["tool_name"] == "Bash" and deny_only.network_shaped(payload):  # ADR 0028 1c: network rule before the read gate
-        decision = deny_only.gate(payload)
-        if decision is not None:
-            return decision
-    return _load(_gate_for(payload["tool_name"])).gate(payload)
+    decision = _load(_gate_for(payload["tool_name"])).gate(payload)
+    if payload["tool_name"] == "Bash" and decision == {}:  # the cat gate passed it through: ADR 0028 1c network rule, then the 1b read grammar
+        return _load(_DENY_ONLY).gate(payload) or {}
+    return decision
 
 
 def _project_dir(payload):

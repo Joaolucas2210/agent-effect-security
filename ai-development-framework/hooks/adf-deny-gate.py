@@ -19,7 +19,9 @@ sys.path.insert(0, str(ROOT))
 from integration import mcp_registry  # noqa: E402
 from integration.adapter_attempt import AttemptJournal  # noqa: E402
 from integration.local_read_adapter import schemas as _schemas  # noqa: E402
+from integration.otel_export import emit_local_read  # noqa: E402
 from integration.read_gate_host import local_principal  # noqa: E402
+import time  # noqa: E402
 from runtime.local_read_runtime import sensitive_path  # noqa: E402
 
 _READ_TOOLS = {"Grep": "path", "Glob": "path"}
@@ -243,11 +245,22 @@ def journal_deny(payload, reason):
         pass
 
 
+def emit_decision(payload, reason, start_ns):
+    """ADR 0021 for this edge: one span per decision, after it; tool name, outcome, reason code and duration only."""
+    tool = payload.get("tool_name") if isinstance(payload, dict) else None
+    principal = local_principal(payload, "claude") if isinstance(payload, dict) else None
+    agent_type = principal["sub"].split(":", 1)[1] if principal else None
+    emit_local_read("deny_gate", {"outcome": "deny" if reason else "no_decision", "reason_code": reason, "bundle_id": None}, start_ns, hook=True, agent_type=agent_type, tool=tool if isinstance(tool, str) else None)
+
+
 def gate(payload):
-    """Path-only mapping to `deny` or None; a malformed payload in an enabled project denies. Every deny is journaled."""
+    """Path-only mapping to `deny` or None; a malformed payload in an enabled project denies. Every deny is journaled and spanned."""
+    start_ns = time.time_ns()
     decision = _decide(payload)
-    if decision is not None:
-        journal_deny(payload, decision["hookSpecificOutput"]["permissionDecisionReason"].removeprefix("adf: "))
+    reason = decision["hookSpecificOutput"]["permissionDecisionReason"].removeprefix("adf: ") if decision is not None else None
+    if reason:
+        journal_deny(payload, reason)
+    emit_decision(payload, reason, start_ns)
     return decision
 
 

@@ -15,8 +15,8 @@ import urllib.parse
 import urllib.request
 
 
-ATTRIBUTES = frozenset({"adf.edge", "adf.agent_type", "adf.skill", "adf.outcome", "adf.reason_code", "adf.has_principal", "adf.act_depth", "adf.decision_id", "adf.bundle_id", "adf.record_id", "adf.task_state", "adf.confirmation", "adf.duration_ms", "http.response.status_code"})
-EDGES = frozenset({"claude_read", "codex_bash", "mcp_read"})  # ADR 0021: closed enum for adf.edge
+ATTRIBUTES = frozenset({"adf.edge", "adf.agent_type", "adf.skill", "adf.outcome", "adf.reason_code", "adf.has_principal", "adf.act_depth", "adf.decision_id", "adf.bundle_id", "adf.record_id", "adf.task_state", "adf.confirmation", "adf.duration_ms", "adf.tool", "http.response.status_code"})  # adf.tool: the tool *name* only, never its input
+EDGES = frozenset({"claude_read", "codex_bash", "mcp_read", "deny_gate"})  # ADR 0021: closed enum for adf.edge; deny_gate = ADR 0028 gates and the pre-gate tamper deny
 _CREDENTIAL = re.compile(r"eyJ[A-Za-z0-9_-]*\.|bearer|secret|password|private", re.I)
 
 
@@ -38,12 +38,12 @@ def emit_span(name, attributes, start_ns, end_ns, quiet=False):
     return None
 
 
-def emit_local_read(edge, result, start_ns, hook, agent_type=None):
+def emit_local_read(edge, result, start_ns, hook, agent_type=None, tool=None):
     """ADR 0021: one span per local-edge decision, built from the adapter result only (never path,
     command or session). A hook exits right after answering, so it waits up to ADF_OTEL_FLUSH_MS."""
     try:
         end_ns = time.time_ns()
-        attributes = {"adf.edge": edge, "adf.agent_type": agent_type, "adf.outcome": result.get("outcome"), "adf.reason_code": result.get("reason_code"), "adf.bundle_id": result.get("bundle_id"), "adf.duration_ms": (end_ns - start_ns) // 1_000_000}
+        attributes = {"adf.edge": edge, "adf.tool": tool, "adf.agent_type": agent_type, "adf.outcome": result.get("outcome"), "adf.reason_code": result.get("reason_code"), "adf.bundle_id": result.get("bundle_id"), "adf.duration_ms": (end_ns - start_ns) // 1_000_000}
         thread = emit_span("adf.local_read.request", attributes, start_ns, end_ns, quiet=hook)
         if thread is not None and hook:
             thread.join(_flush_seconds())

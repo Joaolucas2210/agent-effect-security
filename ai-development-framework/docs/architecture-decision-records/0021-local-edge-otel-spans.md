@@ -104,3 +104,11 @@ exporter ganha uma chave (`adf.edge`) com valor de enum fechado.
 2. **Teto do flush:** 300 ms por padrão é aceitável para um `Read` interativo?
 3. **Emendar o 0020 na aceitação:** ao aceitar, acrescentar ao 0020 uma linha "Amended by ADR 0021", sem
    reescrever o texto aceito.
+
+## Extension (2026-11-04): the deny-only gate
+
+`adf.edge` gains `deny_gate` (ADR 0028 gates and the pre-gate `control_plane_tampered` deny of ADR 0027) and the
+attribute allowlist gains `adf.tool` — the tool *name* only (`Edit`, `WebFetch`, `mcp__<server>__<tool>`), never
+its input, URL, path or command. One span per decision, including pass-through (`adf.outcome=no_decision`), so
+the pilot's latency p95 (ADR 0026 success table) becomes measurable. Same rules: emitted after the decision, hook
+waits at most `ADF_OTEL_FLUSH_MS`, off by default, trace ≠ evidence. `hooks/test-deny-gate-otel.sh` ran red first.

@@ -44,6 +44,7 @@ A registered server can still return malicious *output*; that is leg 2 of the tr
 Servers started outside the agent's hook path are unseen. The tool-list digest is checked only when a human runs
 `adf mcp probe`: a rug-pull between probes is caught at the next probe, not at the call. Managed/enterprise MCP
 settings outside the three Claude Code scopes are not read, so a server defined only there is `unverified`.
+Codex drift is visible only in `adf doctor`, never at a Codex call (no hook sees it).
 
 ## Validation
 
@@ -63,8 +64,13 @@ Slice 2 (delivered 2026-11-04), in two parts because the `PreToolUse` payload st
   `<root>/.mcp.json` project scope — and requires **all** of them to equal the pin: `mcp_server_definition_changed`
   otherwise (INC-05 MCPoison: a repo-shipped `.mcp.json` overriding an approved server is caught);
   `mcp_server_definition_unverified` when no scope defines it or a config file is unreadable (fail closed).
-  Entries without `definition` keep slice-1 behaviour. Codex `config.toml` is not read: Python 3.10 has no
-  `tomllib`; a Codex definition check needs its own slice.
+  Entries without `definition` keep slice-1 behaviour.
+- **Codex `config.toml` (follow-up, 2026-11-04).** `[mcp_servers.<name>]` in `~/.codex/config.toml` and
+  `<root>/.codex/config.toml` (inline or sub-table `env`) is read with `tomllib` (3.11+) or the `tomli` backport
+  (3.10, declared in `requirements-test.txt` and the `codex` extra); no parser → `unreadable`, never ok. Codex
+  sends no MCP calls to the hook, so this is **offline**: `adf doctor` prints `mcp <server>: claude=… codex=…`
+  with `ok | changed | absent | unreadable` per client and exits 1 on `changed`/`unreadable`. A Claude-origin call
+  is still judged against Claude's scopes only.
 - **Offline — tool-list digest.** `adf mcp probe FILE [--write]` (human-run, never from a hook) starts each
   pinned server over stdio with only its `env_keys` from the environment, lists tools, and digests
   `name + inputSchema` (descriptions and annotations excluded: they authorize nothing). Status per server:

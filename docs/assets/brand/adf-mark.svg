@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">ADF decision boundary mark</title>
+  <desc id="desc">An incoming line meets an open boundary, continues after a decision diamond, and leaves a square evidence record.</desc>
+  <rect width="64" height="64" rx="12" fill="#0B1220"/>
+  <path d="M31 8v16m0 16v16M8 32h15m18 0h15" fill="none" stroke="#F3F7FC" stroke-width="4" stroke-linecap="square"/>
+  <path d="m32 25 7 7-7 7-7-7z" fill="#52D1B0"/>
+  <rect x="46" y="45" width="10" height="10" fill="none" stroke="#52D1B0" stroke-width="3"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 92" role="img" aria-labelledby="title desc">
+  <title id="title">ADF — Agent Effect Security, for dark backgrounds</title>
+  <desc id="desc">ADF decision boundary symbol with the project name.</desc>
+  <rect x="2" y="10" width="72" height="72" rx="14" fill="#263548"/>
+  <path d="M37 20v18m0 16v18M14 46h16m16 0h17" fill="none" stroke="#F3F7FC" stroke-width="4"/>
+  <path d="m38 39 7 7-7 7-7-7z" fill="#52D1B0"/>
+  <rect x="53" y="61" width="10" height="10" fill="none" stroke="#52D1B0" stroke-width="3"/>
+  <text x="95" y="54" fill="#F3F7FC" font-family="system-ui, sans-serif" font-size="50" font-weight="750" letter-spacing="-2">ADF</text>
+  <text x="236" y="52" fill="#F3F7FC" font-family="system-ui, sans-serif" font-size="20" font-weight="600">Agent Effect Security</text>
+</svg>

@@ -1,14 +1,21 @@
 # Assets
 
+**English** · [Português (Brasil)](README.pt-BR.md)
+
+The [brand guidelines](../brand/BRAND_GUIDELINES.md) document the SVG system, contrast, diagram semantics and
+the social preview. `python3 docs/assets/brand/make-social-preview.py` regenerates the 1280 × 640 PNG with Pillow
+and an installed DejaVu Sans font. A maintainer must upload that PNG in GitHub Settings → General → Social preview;
+the committed file alone does not change link previews.
+
 | File | What it shows | How it is made |
 | --- | --- | --- |
 | `adf-demo.gif` | A real ADF session: enable a project, create the evidence key, a Claude Code `Read` of `README.md` allowed with a signed bundle, a `Read` of `.env` denied by the PDP with a bundle, `adf verify … --key` passing offline, `adf projects reasons`. ~12 s, ~400 KiB, 1048×410. | `python3 docs/assets/make-demo-gif.py` |
 
 ## Regenerating the GIF
 
-`make-demo-gif.py` runs the **real** `adf` CLI and the **real** `PreToolUse` hook against a throwaway repository and
+`make-demo-gif.py` runs the **real** `adf` CLI and the **real** `PreToolUse` hook with synthetic payloads against a throwaway repository and
 an isolated `ADF_HOME`, captures their output, and renders terminal frames with Pillow. Nothing in the GIF is typed
-by hand. Two substitutions keep it readable: the temporary repository is shown as `~/dev/my-app` and the temporary
+by hand. This is a hook contract demo, not a recorded Claude Code client session. Two substitutions keep it readable: the temporary repository is shown as `~/dev/my-app` and the temporary
 `ADF_HOME` as `~/.adf`; the bundle path in the `adf verify` line is elided to its first eight hex digits.
 
 ```bash

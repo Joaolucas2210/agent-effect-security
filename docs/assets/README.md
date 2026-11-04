@@ -9,7 +9,7 @@ the committed file alone does not change link previews.
 
 | File | What it shows | How it is made |
 | --- | --- | --- |
-| `adf-demo.gif` | A real ADF session: enable a project, create the evidence key, a Claude Code `Read` of `README.md` allowed with a signed bundle, a `Read` of `.env` denied by the PDP with a bundle, `adf verify … --key` passing offline, `adf projects reasons`. ~12 s, ~400 KiB, 1048×410. | `python3 docs/assets/make-demo-gif.py` |
+| `adf-demo.gif` | Real ADF commands on a synthetic fixture: enable a project, create the evidence key, a Claude-style `Read` payload for `README.md` allowed with a signed bundle, a `Read` payload for `.env` denied by the PDP with a bundle, `adf verify … --key` passing offline, `adf projects reasons`. ~12 s, ~400 KiB, 1048×410. | `python3 docs/assets/make-demo-gif.py` |
 
 ## Regenerating the GIF
 

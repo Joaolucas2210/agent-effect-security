@@ -6,7 +6,7 @@ As [diretrizes da marca](../brand/BRAND_GUIDELINES.pt-BR.md) documentam os SVGs,
 
 | Arquivo | O que mostra | Como é gerado |
 | --- | --- | --- |
-| `adf-demo.gif` | Uma sessão ADF real com fixture sintética: habilitar um projeto, criar a chave de evidência, permitir `Read README.md` com bundle assinado, negar `Read .env` pelo PDP com bundle, conferir `adf verify … --key` offline e contar motivos com `adf projects reasons`. ~12 s, ~400 KiB, 1048×410. | `python3 docs/assets/make-demo-gif.py` |
+| `adf-demo.gif` | Comandos ADF reais numa fixture sintética: habilitar um projeto, criar a chave de evidência, permitir o payload `Read README.md` no formato Claude com bundle assinado, negar o payload `Read .env` pelo PDP com bundle, conferir `adf verify … --key` offline e contar motivos com `adf projects reasons`. ~12 s, ~400 KiB, 1048×410. | `python3 docs/assets/make-demo-gif.py` |
 
 ## Regeneração do GIF
 

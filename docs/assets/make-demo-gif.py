@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Render docs/assets/adf-demo.gif from a REAL ADF session.
+"""Render docs/assets/adf-demo.gif from real ADF commands against a synthetic fixture.
 
-Every line shown in the GIF is captured from the actual `adf` CLI and the actual PreToolUse hook, run against a
-throwaway repository and an isolated ADF_HOME created by this script; nothing is typed in by hand. Only two
+Every line shown in the GIF is captured from the actual `adf` CLI and PreToolUse entry point, run against a
+throwaway repository and an isolated ADF_HOME created by this script. No client is involved. Only two
 substitutions are made for readability: the temporary repository path is shown as `~/dev/my-app` and the
 temporary ADF_HOME as `~/.adf`. Needs: the repo's `.venv` (`make install-dev`) and Pillow on the Python that runs
 this script (`python3 -m pip install Pillow`). No asciinema/agg/ffmpeg required; see README.md next to this file
@@ -41,7 +41,7 @@ def hook(env, tool_input, repo):
 
 
 def capture():
-    """Run the real session; return the scene list [(prompt_line, [output lines])]."""
+    """Call the real entry points with synthetic inputs; return the scene list."""
     with tempfile.TemporaryDirectory() as temp:
         base = Path(temp).resolve(); repo, home = base / "my-app", base / "adf-home"
         (repo / "config").mkdir(parents=True); home.mkdir()
@@ -54,9 +54,9 @@ def capture():
         key_line = sh([str(ADF), "key", "init"], env); env["ADF_EVIDENCE_KEY_FILE"] = str(home / "evidence.key")
         scenes.append(("adf key init", [key_line]))
         allow = hook(env, {"file_path": str(repo / "README.md")}, repo)
-        scenes.append(("# Claude Code → Read README.md", [f"{allow[0]:<6} {allow[1]}"]))
+        scenes.append(("# Hook fixture → Read README.md", [f"{allow[0]:<6} {allow[1]}"]))
         deny = hook(env, {"file_path": str(repo / ".env")}, repo)
-        scenes.append(("# Claude Code → Read .env", [f"{deny[0]:<6} {deny[1]}"]))
+        scenes.append(("# Hook fixture → Read .env", [f"{deny[0]:<6} {deny[1]}"]))
         bundle_id = deny[1].split("bundle=")[1]
         bundle = next((home / "evidence").rglob(f"{bundle_id}.json"))
         shown = f"~/.adf/evidence/…/demo-session/{bundle_id[:8]}….json"  # elided for the frame width; the file name is the full bundle id
@@ -81,7 +81,7 @@ def render(scenes):
 
     def draw(hold_ms, cursor=True):
         img = Image.new("RGB", (width, height), BG); d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, width, 30], fill=(36, 38, 46)); d.text((PAD, 7), "adf · agent effect security · real session", fill=DIM, font=font)
+        d.rectangle([0, 0, width, 30], fill=(36, 38, 46)); d.text((PAD, 7), "adf · isolated hook fixture · no client", fill=DIM, font=font)
         y = 30 + 8
         rows = []
         for kind, text in screen:

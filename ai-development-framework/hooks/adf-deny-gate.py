@@ -72,7 +72,11 @@ def _mcp(tool):
         config = mcp_registry.configured()
         if config is None:
             return None
-        reason = mcp_registry.decide(tool, mcp_registry.load(*config))
+        registry = mcp_registry.load(*config)
+        reason = mcp_registry.decide(tool, registry)
+        if reason is None:  # ADR 0031 slice 2: the client's definition of the server must still be the pinned one
+            server = tool.split("__", 2)[1]
+            reason = mcp_registry.check_definition(server, registry["servers"][server], os.environ.get("ADF_TRUSTED_REPOSITORY", "/"), os.environ.get("HOME") or str(Path.home()))
     except mcp_registry.RegistryInvalid:
         return _decision("mcp_registry_invalid")
     return _decision(reason) if reason else None

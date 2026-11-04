@@ -8,6 +8,7 @@
   adf verify FILE [--key KEYFILE]                            verify an EvidenceBundle or an A2AEvidenceRecord offline; --key also checks the host signature (ADR 0030)
   adf key init [KEYFILE]                                     create the host evidence key (0400, never overwritten); default $ADF_HOME/evidence.key
   adf mcp pin FILE                                           validate a host MCP registry and print its pin (ADR 0031); export ADF_MCP_REGISTRY_FILE/_SHA256
+  adf mcp probe FILE [--write]                               start each pinned server, digest its live tool list, compare (exit 1 on any change/unpinned); --write records digests, then re-pin
   adf doctor [--pin]                                         check the control plane against $ADF_HOME/pins.json (exit 0 intact, 1 tampered, 3 not pinned); --pin (re)writes it (ADR 0027)
   adf version
 
@@ -137,7 +138,10 @@ def cmd_key(argv):
 
 
 def cmd_mcp(argv):
-    """`adf mcp pin FILE`: the human computes the pin once, after review; the gate never recomputes it."""
+    """`adf mcp pin FILE`: the human computes the pin once, after review; the gate never recomputes it.
+    `adf mcp probe FILE [--write]`: human-run tool-list digest check (ADR 0031 slice 2); never called by a hook."""
+    if argv[:1] == ["probe"] and len(argv) in (2, 3) and (len(argv) == 2 or argv[2] == "--write"):
+        return _mcp_probe(Path(argv[1]), len(argv) == 3)
     if len(argv) != 2 or argv[0] != "pin":
         return _usage()
     from integration.mcp_registry import RegistryInvalid, pin
@@ -148,6 +152,29 @@ def cmd_mcp(argv):
         return 1
     print(f"export ADF_MCP_REGISTRY_FILE={Path(argv[1]).resolve()}\nexport ADF_MCP_REGISTRY_SHA256={fingerprint}")
     return 0
+
+
+def _mcp_probe(path, write):
+    import asyncio
+    from integration.mcp_registry import RegistryInvalid, probe, validate
+    try:
+        registry = validate(json.loads(path.read_text(encoding="utf-8")))
+        report = asyncio.run(probe(registry))
+    except (OSError, ValueError, RegistryInvalid) as exc:
+        print(f"adf: registry rejected ({exc})", file=sys.stderr)
+        return 2
+    bad = False
+    for name, item in report.items():
+        print(f"  {name}: {item['status']}" + (f"  tools_sha256={item['tools_sha256']}" if "tools_sha256" in item else ""))
+        if item["status"] in ("unpinned", "mcp_tool_list_changed", "unreachable"):
+            bad = True
+            if write and "tools_sha256" in item:
+                registry["servers"][name]["tools_sha256"] = item["tools_sha256"]
+    if write:
+        path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n")
+        print(f"wrote digests to {path}; re-pin with: adf mcp pin {path}")
+        return 0 if all(item["status"] != "unreachable" for item in report.values()) else 1
+    return 1 if bad else 0
 
 
 def cmd_doctor(argv):

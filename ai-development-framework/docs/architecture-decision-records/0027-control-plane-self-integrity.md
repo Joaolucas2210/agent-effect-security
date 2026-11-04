@@ -4,7 +4,7 @@
 - **Date:** 2026-11-04
 - **Depends on:** ADR 0026; ADRs 0011, 0025 (Accepted).
 - **Scope:** detection of tampering with ADF's own host configuration. No new effect, no admit path.
-- **Threats:** THR-04 (control-plane tampering), INC-08, INC-09.
+- **Threats:** THR-04 (control-plane tampering), INC-08, INC-09; OWASP ASI03, ASI10.
 
 ## Problem
 

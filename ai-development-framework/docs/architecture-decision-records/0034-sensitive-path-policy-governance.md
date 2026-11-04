@@ -1,6 +1,6 @@
 # ADR 0034: sensitive-path policy governance
 
-- **Status:** Proposed — awaits human acceptance.
+- **Status:** Accepted — human acceptance on 2026-11-04 (maintainer); previously Proposed. Already practised: policy v2 entered through this process (ADR 0036).
 - **Date:** 2026-11-04
 - **Depends on:** ADR 0008 (Accepted), 0026, 0035.
 - **Scope:** how `sensitive_path_policy_vN` and `agent_config_policy_vN` change. Process, not code.

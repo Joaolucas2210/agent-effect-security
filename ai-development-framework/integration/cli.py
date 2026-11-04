@@ -9,7 +9,7 @@
   adf key init [KEYFILE]                                     create the host evidence key (0400, never overwritten); default $ADF_HOME/evidence.key
   adf mcp pin FILE                                           validate a host MCP registry and print its pin (ADR 0031); export ADF_MCP_REGISTRY_FILE/_SHA256
   adf mcp probe FILE [--write]                               start each pinned server, digest its live tool list, compare (exit 1 on any change/unpinned); --write records digests, then re-pin
-  adf doctor [--pin]                                         check the control plane against $ADF_HOME/pins.json (exit 0 intact, 1 tampered, 3 not pinned); --pin (re)writes it (ADR 0027)
+  adf doctor [--pin]                                         check the control plane against $ADF_HOME/pins.json (exit 0 intact, 1 tampered, 3 not pinned); --pin (re)writes it (ADR 0027); with a registry also MCP definition drift and probe age (ADF_MCP_PROBE_MAX_AGE_DAYS, default 30)
   adf version
 
 Arguments after the command go to the underlying script unchanged. Editable install only (`make install-dev`):
@@ -156,7 +156,7 @@ def cmd_mcp(argv):
 
 def _mcp_probe(path, write):
     import asyncio
-    from integration.mcp_registry import RegistryInvalid, probe, validate
+    from integration.mcp_registry import RegistryInvalid, probe, record_probe, validate
     try:
         registry = validate(json.loads(path.read_text(encoding="utf-8")))
         report = asyncio.run(probe(registry))
@@ -168,10 +168,8 @@ def _mcp_probe(path, write):
         print(f"  {name}: {item['status']}" + (f"  tools_sha256={item['tools_sha256']}" if "tools_sha256" in item else ""))
         if item["status"] in ("unpinned", "mcp_tool_list_changed", "unreachable"):
             bad = True
-            if write and "tools_sha256" in item:
-                registry["servers"][name]["tools_sha256"] = item["tools_sha256"]
     if write:
-        path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n")
+        path.write_text(json.dumps(record_probe(registry, report), indent=2, sort_keys=True) + "\n")
         print(f"wrote digests to {path}; re-pin with: adf mcp pin {path}")
         return 0 if all(item["status"] != "unreachable" for item in report.values()) else 1
     return 1 if bad else 0
@@ -203,19 +201,30 @@ def cmd_doctor(argv):
 
 def _doctor_mcp(root, home):
     """ADR 0031 follow-up: definition drift in every client config, offline. True when something changed or is unreadable."""
-    from integration.mcp_registry import RegistryInvalid, configured, drift, load
+    import os
+    from integration.mcp_registry import RegistryInvalid, configured, drift, load, probe_status
     try:
         config = configured()
         if config is None:
             return False
-        report = drift(load(*config), root, home)
+        registry = load(*config)
+        report = drift(registry, root, home)
+        max_age = int(os.environ.get("ADF_MCP_PROBE_MAX_AGE_DAYS", "30"))
+        if max_age < 0:
+            raise ValueError
+        ages = probe_status(registry, max_age)
     except RegistryInvalid:
         print("  ✗ mcp registry: mcp_registry_invalid")
         return True
+    except ValueError:
+        print("  ✗ ADF_MCP_PROBE_MAX_AGE_DAYS must be a non-negative integer (days)")
+        return True
     bad = False
     for name, clients in report.items():
-        print(f"  mcp {name}: " + " ".join(f"{client}={status}" for client, status in clients.items()))
-        bad = bad or any(status in ("changed", "unreadable") for status in clients.values())
+        age = ages.get(name, {"status": "never"})
+        probe = age["status"] + (f"({age['age_days']}d)" if "age_days" in age else "")
+        print(f"  mcp {name}: " + " ".join(f"{client}={status}" for client, status in clients.items()) + f" probe={probe}")
+        bad = bad or any(status in ("changed", "unreadable") for status in clients.values()) or age["status"] != "fresh"
     return bad
 
 

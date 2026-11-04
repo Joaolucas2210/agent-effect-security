@@ -152,6 +152,8 @@ def decide(intent, profiles, policy, context, schemas, principal=None):
             return _decision("principal_not_allowlisted", intent, profile, policy, scope, rules=rules)
         if scope not in principal_matches[0]["allowed_scopes"]:
             return _decision("scope_not_allowlisted_for_principal", intent, profile, policy, scope, rules=rules)
+        if "max_act_depth" in principal_matches[0] and len(principal.get("act") or []) > principal_matches[0]["max_act_depth"]:  # ADR 0033
+            return _decision("act_depth_exceeded", intent, profile, policy, scope, rules=rules)
         rules = rules + [f"principal:{principal['sub']}"]
     budget = min([intent["requested_budget"]["max_output_bytes"], operation["max_risk"]["max_output_bytes"]] + [item["max_output_bytes"] for item in restrictions])
     if intent["requested_budget"]["max_output_bytes"] > budget:

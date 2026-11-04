@@ -469,6 +469,17 @@ token remains valid until `exp` (≤ 1 h). DPoP/mTLS (A2A-8b) require their own 
 deferred. The card still announces a loopback `url`; the remote client uses the proxy URL. The
 proxy is a new exposed component: patching, certificates, and rate limiting belong to the host.
 
+## Control-plane self-integrity (ADR 0027)
+
+[ADR 0027](architecture-decision-records/0027-control-plane-self-integrity.md) (Accepted). Off until a human
+runs `adf doctor --pin`, which writes `$ADF_HOME/pins.json` (`0400`) with the SHA-256 of ADF's own gate and
+control-plane code, the runtime policies, `enabled-projects`, the pinned policy/registry/JWKS/key files, and
+the matchers under which the hook is registered. Every hook invocation recomputes the snapshot first; any
+divergence, or an unusable manifest, denies with `control_plane_tampered` before any gate runs. `adf doctor`
+exits 0 intact, 1 tampered, 3 not pinned. Re-pin after every legitimate change. Residual: root or the user
+can rewrite the manifest; a replaced checker could skip its own check; a removed `adf` binary is "no
+decision" by the hook's fail-safe and is visible only in `adf doctor`.
+
 ## Evidence authenticity (ADR 0030)
 
 [ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md) (Accepted). Off by

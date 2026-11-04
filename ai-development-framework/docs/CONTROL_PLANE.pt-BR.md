@@ -467,6 +467,17 @@ roubado continua valendo até `exp` (≤ 1 h). DPoP/mTLS (A2A-8b) exigem ADR pr�
 adiados. O card continua anunciando `url` loopback; o cliente remoto usa a URL do proxy. O
 proxy é um componente exposto novo: patch, certificados e rate limit são do host.
 
+## Integridade do próprio control plane (ADR 0027)
+
+[ADR 0027](architecture-decision-records/0027-control-plane-self-integrity.md) (Accepted). Desligado até um
+humano rodar `adf doctor --pin`, que grava `$ADF_HOME/pins.json` (`0400`) com o SHA-256 do código dos gates e
+do control plane, das policies do runtime, de `enabled-projects`, dos arquivos pinados de policy/registry/JWKS/
+chave e dos matchers sob os quais o hook está registrado. Cada invocação do hook recomputa o snapshot antes;
+qualquer divergência, ou um manifesto inutilizável, nega com `control_plane_tampered` antes de qualquer gate.
+`adf doctor` sai 0 íntegro, 1 adulterado, 3 não pinado. Re-pine após toda mudança legítima. Residual: root ou
+o usuário reescrevem o manifesto; um checker substituído pode pular a própria checagem; um binário `adf`
+removido é "sem decisão" pelo fail-safe do hook e só aparece em `adf doctor`.
+
 ## Autenticidade da evidência (ADR 0030)
 
 [ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md) (Accepted). Desligado por

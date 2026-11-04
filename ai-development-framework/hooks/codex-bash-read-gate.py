@@ -55,7 +55,7 @@ def gate(payload):
     if principal is None: return _decision("deny", "invalid_principal")
     start_ns = time.time_ns()
     result = read_adapter(LocalReadAdapter(repository, revision, evidence_dir, **host_policy_settings()), payload.get("session_id"), relative, max_output_bytes, evidence_dir, principal)
-    emit_local_read("codex_bash", result, start_ns, hook=True, agent_type=principal["sub"].split(":", 1)[1])  # ADR 0021: view only, after the decision
+    emit_local_read("codex_bash", result, start_ns, hook=True, agent_type=principal["sub"].split(":", 1)[1], act_depth=len(principal["act"]))  # ADR 0021: view only, after the decision
     reason = f"{result['outcome']}/{result['reason_code']}" + (f" bundle={result['bundle_id']}" if result["bundle_id"] else "")
     return {} if result["outcome"] == "delivered" else _decision("deny", reason)
 

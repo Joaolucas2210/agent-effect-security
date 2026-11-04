@@ -45,25 +45,28 @@ def refused(path, deny):
 _SUB = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.@:-]{0,127}\Z")
 
 
-def principal_rules(principals, paths, deny):
+def principal_rules(principals, paths, deny, max_act_depth=None):
     """ADR 0024: `sub -> exact paths`, each path already in the host allowlist (the ceiling) and never a secret."""
     rules = []
+    for sub, depth in (max_act_depth or {}).items():  # ADR 0033: a cap only for a principal that has a rule
+        if sub not in (principals or {}) or type(depth) is not int or not 0 <= depth <= 8:
+            raise ValueError(f"refused: max_act_depth for {sub!r} needs a principal rule and an integer 0..8")
     for sub, allowed in (principals or {}).items():
         if not isinstance(sub, str) or not _SUB.fullmatch(sub) or not allowed:
             raise ValueError(f"refused: principal {sub!r} needs a valid sub and at least one path")
         problems = {path: reason for path in allowed if (reason := refused(path, deny) or ("outside_allowlist" if path not in paths else None))}
         if problems:
             raise ValueError(f"refused: principal {sub!r}: {problems}")
-        rules.append({"sub": sub, "allowed_scopes": [{"kind": "filesystem", "path": path} for path in sorted(set(allowed))]})
+        rules.append({"sub": sub, "allowed_scopes": [{"kind": "filesystem", "path": path} for path in sorted(set(allowed))], **({"max_act_depth": max_act_depth[sub]} if max_act_depth and sub in max_act_depth else {})})
     return sorted(rules, key=lambda item: item["sub"])
 
 
-def build(run_id, paths, max_output_bytes=None, principals=None):
+def build(run_id, paths, max_output_bytes=None, principals=None, max_act_depth=None):
     deny, pack = denylist(), manifest()
     problems = {path: reason for path in paths if (reason := refused(path, deny))}
     if not paths or problems:
         raise ValueError(f"refused: {problems or 'no --allow path'}")
-    by_principal = principal_rules(principals, set(paths), deny)
+    by_principal = principal_rules(principals, set(paths), deny, max_act_depth)
     budget = pack["max_output_bytes"] if max_output_bytes is None else max_output_bytes
     if type(budget) is not int or budget < 1:
         raise ValueError("refused: max_output_bytes must be a positive integer")
@@ -99,6 +102,7 @@ def main(argv=None):
     parser.add_argument("--run-id", required=True, help="host run/session id the policy is bound to (Claude: session_id)")
     parser.add_argument("--allow", action="append", default=[], help="repo-relative file path to allow; repeat")
     parser.add_argument("--principal", action="append", default=[], metavar="SUB=PATH[,PATH]", help="ADR 0024: restrict a principal (e.g. claude:backend-reviewer) to these --allow paths; repeat. Any --principal closes the policy to unnamed principals")
+    parser.add_argument("--max-act-depth", action="append", default=[], metavar="SUB=N", help="ADR 0033: deny the principal when its act chain is deeper than N (0 = main thread only)")
     parser.add_argument("--max-output-bytes", type=int, help="byte ceiling per read (default: pack.json)")
     parser.add_argument("--out", required=True, help="where to write the host policy JSON")
     args = parser.parse_args(argv)
@@ -107,7 +111,11 @@ def main(argv=None):
         for item in args.principal:
             sub, _, allowed = item.partition("=")
             principals.setdefault(sub, []).extend(part for part in allowed.split(",") if part)
-        target, pin = write(build(args.run_id, args.allow, args.max_output_bytes, principals), args.out)
+        depths = {}
+        for item in args.max_act_depth:
+            sub_, _, value = item.partition("=")
+            depths[sub_] = int(value) if value.isdecimal() else -1
+        target, pin = write(build(args.run_id, args.allow, args.max_output_bytes, principals, depths), args.out)
     except (ValueError, ValidationError) as error:  # never print a pin for a policy that does not load
         Path(args.out).unlink(missing_ok=True)
         print(f"effect-security-read-v0: {getattr(error, 'message', error)}", file=sys.stderr)

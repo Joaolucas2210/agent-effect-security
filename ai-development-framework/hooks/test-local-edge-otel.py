@@ -85,7 +85,7 @@ class LocalEdgeOtelTest(unittest.TestCase):
                 span = self.sink.span()
                 self.assertEqual(span["name"], "adf.local_read.request")
                 self.assertEqual({key: value for key, value in attrs(span).items() if key != "adf.duration_ms"},
-                                 {"adf.edge": edge, **({"adf.agent_type": "main"} if edge != "mcp_read" else {}), "adf.outcome": outcome, "adf.reason_code": reason, "adf.bundle_id": attrs(span)["adf.bundle_id"]})
+                                 {"adf.edge": edge, **({"adf.agent_type": "main", "adf.act_depth": "0"} if edge != "mcp_read" else {}), "adf.outcome": outcome, "adf.reason_code": reason, "adf.bundle_id": attrs(span)["adf.bundle_id"]})
         raw = b"".join(self.sink.bodies).decode()
         for forbidden in (SESSION, SENTINEL_DIR, "README", "config", ".env", "cat ", str(self.repo), PUBLIC, SECRET):
             self.assertNotIn(forbidden, raw)
@@ -98,7 +98,7 @@ class LocalEdgeOtelTest(unittest.TestCase):
         self.assertNotIn("af2a1d1014d2e9b6b", b"".join(self.sink.bodies).decode(), "agent_id is not an attribute")
         evidence = Path(self.host["ADF_EVIDENCE_DIR"])
         started = [json.loads(line) for path in (evidence / "_attempts").glob("*.jsonl") for line in path.read_text().splitlines()][0]
-        self.assertEqual(started["payload"], {"principal_sub": "claude:security-reviewer"})
+        self.assertEqual(started["payload"], {"principal_sub": "claude:security-reviewer", "act_depth": 1})
         self.assertNotIn("security-reviewer", "".join(path.read_text() for path in (evidence / SESSION).glob("*.json")), "bundles stay principal-free")
         spans, journals = len(self.sink.bodies), len(list((evidence / "_attempts").glob("*.jsonl")))
         for bad in ("../x", "a" * 121, "", 7, "sec reviewer"):

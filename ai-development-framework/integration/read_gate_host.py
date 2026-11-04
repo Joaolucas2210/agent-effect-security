@@ -22,7 +22,8 @@ def local_principal(payload, edge):
     agent_type = payload.get("agent_type", "main")
     if not isinstance(agent_type, str) or not _AGENT_TYPE.fullmatch(agent_type):
         return None
-    return {"schema_version": "1.0", "sub": f"{edge}:{agent_type}", "scopes": ["workspace:read"], "act": [], "token_aud": "local-host", "authn_method": "host_harness", "expires_at": int(time.time()) + LOCAL_PRINCIPAL_TTL_SECONDS}
+    act = [] if agent_type == "main" else [f"{edge}:main"]  # ADR 0033: Claude Code subagents do not nest; a subagent acts for the session's main thread (depth 1)
+    return {"schema_version": "1.0", "sub": f"{edge}:{agent_type}", "scopes": ["workspace:read"], "act": act, "token_aud": "local-host", "authn_method": "host_harness", "expires_at": int(time.time()) + LOCAL_PRINCIPAL_TTL_SECONDS}
 
 
 def relative_path(file_path, root):

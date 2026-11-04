@@ -15,6 +15,7 @@ dependencies = ["jsonschema==4.26.0"]
 
 [project.optional-dependencies]
 mcp = ["mcp[cli]==2.3.0"]
+codex = ["tomli>=2.0; python_version < '3.11'"]
 
 [project.scripts]
 adf = "integration.cli:main"

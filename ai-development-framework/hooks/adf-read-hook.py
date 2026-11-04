@@ -61,6 +61,14 @@ def _deny(reason):
     return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": f"adf: {reason}"}}
 
 
+def _tampered():
+    """ADR 0027: with `$ADF_HOME/pins.json` present, any divergence (or an unusable manifest) is tampering; absent = not pinned."""
+    sys.path.insert(0, str(ROOT))
+    from integration.control_plane_pins import check
+    divergent = check(ROOT, adf_home())
+    return divergent is not None and divergent != []
+
+
 def _gate(payload):
     """Import lazily: a broken ADF install must not affect projects that are not enabled."""
     sys.path.insert(0, str(ROOT))
@@ -95,6 +103,8 @@ def decide(raw):
             return _deny("project_not_git")
         if not isinstance(payload, dict) or _gate_for(payload.get("tool_name")) is None:
             return _deny("unsupported_tool")
+        if _tampered():
+            return _deny("control_plane_tampered")  # ADR 0027: pinned host, divergent code/host file/registration
         os.environ["ADF_TRUSTED_REPOSITORY"] = root  # host-derived; a stale export for another repo is overridden
         os.environ.setdefault("ADF_TRUSTED_REVISION", "HEAD")
         os.environ.setdefault("ADF_MAX_OUTPUT_BYTES", str(1 << 20))

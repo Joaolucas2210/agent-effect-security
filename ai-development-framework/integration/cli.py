@@ -8,6 +8,7 @@
   adf verify FILE [--key KEYFILE]                            verify an EvidenceBundle or an A2AEvidenceRecord offline; --key also checks the host signature (ADR 0030)
   adf key init [KEYFILE]                                     create the host evidence key (0400, never overwritten); default $ADF_HOME/evidence.key
   adf mcp pin FILE                                           validate a host MCP registry and print its pin (ADR 0031); export ADF_MCP_REGISTRY_FILE/_SHA256
+  adf doctor [--pin]                                         check the control plane against $ADF_HOME/pins.json (exit 0 intact, 1 tampered, 3 not pinned); --pin (re)writes it (ADR 0027)
   adf version
 
 Arguments after the command go to the underlying script unchanged. Editable install only (`make install-dev`):
@@ -148,6 +149,29 @@ def cmd_mcp(argv):
     return 0
 
 
+def cmd_doctor(argv):
+    """ADR 0027. A human pins; the gates only compare. Not pinned is exit 3, never green."""
+    import os
+    from integration.control_plane_pins import check, snapshot, write_manifest
+    if argv not in ([], ["--pin"]):
+        return _usage()
+    adf_home = Path(os.environ.get("ADF_HOME") or Path.home() / ".adf")
+    if argv:
+        adf_home.mkdir(parents=True, exist_ok=True, mode=0o700)
+        snap = snapshot(ROOT, adf_home)
+        write_manifest(adf_home / "pins.json", snap)
+        print(f"pinned {len(snap['files'])} file(s), registration {snap['registration']} -> {adf_home / 'pins.json'}")
+        return 0
+    divergent = check(ROOT, adf_home)
+    if divergent is None:
+        print("not pinned: run `adf doctor --pin` after reviewing the install (ADR 0027)")
+        return 3
+    for label in divergent:
+        print(f"  ✗ {label}")
+    print("control_plane_tampered" if divergent else "control plane intact")
+    return 1 if divergent else 0
+
+
 def cmd_version(argv):
     for candidate in (ROOT / "VERSION", ROOT.parent / "VERSION"):
         if candidate.is_file():
@@ -156,7 +180,7 @@ def cmd_version(argv):
     return 1
 
 
-COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "key": cmd_key, "mcp": cmd_mcp, "version": cmd_version}
+COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "key": cmd_key, "mcp": cmd_mcp, "doctor": cmd_doctor, "version": cmd_version}
 
 
 def main(argv=None):

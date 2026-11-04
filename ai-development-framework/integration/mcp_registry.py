@@ -17,6 +17,7 @@ from integration.local_evidence_bundle import digest
 _NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,119}\Z")
 _TOOL = re.compile(r"mcp__([A-Za-z0-9][A-Za-z0-9_.-]{0,119})__([A-Za-z0-9][A-Za-z0-9_.-]{0,119})\Z")
 _HASH = re.compile(r"[a-f0-9]{64}\Z")
+_STAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z")
 
 try:  # Codex config.toml: stdlib on 3.11+, the `tomli` backport on 3.10; neither -> unreadable, never ok
     import tomllib as _toml
@@ -37,12 +38,14 @@ def validate(registry):
     if not isinstance(registry, dict) or set(registry) != {"schema_version", "servers"} or registry["schema_version"] != "1.0" or not isinstance(registry["servers"], dict):
         raise RegistryInvalid("mcp_registry_invalid")
     for server, entry in registry["servers"].items():
-        if not _NAME.fullmatch(server) or not isinstance(entry, dict) or not {"tools"} <= set(entry) <= {"tools", "definition", "tools_sha256"} or not isinstance(entry["tools"], list) or not all(isinstance(tool, str) and _NAME.fullmatch(tool) for tool in entry["tools"]):
+        if not _NAME.fullmatch(server) or not isinstance(entry, dict) or not {"tools"} <= set(entry) <= {"tools", "definition", "tools_sha256", "probed_at"} or not isinstance(entry["tools"], list) or not all(isinstance(tool, str) and _NAME.fullmatch(tool) for tool in entry["tools"]):
             raise RegistryInvalid("mcp_registry_invalid")
         definition = entry.get("definition")
         if definition is not None and not (isinstance(definition, dict) and set(definition) == {"command", "args", "env_keys"} and isinstance(definition["command"], str) and definition["command"] and isinstance(definition["args"], list) and all(isinstance(a, str) for a in definition["args"]) and isinstance(definition["env_keys"], list) and all(isinstance(k, str) and k for k in definition["env_keys"])):
             raise RegistryInvalid("mcp_registry_invalid")
         if "tools_sha256" in entry and not (isinstance(entry["tools_sha256"], str) and _HASH.fullmatch(entry["tools_sha256"])):
+            raise RegistryInvalid("mcp_registry_invalid")
+        if "probed_at" in entry and (definition is None or not (isinstance(entry["probed_at"], str) and _STAMP.fullmatch(entry["probed_at"]))):
             raise RegistryInvalid("mcp_registry_invalid")
     return registry
 
@@ -124,6 +127,36 @@ def drift(registry, root, home):
             found = client_definitions(name, root, home, client=client)
             report[name][client] = "unreadable" if found is None else ("absent" if not found else ("ok" if all(item == expected for item in found) else "changed"))
     return report
+
+
+def probe_status(registry, max_age_days=30, now=None):
+    """{server: {status: never | fresh | stale, age_days?}} for every pinned definition. A probe is evidence only
+    while it is recent, and a timestamp in the future is not a recent probe."""
+    from datetime import datetime, timezone
+    now = now or datetime.now(timezone.utc)
+    out = {}
+    for name, entry in validate(registry)["servers"].items():
+        if entry.get("definition") is None:
+            continue
+        stamp = entry.get("probed_at")
+        if stamp is None or "tools_sha256" not in entry:
+            out[name] = {"status": "never"}
+            continue
+        age = (now - datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).days
+        out[name] = {"status": "fresh" if 0 <= age <= max_age_days else "stale", "age_days": age}
+    return out
+
+
+def record_probe(registry, report, now=None):
+    """Write the probe's digests and timestamp into the registry for servers that were actually probed."""
+    from datetime import datetime, timezone
+    stamp = now or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    out = json.loads(json.dumps(registry))
+    for name, item in report.items():
+        if "tools_sha256" in item:
+            out["servers"][name]["tools_sha256"] = item["tools_sha256"]
+            out["servers"][name]["probed_at"] = stamp
+    return validate(out)
 
 
 def tools_digest(tools):

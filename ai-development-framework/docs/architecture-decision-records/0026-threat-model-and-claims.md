@@ -34,11 +34,14 @@ host or user account, a malicious ADF install, root.
 | Trusted | Not trusted |
 | --- | --- |
 | Host operator: pinned policy + pin, `~/.adf/enabled-projects`, hook registration, repository + revision, evidence directory, host-held keys | Tool payload fields, file content, tool descriptions/annotations, model output, A2A body, environment variables set by the agent |
-| ADF code at the installed revision, **assumed** intact (integrity is not verified until ADR 0027) | ADF code or config after the agent could write to it |
+| ADF code at the installed revision; ADR 0027 checks a host pin only when a registered hook runs | ADF code or config after the agent could write to it; an absent/broken hook is outside ADF's observation |
 | Git snapshot digest computed by `WorkspaceManager` | The live checkout |
 
-Claims apply only while the host activation holds: project listed in `~/.adf/enabled-projects` and the hook
-registered for the session. Outside that, ADF decides nothing (REQ-MP-01).
+Claims apply only while the host activation holds: project listed in `~/.adf/enabled-projects`, executable available,
+and the hook registered and invoked for the session. Outside that, ADF decides nothing (REQ-MP-01). The supplied
+wrapper exits without a decision if its executable is missing; the CLI suppresses unexpected `adf hook` exceptions.
+An agent can still reach unobserved tools. Neither pin checks nor journal entries prove that every attempted
+call entered the hook (ADR 0037 proposed).
 
 ### Claims (the only ones allowed in public text)
 
@@ -46,14 +49,14 @@ registered for the session. Outside that, ADF decides nothing (REQ-MP-01).
 | --- | --- | --- | --- | --- |
 | C1 | A `read` on a covered edge is admitted only by the host-pinned policy; content never widens it | PDP pure, `cannot_authorize` taint | `AdmissionDecision`, bundle | `test-tool-admission.sh`, `test-principal-policy.sh` |
 | C2 | A decision is consumed once, at the effect, with every binding revalidated | PEP, `intent_digest`, `task_ref` | receipt | `test-runtime-read.sh` |
-| C3 | A sensitive path is denied at the effect even if the policy admitted it | `sensitive_path_policy_v1` | `sensitive_path_denied` | `test-local-read-adapter.sh` |
-| C4 | Every decision on a covered edge leaves a bundle that verifies offline | `compose`, `verify_offline` | bundle | `test-local-evidence-bundle.sh` |
-| C5 | On the mediated MCP stdio edge the bytes delivered are the snapshot bytes; on the `gate_only` edges (Claude `Read`, Codex `cat`) only the decision and a confined snapshot read are proven, never the bytes the native tool delivered | ADR 0012 | coverage matrix (docs); in the bundle only after ADR 0029 | `test-local-evidence-pilot.sh` |
+| C3 | A sensitive path that reaches the runtime is denied at the effect even if the policy admitted it | `sensitive_path_policy_v2` | `sensitive_path_denied` bundle | `test-local-read-adapter.sh`, `test-root-dotfiles.sh` |
+| C4 | A composed decision on a covered read edge leaves a bundle that verifies offline; pre-adapter contract and deny-only gate attempts leave a journal entry instead | `compose`, `verify_offline`, attempt journal | bundle or journal, by stage | `test-local-evidence-bundle.sh`, `test-deny-gate-journal.sh` |
+| C5 | On mediated edges ADF returns snapshot bytes; on `gate_only` edges (Claude `Read`, Codex `cat`) the bundle proves the decision and a confined snapshot read, never the bytes the native tool delivered | ADRs 0012, 0029 | `delivery_mode` in bundle 1.1 | `test-delivery-mode.sh` |
 | C6 | A2A identity is verified at the transport and revalidated at the effect | ADRs 0013–0017 | `A2AEvidenceRecord` | `test-a2a-gateway.sh` |
 
 Forbidden claims: "prevents prompt injection", "sandbox", "covers Bash", "incidents prevented", "compliant
-with OWASP/ISO/EU AI Act", "tamper-proof" (until ADR 0027 + 0030 are Accepted and still only against a
-non-root agent).
+with OWASP/ISO/EU AI Act", "tamper-proof", or publicly verifiable authenticity from a shared-secret HMAC.
+ADRs 0027 and 0030 add conditional pin and HMAC checks, not global containment or independent public verification.
 
 ### Lethal Trifecta mapping
 

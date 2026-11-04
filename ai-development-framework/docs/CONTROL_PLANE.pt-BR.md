@@ -123,7 +123,7 @@ determinístico e desligado por padrão. A ideia é semelhante a System-One/JEV,
 produto comercial Jev, Laya, LLM ou serviço externo. Um provider real e qualquer uso do sinal
 em política exigem decisão e avaliação posteriores; sinal tipado não é autorização.
 
-## Journal de tentativa do adapter (P0-A, proposta em branch)
+## Journal de tentativa do adapter (P0-A, implementado)
 
 O contrato aditivo `integration/v1/schemas/adapter-attempt-event.schema.json` registra
 `started` e `completed` em `<evidence_dir>/_attempts/<attempt_id>.jsonl` para cada chamada
@@ -141,8 +141,9 @@ Se fsync final e rollback por ftruncate falharem, um journal completo pode conte
 resultado calculado `delivered` apesar do retorno deny; durabilidade não confirmada.
 
 Os contadores v1 de trials continuam ingerindo somente bundles `*.json`: não incluem
-journals nem passam a demonstrar sucesso final. Rejeições anteriores dos hooks e tools
-não cobertas permanecem fora da captura. Detalhes, contrato e limites em
+journals nem passam a demonstrar sucesso final. Este journal do adapter não captura rejeições anteriores
+dos hooks; gates deny-only selecionados escrevem seus próprios eventos (ADR 0028). Tools fora dos hooks
+instalados continuam sem observação. Detalhes, contrato e limites em
 [ADR 0010 (Accepted)](architecture-decision-records/0010-adapter-attempt-lifecycle.md).
 
 ## Adapter read-only (P0)
@@ -243,7 +244,10 @@ O que **não** está coberto, deliberadamente:
   continua inválido: o receipt exige o scope.
 - O gate Claude Code cobre apenas `Read`; o gate Codex P4 abaixo cobre apenas o Bash allowlisted.
 - Desde a ADR 0023 (Accepted) as bordas locais derivam um `CallerPrincipal` do harness (`claude:<agent_type>`);
-  ele aparece no journal e no span, não no bundle, e ainda não altera a decisão.
+  ele aparece no journal e no span, não no bundle. Desde a ADR 0033, um subagente leva
+  `act: ["claude:main"]` (profundidade 1); `principal_rules` pode definir `max_act_depth` por principal
+  (`--max-act-depth SUB=N` no pack). O PDP nega profundidade maior com `act_depth_exceeded`; journal e span
+  registram `act_depth`.
 
 ## Codex Bash read-equivalent (P4)
 

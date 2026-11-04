@@ -43,6 +43,11 @@ reviews them in the implementing PR:
 `adf verify FILE --key KEYFILE` reports `authenticity=valid|invalid|unsigned`; without `--key`,
 `not_checked`. Exit 1 whenever integrity or (with a key) authenticity fails.
 
+**Public-claim clarification (2026-11-04):** the sidecar is a shared-secret HMAC, not an asymmetric public
+signature. A verifier holding the key can also forge evidence. `verify` without a key checks integrity and
+reports `not_checked`, not issuer authenticity. Do not give the host key to an external auditor. Rotation,
+revocation and third-party verification remain open in [ADR 0038](0038-evidence-key-lifecycle.md).
+
 ## Options considered
 
 1. **Ed25519 via `cryptography`** — new dependency; deferred as the upgrade path.

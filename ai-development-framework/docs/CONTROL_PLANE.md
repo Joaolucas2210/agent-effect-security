@@ -123,7 +123,7 @@ deterministic and off by default. The idea is similar to System-One/JEV, without
 commercial Jev product, Laya, an LLM, or an external service. A real provider and any use of the signal
 in policy require a later decision and evaluation; a typed signal is not authorization.
 
-## Adapter attempt journal (P0-A, proposal on a branch)
+## Adapter attempt journal (P0-A, implemented)
 
 The additive contract `integration/v1/schemas/adapter-attempt-event.schema.json` records
 `started` and `completed` in `<evidence_dir>/_attempts/<attempt_id>.jsonl` for every call
@@ -141,8 +141,9 @@ If the final fsync and the ftruncate rollback both fail, a complete journal may 
 computed result `delivered` despite a deny return; durability is not confirmed.
 
 The v1 trial counters still ingest only `*.json` bundles: they do not include
-journals and do not start demonstrating final success. Rejections that happen earlier in the hooks, and tools
-that are not covered, remain outside the capture. Details, contract, and limits in
+journals and do not start demonstrating final success. This adapter journal does not capture earlier hook
+rejections; selected deny-only hook gates write their own journal events (ADR 0028). Tools outside installed
+hooks remain unobserved. Details, contract, and limits in
 [ADR 0010 (Accepted)](architecture-decision-records/0010-adapter-attempt-lifecycle.md).
 
 ## Read-only adapter (P0)

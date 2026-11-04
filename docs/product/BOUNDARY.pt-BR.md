@@ -2,11 +2,11 @@
 
 [English](BOUNDARY.md) · **Português (Brasil)**
 
-Atualizado: 2026-10-19 · Versão 0.1.0 (experimental)
+Atualizado: 2026-11-04 · Versão deste checkout 0.1.0 (experimental)
 
-**Categoria:** *agent effect security*, um control plane local para coding agents. O ADF decide se um
-efeito pedido por um agente pode acontecer, aplica a decisão no instante do efeito e deixa evidência
-verificável offline. Ele não é plataforma de agentes, UI de orquestração, substituto do Langfuse,
+**Categoria:** *agent effect security*, um control plane local para coding agents. Em uma borda suportada e instalada,
+o ADF decide se uma leitura observada pode prosseguir e, quando o pedido chega à composição, deixa um bundle
+que pode ser conferido offline. Negações anteriores podem deixar apenas journal. Ele não é plataforma de agentes, UI de orquestração, substituto do Langfuse,
 marketplace MCP, sandbox de sistema operacional nem fábrica de certificação.
 
 ```text
@@ -28,13 +28,24 @@ cada um ligado numa lista do host (`~/.adf/enabled-projects`, operada por `make 
 `reason_code` por projeto a partir de `~/.adf/evidence`, só contagens.
 Passo a passo em [trials.md](../../ai-development-framework/docs/trials.pt-BR.md#vários-projetos-com-um-hook-só-req-mp-01).
 
+## Bootstrap e confiança no host
+
+`adf hook-snippet` imprime JSON de registro; o operador deve mesclá-lo nas configurações do cliente, reiniciar o
+cliente e então pinar o control plane instalado. O wrapper emitido contém `[ -x "$A" ] || exit 0`: se o executável
+faltar, não há decisão ADF. `integration/cli.py` também retorna 0 sem decisão numa exceção inesperada de
+`adf hook`. O dispatcher de projeto habilitado retorna deny para falhas que captura *depois* de identificar o
+projeto. Esses fatos não estabelecem fail-closed para o cliente inteiro. Registro ausente, wrapper que falha,
+tool não observada ou cliente que ignora a saída do hook podem seguir as regras do próprio cliente. A
+[ADR 0037](../../ai-development-framework/docs/architecture-decision-records/0037-hook-bootstrap-failure-contract.md)
+registra o desenho aberto e os testes de versão de cliente necessários antes de qualquer mudança semântica.
+
 ## Matriz de suporte
 
 Fora desta tabela, considere **risco residual**: o ADF não vê nem bloqueia esses caminhos.
 
 | Borda | Superfície coberta | Versão validada | Modos de AuthN | Não coberto (residual) |
 | --- | --- | --- | --- | --- |
-| Claude Code | Hook `PreToolUse`, matcher `Read`; deny-only em `Grep`/`Glob` (paths sensíveis), `Edit`/`Write`/`MultiEdit`/`NotebookEdit` (paths sensíveis + config de agente) e `WebFetch`/`curl`/`wget` após tentativa sensível na mesma sessão (ADR 0028 slices 1a, 1c); todo deny vai ao journal | Versão não registrada nos trials (`na`): revalide o formato do payload na versão instalada | Nenhum (processo local, host confiável) | Formas de Bash fora da gramática 1b, `Grep`/`Glob` sem `path`, servers MCP fora do registry, subagentes com outras tools; gates deny-only deixam journal, nunca bundle |
+| Claude Code | Hook `PreToolUse`, matcher `Read`; deny-only em `Grep`/`Glob` (paths sensíveis), `Edit`/`Write`/`MultiEdit`/`NotebookEdit` (paths sensíveis + config de agente) e `WebFetch`/`curl`/`wget` após tentativa sensível na mesma sessão (ADR 0028 slices 1a, 1c); decisões deny-only observadas vão ao journal quando a persistência funciona | Versão não registrada nos trials (`na`): revalide o formato do payload na versão instalada | Nenhum (processo local, host confiável) | Formas de Bash fora da gramática 1b, `Grep`/`Glob` sem `path`, servers MCP fora do registry, subagentes com outras tools; gates deny-only deixam journal, nunca bundle |
 | Codex CLI | `PreToolUse` `Bash`: um único `cat <arquivo>` allowlisted é admitido com bundle; `head`/`tail`/`sed`/`grep`/`rg`/`awk`/… em paths sensíveis, e qualquer forma de leitura que a gramática não enxerga, são negados (ADR 0028 slice 1b); `curl`/`wget` após tentativa sensível negados (1c); ativação por host pela mesma lista do Claude (REQ-MP-01) | 0.157.0 (hook global: `na`) | Nenhum (processo local) | Binários de leitura não listados, interpretadores que leem sem `open(`/`readFile`, qualquer comando que não é leitura |
 | A2A (HTTP) | Skill `read_workspace_file` via `message/send` | Gateway deste repo, HTTP só em `127.0.0.1` | HS256 (**só piloto**: quem tem o segredo emite qualquer token); RS256 com JWKS pinada por SHA-256 (IdP real, sem rotação automática; [runbook](../../ai-development-framework/docs/runbooks/a2a-rs256-jwks.pt-BR.md)) | Token roubado vale até `exp` (≤ 1 h; sem DPoP/mTLS); bind público só por proxy TLS do host; tasks em memória |
 | MCP (qualquer server, Claude Code) | Deny-only: nomes de server e tool precisam estar no registry pinado pelo host; uma `definition` pinada (command/args/chaves de env) precisa bater com todos os escopos de config do Claude Code na chamada; digest da lista de tools conferido offline por `adf mcp probe` (ADR 0031 slices 1–2); tools que o host declara `write`/`network` são negadas depois que a sessão tentou um path sensível; descrições não autorizam nada | Probe validado contra o próprio server stdio deste repo; clientes de terceiros reais `na` | Nenhum | Rug-pull entre probes (`adf doctor` falha quando o último probe é mais velho que o limite do host, 30 dias por padrão); drift no `config.toml` do Codex só reportado por `adf doctor` (o Codex não manda chamadas MCP ao hook); servers iniciados fora do hook; o output do próprio server (tainted, não bloqueado) |
@@ -48,9 +59,18 @@ gate. O ADF reduz o que passa pelas bordas acima; não torna o agente seguro.
 
 | Sinal | Autoridade | Uso |
 | --- | --- | --- |
-| `EvidenceBundle` + `A2AEvidenceRecord` (`verify_offline`, `verify_record`) | **Registro oficial** | Auditoria, trial report, investigação |
+| `EvidenceBundle` + `A2AEvidenceRecord` (`verify_offline`, `verify_record`) | Registro de decisão composta | Auditoria, trial report, investigação; `gate_only` prova decisão e checagem do snapshot, não bytes nativos entregues; `mediated` devolve bytes controlados |
+| Journal de tentativas (`_attempts/`) | Registro de tentativa pré-adapter / deny-only | Motivo e principal de uma tentativa observada; não implica bundle nem receipt de leitura |
 | Spans OTel (`adf.a2a.request`, `adf.local_read.request`) no Jaeger ou Langfuse | Nenhuma | Correlacionar por `record_id` / `bundle_id`; o span pode faltar e não é assinado |
 | Trace do agente no Langfuse | Nenhuma | Ver o que o agente tentou; não diz o que o ADF permitiu |
+
+`adf verify ARQUIVO` confere schema, digests e vínculos, mas informa `authenticity=not_checked`. Com `--key`, ele
+confere o sidecar HMAC usando o segredo compartilhado do host. Isso é autenticidade relativa à chave do host,
+não assinatura pública nem prova para auditor independente. Não distribua a chave HMAC. A assinatura é opt-in;
+um bundle não assinado ainda pode passar na checagem de integridade. A evidência pode conter scopes relativos ao
+repositório e IDs; revise antes de compartilhar. A [ADR 0030](../../ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md)
+define o esquema implementado; a [ADR 0038](../../ai-development-framework/docs/architecture-decision-records/0038-evidence-key-lifecycle.md)
+registra o desenho ainda aberto para rotação e verificação por terceiros.
 
 ## Contrato do cliente A2A
 
@@ -69,8 +89,9 @@ gate. O ADF reduz o que passa pelas bordas acima; não torna o agente seguro.
 2. Leia os `reason_codes`, não só o total de denies. `deny_total` conta só denies do PDP; denies no
    efeito aparecem em `sensitive_path_denied_total` e `binding_mismatch_total`.
 3. Cobre `verify_offline` ou `verify_record` de uma amostra: um número sem bundle verificável não é prova.
-4. `make project-reasons` dá, por projeto, bundles, tentativas do journal (o `.env` da raiz, negado por contrato sem
-   bundle, aparece aqui) e contagens por principal; com `POLICY=` mostra concedido versus não usado.
+4. `make project-reasons` dá, por projeto, bundles e tentativas do journal (por exemplo, traversal inválido
+   negado por contrato sem bundle) e contagens por principal; com `POLICY=` mostra concedido versus não usado.
+   Desde a ADR 0036, um `.env` na raiz chega ao PDP e produz bundle para a negação `invalid_scope`.
 5. `make local-evidence-trial` agrega bundles do adapter local. Ele **não** conta records A2A
    (`evidence/_a2a/`). Para a borda A2A, use o `summary.json` do trial A2A.
 
@@ -88,10 +109,10 @@ gate. O ADF reduz o que passa pelas bordas acima; não torna o agente seguro.
 
 | Tema | O que o ADF entrega | O que não entrega |
 | --- | --- | --- |
-| Tool misuse (OWASP Agentic / LLM) | Leitura só por PDP → PEP nas bordas cobertas | Controle de tools fora das bordas |
+| Tool misuse (OWASP Agentic / LLM) | Leituras admitidas passam por PDP → PEP nas bordas cobertas; outras tentativas selecionadas passam por gates deny-only | Controle de tools fora das bordas |
 | Excessive agency | Policy pinada pelo host, efeito `read` apenas, budget de bytes, scopes por skill | Limites para efeitos que não existem no produto |
 | Autorização em runtime fora do modelo | Decisão determinística sem LLM; conteúdo lido marcado `cannot_authorize` | Defesa contra prompt injection em geral |
-| Governança com ponto de enforcement | Deny + evidência verificável por decisão | Dashboard, SSO/RBAC, relatórios de compliance |
+| Governança com ponto de enforcement | Decisão de leitura composta tem bundle; negações observadas antes têm journal | Dashboard, SSO/RBAC, relatórios de compliance |
 
 Isso não é uma alegação de conformidade com OWASP nem com qualquer framework.
 

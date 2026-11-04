@@ -44,6 +44,9 @@ WP6, WP7                           (Later, com gate de ADR)
 - **Pronto quando:** a saída carrega com `load_host_policy` e o pin impresso; o gate Claude `Read` entrega o
   README e nega `.env`, `config/.env` e `secrets/…` com o `reason_code` de cada camada; a denylist do pack
   contém a do runtime; um segredo que escapou do builder ainda é negado no runtime.
+
+Nota da implementação atual (2026-11-04): a ADR 0036 passou o runtime para `sensitive-path-policy-v2.json` e
+fez `.env` na raiz ser um deny `invalid_scope` do PDP com bundle. O texto v1 acima registra o escopo original de WP1.
 - **Fora de escopo:** wildcard/DSL na policy (o ADR 0011 proíbe), mudar a denylist do runtime.
 
 ## WP1b: denies do PDP anteriores ao scope verificáveis (**Done**, 2026-10-19)

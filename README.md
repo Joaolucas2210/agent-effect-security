@@ -80,6 +80,6 @@ The repository is experimental `0.x`. The read effect and selected deny-only gat
 ## Documentation and contribution
 
 - **Integrate:** [isolated quickstart](docs/product/QUICKSTART.md), [host/trial guide](ai-development-framework/docs/trials.md), [policy pack](ai-development-framework/policy-packs/effect-security-read-v0/README.md).
-- **Operate and verify:** [boundary](docs/product/BOUNDARY.md), [control plane](ai-development-framework/docs/CONTROL_PLANE.md), [threats and claims](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md).
+- **Operate and verify:** [boundary](docs/product/BOUNDARY.md), [control plane](ai-development-framework/docs/CONTROL_PLANE.md), [threats and claims](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md), [OSPS Baseline self-assessment](docs/security/OSPS-BASELINE-2026-08-28.md).
 - **Contribute:** [CONTRIBUTING](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), [MIT license](LICENSE), [brand assets](docs/brand/BRAND_GUIDELINES.md).
 - **Report a flaw:** use the [private security reporting route](SECURITY.md); do not open a public issue with secrets.

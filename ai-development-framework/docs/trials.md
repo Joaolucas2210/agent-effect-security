@@ -198,25 +198,24 @@ To use the gate in other repositories without installing ADF in each one (and wi
 Claude Code does not inherit `.claude/` from parent folders, and `install-metrics` refuses a target that contains
 the clone), register the wrapper **once** in the global settings and enable projects in a host list:
 
-```jsonc
-// ~/.claude/settings.json — append to the hooks.PreToolUse array; the other hooks keep running (they add up)
-{ "matcher": "Read", "hooks": [{ "type": "command", "timeout": 30,
-  "command": "H=/abs/agent-effect-security/ai-development-framework/hooks/adf-read-hook.py; P=/abs/agent-effect-security/.venv/bin/python3; [ -f \"$H\" ] && [ -x \"$P\" ] || exit 0; exec \"$P\" \"$H\"" }] }
+```bash
+adf hook-snippet claude     # prints JSON for ~/.claude/settings.json; does not install it
+adf hook-snippet codex      # prints JSON for ~/.codex/hooks.json; does not install it
 ```
 
-Simpler: `adf hook-snippet claude` (or `codex`) prints this block already filled in with this clone's paths and the
-fail-safe, for the `Read` and `Bash` matchers ([ADR 0025](architecture-decision-records/0025-adf-operator-cli.md)).
+Create the evidence key first if signing is wanted, then review and merge the printed `hooks.PreToolUse`
+entries into the global settings without replacing existing hooks. Restart the client, enable the project,
+and run `adf doctor --pin` **after** registration. If the key was created after the snippet was printed,
+regenerate it so its command exports the key path. [ADR 0025](architecture-decision-records/0025-adf-operator-cli.md)
+defines the CLI. The supplied wrapper exits 0 without an ADF decision when the executable is absent;
+`adf hook` also suppresses unexpected CLI exceptions. Client fallback on empty output, nonzero exit or timeout
+has not been verified for a recorded client version ([ADR 0037](architecture-decision-records/0037-hook-bootstrap-failure-contract.md)).
 
-The `[ -f … ] || exit 0` test is mandatory: if the clone switches to a branch without the wrapper, Python exits with
-code 2, and in `PreToolUse` code 2 **blocks** the tool, that is, every `Read` in every project.
-
-The same wrapper serves Codex: register it in Codex's global hooks file (`~/.codex/hooks.json` in
-0.157.0; confirm the path in the installed version, `na` in the trials) with `matcher: "^Bash$"` and the same
-command line with the fail-safe. The hook identifies the project by the `cwd` that Codex sends in the payload (Claude exports
-`CLAUDE_PROJECT_DIR`) and applies the P4 gate: only an allowlisted `cat PATH` gets a decision (`{}` = delivered, deny with
-`reason_code`); any other command returns `{}` and follows the Codex policy. Same list, same git
-root, same evidence folder as Claude. Codex is not coverage of all file access: `head`, `sed`,
-`rg`, pipes and redirections stay outside, as in P4.
+For Codex, the emitted matcher is `^Bash$`; the global hooks file was documented for 0.157.0, but the global
+hook's behavior in that client version was not recorded in a live trial. Confirm the settings path on the
+installed version. The hook uses the payload's `cwd` (Claude exports `CLAUDE_PROJECT_DIR`), admits only a
+supported single `cat PATH`, and applies deny-only checks to selected other Bash read shapes. Other commands
+can pass through to the client's own policy. It does not cover arbitrary scripts, interpreters or disk access.
 
 ```bash
 make project-enable PROJECT=/home/you/dev/MY_PROJECT   # canonical absolute path; git root recommended
@@ -238,7 +237,7 @@ directly is still valid (one line per absolute path).
 | Line that is relative, contains `..` or `//`, or ends in `/` | Ignored (enables nothing) |
 | Listed project that is a git repository (including when opened in a subfolder) | Clone gate, with root = the project's git top level; an `ADF_TRUSTED_REPOSITORY` exported for another repo is overridden |
 | Listed project without git | `deny project_not_git` (the gate only reads a git snapshot) |
-| Listed project and internal failure, malformed payload or tool other than `Read`/`Bash` | `deny adapter_failed` / `unsupported_tool` (fail closed) |
+| Listed project with known root and a caught internal failure, malformed payload or unsupported tool | Explicit `deny adapter_failed` / `unsupported_tool` in the local hook fixture; client handling still needs validation |
 
 Evidence goes to `~/.adf/evidence/<project>-<hash>/<YYYY-MM-DD>/<session_id>/`, outside the project's
 repo. Revision, budget, pinned policy (`ADF_READ_POLICY_*`) and OTel (`ADF_OTEL_*`) come from the environment

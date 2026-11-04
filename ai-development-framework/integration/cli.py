@@ -113,7 +113,8 @@ def cmd_verify(argv):
         ok, kind = verify_offline(data, schemas()), "evidence_bundle"
     authenticity = verify_file(path, key)  # integrity (above) and authenticity are reported separately; both must hold with --key
     ok = ok and authenticity in ("valid", "not_checked")
-    print(f"{'verified' if ok else 'NOT verified'}  {kind}  reason_code={data.get('reason_code')}  authenticity={authenticity}")
+    mode = f"  delivery_mode={data['delivery_mode']}" if "delivery_mode" in data else ""
+    print(f"{'verified' if ok else 'NOT verified'}  {kind}  reason_code={data.get('reason_code')}  authenticity={authenticity}{mode}")
     return 0 if ok else 1
 
 

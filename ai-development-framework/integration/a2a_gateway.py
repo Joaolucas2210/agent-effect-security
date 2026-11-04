@@ -415,7 +415,7 @@ class A2AGateway:
         if skill in self._confirm_skills and not confirmed:  # ADR 0018: pause before PDP, PEP and effect
             return self._pause_for_confirmation(request_id, principal, skill, path, binding)
         run_id = self._policy["context"]["resolved_run_config_ref"]["run_id"]
-        result = self._adapter.read(run_id, path, self._budget, principal=principal)
+        result = self._adapter.read(run_id, path, self._budget, principal=principal, delivery_mode="mediated")  # ADR 0029: the edge returns the bytes
         # ADR 0016: the credential lapsed between admission and effect -> auth-required, no effect.
         if result["reason_code"] == "principal_expired":
             task_id = self._open_task(principal, skill, path)

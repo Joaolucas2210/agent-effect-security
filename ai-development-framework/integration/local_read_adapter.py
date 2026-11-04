@@ -17,7 +17,7 @@ from jsonschema import Draft7Validator
 from integration.adapter_attempt import AttemptJournal
 from integration.attempt_timing import call_stage
 from integration.evidence_signing import SigningUnavailable, sign_if_configured
-from integration.local_evidence_bundle import compose, digest, verify_offline
+from integration.local_evidence_bundle import DELIVERY_MODES, compose, digest, verify_offline
 from runtime.local_read_runtime import LocalReadRuntime
 from runtime.pep import PolicyEnforcementPoint
 from runtime.workspace_manager import WORKSPACE_FAILURE_CODES, WorkspaceManager
@@ -121,15 +121,18 @@ class LocalReadAdapter:
             try: self._host_policy = load_host_policy(host_policy_path, host_policy_sha256, self._schemas)
             except Exception: self._host_policy_invalid = True
 
-    def read(self, run_id, path, max_output_bytes, *, timing=None, principal=None):
-        """Return a closed, tainted result; content is present only when the PEP delivered it."""
+    def read(self, run_id, path, max_output_bytes, *, timing=None, principal=None, delivery_mode=None):
+        """Return a closed, tainted result; content is present only when the PEP delivered it.
+        `delivery_mode` (ADR 0029): the caller says whether it hands these bytes to the model (`mediated`) or only
+        gates a native tool (`gate_only`); None keeps the 1.0 bundle."""
+        if delivery_mode is not None and delivery_mode not in DELIVERY_MODES: raise ValueError("invalid_delivery_mode")
         safe_run_id = run_id if isinstance(run_id, str) and _ID.fullmatch(run_id) else None
         try: journal = call_stage(timing, "persistence", AttemptJournal, self._evidence, safe_run_id, self._schemas["adapter_attempt_event"], principal)
         except Exception: return _result("deny", "attempt_evidence_failed")
         if timing is not None:
             timing.start = dict(journal._start)
         try:
-            outcome = self._read(run_id, path, max_output_bytes, journal, timing, principal)
+            outcome = self._read(run_id, path, max_output_bytes, journal, timing, principal, delivery_mode)
             call_stage(timing, "persistence", journal.finish, outcome)
             return outcome
         except Exception:
@@ -137,7 +140,7 @@ class LocalReadAdapter:
         finally:
             journal.close()
 
-    def _read(self, run_id, path, max_output_bytes, journal, timing=None, principal=None):
+    def _read(self, run_id, path, max_output_bytes, journal, timing=None, principal=None, delivery_mode=None):
         if not isinstance(run_id, str) or not _ID.fullmatch(run_id): return _result("deny", "invalid_run_id")
         if not isinstance(path, str) or not path or path.startswith("/") or "\x00" in path: return _result("deny", "invalid_scope")
         if type(max_output_bytes) is not int or max_output_bytes < 0: return _result("deny", "invalid_budget")
@@ -149,7 +152,7 @@ class LocalReadAdapter:
         except Exception:
             return _result("deny", "workspace_worktree_prepare_failed")
         try:
-            try: outcome = self._attempt(manager, descriptor, run_id, path, max_output_bytes, timing, principal)
+            try: outcome = self._attempt(manager, descriptor, run_id, path, max_output_bytes, timing, principal, delivery_mode)
             except Exception: outcome = _result("deny", "adapter_failed")
         finally:
             try: cleaned = call_stage(timing, "cleanup", manager.cleanup, descriptor["workspace_id"])
@@ -159,14 +162,14 @@ class LocalReadAdapter:
             outcome.pop("content", None); outcome.update(outcome="deny", reason_code="workspace_worktree_cleanup_failed")
         return outcome
 
-    def _attempt(self, manager, descriptor, run_id, path, max_output_bytes, timing=None, principal=None):
+    def _attempt(self, manager, descriptor, run_id, path, max_output_bytes, timing=None, principal=None, delivery_mode=None):
         started = time.monotonic()
         runtime = LocalReadRuntime(self._sensitive)
         if timing is not None:
             runtime.read = partial(timing.call, "read", runtime.read)
         pep = _CapturingPEP(PolicyEnforcementPoint(manager, runtime), principal)
         decide_fn = None if principal is None else partial(decide, principal=principal)  # None keeps the pre-A2A-3 path byte-identical
-        try: bundle = compose(build_request(descriptor, run_id, path, max_output_bytes, host_policy=self._host_policy), self._schemas, pep, decide_fn=partial(timing.call, "decision", decide_fn or decide) if timing is not None else decide_fn)
+        try: bundle = compose(build_request(descriptor, run_id, path, max_output_bytes, host_policy=self._host_policy), self._schemas, pep, decide_fn=partial(timing.call, "decision", decide_fn or decide) if timing is not None else decide_fn, delivery_mode=delivery_mode)
         except ValueError as exc: return _result("deny", exc.args[0] if exc.args else "invalid_adapter_request")
         latency = int((time.monotonic() - started) * 1000)
         try: bundle_path = call_stage(timing, "persistence", persist_bundle, bundle, self._evidence, run_id)  # P2 also counts invalid bundles

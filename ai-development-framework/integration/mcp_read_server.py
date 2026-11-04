@@ -32,7 +32,7 @@ def read_snapshot(path: str) -> str:
         raise ToolError("host_configuration_invalid")
     repository, revision, evidence_dir, budget = settings
     start_ns = time.time_ns()
-    result = read_adapter(LocalReadAdapter(repository, revision, evidence_dir, **host_policy_settings()), os.environ["ADF_RUN_ID"], path, budget, evidence_dir)
+    result = read_adapter(LocalReadAdapter(repository, revision, evidence_dir, **host_policy_settings()), os.environ["ADF_RUN_ID"], path, budget, evidence_dir, delivery_mode="mediated")  # ADR 0029: this tool returns the bytes
     emit_local_read("mcp_read", result, start_ns, hook=False)  # ADR 0021: long-lived process, no wait
     if result["outcome"] != "delivered":
         raise ToolError(result["reason_code"])

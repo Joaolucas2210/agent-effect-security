@@ -55,9 +55,10 @@ def host_policy_settings():
     return {"host_policy_path": os.environ.get("ADF_READ_POLICY_FILE"), "host_policy_sha256": os.environ.get("ADF_READ_POLICY_SHA256")}
 
 
-def read_adapter(adapter, run_id, path, budget, evidence_dir, principal=None):
-    """The host opts into diagnostic timings; agent input never selects this setting."""
+def read_adapter(adapter, run_id, path, budget, evidence_dir, principal=None, delivery_mode="gate_only"):
+    """The host opts into diagnostic timings; agent input never selects this setting.
+    `delivery_mode` defaults to the weaker claim (ADR 0029); an edge that returns the bytes itself says `mediated`."""
     if os.environ.get("ADF_CAPTURE_TIMINGS") != "1":
-        return adapter.read(run_id, path, budget, principal=principal)
+        return adapter.read(run_id, path, budget, principal=principal, delivery_mode=delivery_mode)
     from integration.attempt_timing import read_observed
-    return read_observed(adapter, run_id, path, budget, evidence_dir, principal)
+    return read_observed(adapter, run_id, path, budget, evidence_dir, principal, delivery_mode)

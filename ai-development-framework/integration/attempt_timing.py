@@ -79,11 +79,11 @@ def persist_timing(record, evidence_dir):
         os.close(directory)
 
 
-def read_observed(adapter, run_id, path, budget, evidence_dir, principal=None):
+def read_observed(adapter, run_id, path, budget, evidence_dir, principal=None, delivery_mode=None):
     """Measure the adapter's return/raise; exporting the observation is outside this span."""
     timing, return_state = AttemptTiming(), "raised"
     try:
-        result = timing.call("total", adapter.read, run_id, path, budget, timing=timing, principal=principal)
+        result = timing.call("total", adapter.read, run_id, path, budget, timing=timing, principal=principal, delivery_mode=delivery_mode)
         return_state = "returned"
         return result
     finally:

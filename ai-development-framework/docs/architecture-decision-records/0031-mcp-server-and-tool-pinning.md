@@ -71,6 +71,11 @@ Slice 2 (delivered 2026-11-04), in two parts because the `PreToolUse` payload st
   sends no MCP calls to the hook, so this is **offline**: `adf doctor` prints `mcp <server>: claude=… codex=…`
   with `ok | changed | absent | unreadable` per client and exits 1 on `changed`/`unreadable`. A Claude-origin call
   is still judged against Claude's scopes only.
+- **Probe age (follow-up, 2026-11-04).** `adf mcp probe --write` records `probed_at` (UTC) next to each
+  `tools_sha256`; both are under the registry pin, so the human re-pins afterwards (and ADR 0027's manifest, which
+  pins the registry file, is re-pinned too). `adf doctor` prints `probe=never | fresh(<n>d) | stale(<n>d)` per
+  pinned server and exits 1 on `never` or `stale` (`ADF_MCP_PROBE_MAX_AGE_DAYS`, default 30; a timestamp in the
+  future is stale). A probe is evidence only while it is recent; skipped is never green.
 - **Offline — tool-list digest.** `adf mcp probe FILE [--write]` (human-run, never from a hook) starts each
   pinned server over stdio with only its `env_keys` from the environment, lists tools, and digests
   `name + inputSchema` (descriptions and annotations excluded: they authorize nothing). Status per server:

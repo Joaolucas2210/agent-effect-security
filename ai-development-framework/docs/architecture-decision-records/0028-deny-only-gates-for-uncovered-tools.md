@@ -84,7 +84,13 @@ redirection outside single quotes, globs or `~`/`{}` in a path operand, unbalanc
 Unknown commands are not ADF's call. The single-operand `cat PATH` keeps its admit path and bundle; a
 multi-operand `cat` keeps the cat gate's `unsafe_read_command`. `hooks/test-bash-read-grammar.sh` ran red first
 (39 failures). Ceiling, stated: this is a denylist of *shapes*, not a shell parser; `ponytail: a new
-read-equivalent binary or an unlisted interpreter passes until the list grows through ADR 0034's process`. `make project-reasons` over the maintainer's own week:
+read-equivalent binary or an unlisted interpreter passes until the list grows through ADR 0034's process`.
+Second pass (2026-11-04, pilot findings 3 and 8): segments are split only outside quotes (`grep "a|b" f` is one
+segment; `echo "x; head .env"` is not a read); per-command tables of options that take an argument
+(`-e -m -A -t -g -n -d -k …`) stop treating those arguments as paths; an explicit pattern option (`-e`, `--regexp`,
+`-f`, `--expression`) makes every positional a path; a pattern or program *file* (`grep -f`, `rg -f`, `sed -f`,
+`awk -f`, `sort -o`) is itself a read operand. Globs stay ambiguous only in path operands. `hooks/test-bash-grammar-2.sh`
+ran red first (17 failures). `make project-reasons` over the maintainer's own week:
 zero `uncovered_*` denies on legitimate work is the acceptance number.
 
 ## Rollback

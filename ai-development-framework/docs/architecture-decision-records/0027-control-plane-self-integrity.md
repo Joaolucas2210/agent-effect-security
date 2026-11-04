@@ -1,6 +1,6 @@
 # ADR 0027: control-plane self-integrity
 
-- **Status:** Proposed — awaits human acceptance.
+- **Status:** Accepted — human acceptance on 2026-11-04 (maintainer); previously Proposed. Implemented the same day; see *Implementation note*.
 - **Date:** 2026-11-04
 - **Depends on:** ADR 0026; ADRs 0011, 0025 (Accepted).
 - **Scope:** detection of tampering with ADF's own host configuration. No new effect, no admit path.
@@ -26,6 +26,19 @@ value is "prove" cannot leave this as prose.
   `control_plane_tampered_total`.
 - What the manifest does **not** protect: itself against root or the user; the agent runtime's own settings
   beyond the hook line; `.claude/settings.local.json` overrides unless pinned.
+
+## Implementation note (2026-11-04)
+
+`integration/control_plane_pins.py` + `adf doctor [--pin]` + a check in `hooks/adf-read-hook.py` that runs
+before any gate. Pinned: the four gate scripts, `adf-projects.py`, every `integration/`, `tools/`, `runtime/`
+module, the runtime policies, the policy-pack builder, `enabled-projects`, and the files named by
+`ADF_READ_POLICY_FILE`, `ADF_MCP_REGISTRY_FILE`, `ADF_A2A_JWKS_FILE`, `ADF_EVIDENCE_KEY_FILE`. Hook
+registration is checked **semantically** (the sorted matchers under which the ADF hook appears in
+`~/.claude/settings.json`), not by hashing the whole settings file, so unrelated edits do not raise alarms.
+Deviations from the decision text: (1) the shell fail-safe `[ -x "$A" ] || exit 0` is unchanged — without the
+binary nothing can record `control_plane_missing`, so a removed `adf` stays a residual the human sees in
+`adf doctor`; (2) no journal entry or `control_plane_tampered_total` yet: the deny happens before any adapter
+runs (same gap as ADR 0028 1a; 0028 1c adds the journal to pre-adapter denies).
 
 ## Options considered
 

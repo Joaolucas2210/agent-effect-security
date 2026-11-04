@@ -94,3 +94,7 @@ gate. ADF reduces what passes through the edges above; it does not make the agen
 | Governance with an enforcement point | Deny + verifiable evidence per decision | Dashboard, SSO/RBAC, compliance reports |
 
 This is not a claim of conformance with OWASP or with any framework.
+
+Attacker model, trust boundary and the only claims allowed in public text:
+[ADR 0026](../../ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md)
+(Accepted). Real incidents mapped to `covered | residual | out_of_scope`: [coverage map](../knowledge/coverage.md).

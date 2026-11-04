@@ -22,6 +22,7 @@ process the list grows by hand, loses reproducibility, and tempts content-based 
 | Version | Date | Added | Source |
 | --- | --- | --- | --- |
 | v1 | 2026-09 | baseline | ADR 0008 |
+| v2 | 2026-11-04 | `.npmrc .pypirc .netrc .git-credentials .docker .kube .aws .ssh .gnupg .terraform.d .vault-token .pgpass .my.cnf .boto .s3cfg .config`; suffix `.tfrc.json` | ADR 0036 (pilot finding 2, `hooks/test-root-dotfiles.sh`) |
 
 ## Options considered
 

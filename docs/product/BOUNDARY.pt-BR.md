@@ -76,8 +76,8 @@ gate. O ADF reduz o que passa pelas bordas acima; não torna o agente seguro.
 
 | reason_code | Camada | Significado |
 | --- | --- | --- |
-| `invalid_referenced_contract` | Contrato v1 | Path fora do formato (ex.: dotfile na raiz como `.env`); sem bundle |
-| `invalid_scope` | PDP | Componente `.env`/`.git` ou scope malformado |
+| `invalid_referenced_contract` | Contrato v1 | Path fora do formato (`..`, `//`, NUL, metacaracteres de shell); sem bundle. Desde a ADR 0036 um dotfile na raiz é path válido: `.env` é deny do PDP **com** bundle |
+| `invalid_scope` | PDP | Componente `.env`/`.git` (raiz ou aninhado) ou scope malformado |
 | `scope_not_allowlisted` | PDP | Path fora da policy pinada pelo host |
 | `sensitive_path_denied` | Runtime | Admitido pelo PDP, negado no efeito pela política de paths sensíveis |
 | `run_binding_mismatch`, `task_ref_mismatch` | PDP / PEP | Decisão usada fora do run ou snapshot ao qual foi vinculada |

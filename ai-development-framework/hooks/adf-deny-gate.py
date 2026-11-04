@@ -40,7 +40,7 @@ _EXPANSION = re.compile(r"[$`<>]")  # checked outside single quotes: substitutio
 _GLOB = re.compile(r"[*?\[\]~{}]")  # checked on path operands only
 _SINGLE_QUOTED = re.compile(r"'[^']*'")
 _SEGMENT = re.compile(r"\|\||&&|[;|&\n]|\(|\)")
-_SENSITIVE = json.loads((ROOT / "runtime/v1/policies/sensitive-path-policy-v1.json").read_text(encoding="utf-8"))
+_SENSITIVE = json.loads((ROOT / "runtime/v1/policies/sensitive-path-policy-v2.json").read_text(encoding="utf-8"))
 _AGENT_CONFIG = json.loads((ROOT / "runtime/v1/policies/agent-config-policy-v1.json").read_text(encoding="utf-8"))
 
 

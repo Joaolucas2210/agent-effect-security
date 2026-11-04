@@ -50,7 +50,7 @@ fixture_project() {
   export ADF_HOME="$WORK/adf-home"
   PROJECT="$WORK/project"
   mkdir -p "$PROJECT/config"
-  echo "public readme" > "$PROJECT/README.md"; echo "$SECRET" > "$PROJECT/config/.env"; echo "$SECRET" > "$PROJECT/.env"
+  echo "public readme" > "$PROJECT/README.md"; echo "$SECRET" > "$PROJECT/config/.env"; echo "$SECRET" > "$PROJECT/.env"; echo ".venv/" > "$PROJECT/.gitignore"
   git -C "$PROJECT" init -q && git -C "$PROJECT" add -f . \
     && git -C "$PROJECT" -c user.email=e2e@example.invalid -c user.name=e2e commit -qm fixture
   adf projects enable "$PROJECT" >/dev/null
@@ -61,7 +61,9 @@ local_edges() {
   step "Claude Read and Codex cat through adf hook"
   expect "Read README.md is allowed" "$(payload_read README.md | claude_hook)" '"permissionDecision":"allow"'
   expect "Read config/.env is denied with a bundle" "$(payload_read config/.env | claude_hook)" "deny/invalid_scope bundle="
-  expect "Read .env is denied by the contract" "$(payload_read .env | claude_hook)" "deny/invalid_referenced_contract"
+  expect "Read .env is denied by the PDP with a bundle (ADR 0036)" "$(payload_read .env | claude_hook)" "deny/invalid_scope bundle="
+  expect "Read .gitignore is allowed (ADR 0036)" "$(payload_read .gitignore | claude_hook)" '"permissionDecision":"allow"'
+  expect "Read docs/../README.md is denied by the contract" "$(payload_read docs/../README.md | claude_hook)" "deny/invalid_referenced_contract"
   expect "cat README.md is not blocked" "$(payload_cat 'cat README.md' | codex_hook)" "{}"
   expect "cat config/.env is denied" "$(payload_cat 'cat config/.env' | codex_hook)" "invalid_scope"
   expect "a composed cat is denied" "$(payload_cat 'cat README.md; cat .env' | codex_hook)" "unsafe_read_command"

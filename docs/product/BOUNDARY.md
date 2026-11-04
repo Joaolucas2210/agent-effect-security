@@ -77,8 +77,8 @@ gate. ADF reduces what passes through the edges above; it does not make the agen
 
 | reason_code | Layer | Meaning |
 | --- | --- | --- |
-| `invalid_referenced_contract` | Contract v1 | Path outside the format (e.g., a root dotfile such as `.env`); no bundle |
-| `invalid_scope` | PDP | `.env`/`.git` component or malformed scope |
+| `invalid_referenced_contract` | Contract v1 | Path outside the format (`..`, `//`, NUL, shell metacharacters); no bundle. Since ADR 0036 a root dotfile is a valid path: `.env` is a PDP deny **with** a bundle |
+| `invalid_scope` | PDP | `.env`/`.git` component (root or nested) or malformed scope |
 | `scope_not_allowlisted` | PDP | Path outside the policy pinned by the host |
 | `sensitive_path_denied` | Runtime | Admitted by the PDP, denied at the effect by the sensitive path policy |
 | `run_binding_mismatch`, `task_ref_mismatch` | PDP / PEP | Decision used outside the run or snapshot it was bound to |

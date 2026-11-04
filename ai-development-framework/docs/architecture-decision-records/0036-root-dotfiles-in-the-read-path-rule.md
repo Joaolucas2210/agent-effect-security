@@ -1,6 +1,6 @@
 # ADR 0036: root dotfiles in the v1 read path rule
 
-- **Status:** Proposed — awaits human acceptance. No code before acceptance; the red eval comes first.
+- **Status:** Accepted — human acceptance on 2026-11-04 (maintainer); previously Proposed. Implemented the same day; see *Implementation note*.
 - **Date:** 2026-11-04
 - **Deciders:** maintainer.
 - **Depends on:** ADRs 0007, 0008, 0011 (Accepted); 0026, 0034 (Accepted process).
@@ -41,6 +41,19 @@ any policy names them. Widening the grammar without naming them would expose the
    above denied at the right layer with a bundle; `.gitignore` delivered; `..`, `.`, `./x`, `x/.`, `//`,
    `.env.local` in a subdirectory; the Codex `cat` gate and the 1b grammar on the same names; `project-reasons`
    counts moving from `attempts=` to `total=`.
+
+## Implementation note (2026-11-04)
+
+The v1 path grammar lived in eight places, not one: `tools/pdp.py` `_PATH` and the `path` pattern of
+`list-files-input`, `tool-call-intent`, `tool-profile`, `policy-bundle`, `policy-context`, `evidence-bundle`,
+`runtime-audit-receipt` and `a2a-request`. All eight now carry rule 1.1 with their original negative
+look-aheads; the `a2a-request` keeps its 512-byte ceiling as a look-ahead. `sensitive-path-policy-v2.json` is
+loaded by the adapter, the deny gate and the policy-pack builder; the policy schema accepts `policy_version`
+`1.0 | 2.0` and `provenance.adr` `0008 | 0036`; the runtime normative oracle gains `SensitivePathPolicyV2`.
+`hooks/test-root-dotfiles.sh` ran red first (11 failures, 1 error). Three existing expectations changed by
+design — root `.env` is `invalid_scope` **with a bundle** in the adapter, the policy pack and the Codex `cat`
+gate — and the pinned fixed-suite metrics did not move (the suite has no root dotfile case). `x/.` is now
+rejected by the argument schema (`invalid_arguments`) rather than the contract; both are pre-PDP denies.
 
 ## Options considered
 

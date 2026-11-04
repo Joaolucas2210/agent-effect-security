@@ -115,7 +115,7 @@ class LocalReadAdapter:
     def __init__(self, trusted_repository, trusted_revision, evidence_dir, workspace_parent=None, *, host_policy_path=None, host_policy_sha256=None):
         self._repository, self._revision, self._evidence, self._parent = trusted_repository, trusted_revision, Path(evidence_dir), workspace_parent
         self._schemas = schemas()
-        self._sensitive = _load("runtime/v1/policies/sensitive-path-policy-v1.json")
+        self._sensitive = _load("runtime/v1/policies/sensitive-path-policy-v2.json")  # ADR 0036
         self._host_policy, self._host_policy_invalid = None, False
         if host_policy_path is not None or host_policy_sha256 is not None:
             try: self._host_policy = load_host_policy(host_policy_path, host_policy_sha256, self._schemas)

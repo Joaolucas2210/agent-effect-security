@@ -322,12 +322,12 @@ class LocalReadAdapterTest(unittest.TestCase):
 
     def test_denies_never_reach_the_runtime(self):
         with patch.object(LocalReadRuntime, "read", side_effect=AssertionError("runtime must not run")):
-            cases = {"/etc/passwd": "invalid_scope", "": "invalid_scope", "docs/readme.md\x00": "invalid_scope", "docs/../secrets/token": "invalid_referenced_contract", ".env": "invalid_referenced_contract", "docs//readme.md": "invalid_referenced_contract"}
+            cases = {"/etc/passwd": "invalid_scope", "": "invalid_scope", "docs/readme.md\x00": "invalid_scope", "docs/../secrets/token": "invalid_referenced_contract", ".env": "invalid_scope", "docs//readme.md": "invalid_referenced_contract"}
             for path, code in cases.items():
                 result = self.read(path); self.assertEqual((result["outcome"], result["reason_code"]), ("deny", code), path); self.assertNotIn("content", result)
             self.assertEqual(self.read("docs/readme.md", run_id="../x")["reason_code"], "invalid_run_id")
             self.assertEqual(self.read("docs/readme.md", budget="64")["reason_code"], "invalid_budget")
-            self.assertFalse(list(self.evidence.rglob("*.json")), "contract-level denies produce no bundle")
+            bundles = list(self.evidence.rglob("*.json")); self.assertEqual(len(bundles), 1, "only the root .env (ADR 0036: PDP deny) leaves a bundle; contract-level denies produce none")
 
     def test_sensitive_symlink_directory_and_oversize_are_denied_without_content(self):
         expected = {"secrets/token": "sensitive_path_denied", "escape": "safe_open_failed", "docs": "unsafe_file_type", "big.txt": "output_limit_exceeded", "missing.md": "safe_open_failed"}

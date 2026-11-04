@@ -42,7 +42,7 @@ CASES = [
     ("T4", "unknown skill", "plain", "reader", "write_workspace_file", "README.md", 403, "unknown_skill"),
     ("T5a", "secrets/ path not approved by host policy", "plain", "reader", SKILL, "secrets/db.txt", 200, "scope_not_allowlisted"),
     ("T5b", "path outside workspace", "plain", "reader", SKILL, "../etc/passwd", 400, "invalid_request"),
-    ("T5c", "root .env (request schema refuses dotfile)", "plain", "reader", SKILL, ".env", 400, "invalid_request"),
+    ("T5c", "root .env (PDP denies with a bundle, ADR 0036)", "plain", "reader", SKILL, ".env", 200, "invalid_scope"),
     ("T5d", "nested .env (PDP scope rule)", "plain", "reader", SKILL, "config/.env", 200, "invalid_scope"),
     ("T6", "approved path README.md", "plain", "reader", SKILL, "README.md", 200, "read_delivered"),
     ("T7a", "input-required pause", "confirm", "reader", SKILL, "README.md", 200, "input_required"),

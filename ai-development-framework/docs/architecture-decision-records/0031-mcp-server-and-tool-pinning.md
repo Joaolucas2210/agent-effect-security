@@ -1,6 +1,6 @@
 # ADR 0031: MCP server and tool admission pinning
 
-- **Status:** Accepted for slice 1 only — human acceptance on 2026-11-04 (maintainer); slice 2 (tool-list digest) stays Proposed until a client exposes the live tool list to the hook.
+- **Status:** Accepted — slices 1 and 2, human acceptance on 2026-11-04 (maintainer). Fully delivered, with slice 2 split into a per-call and an offline part (see *Validation*).
 - **Date:** 2026-11-04
 - **Depends on:** ADRs 0007, 0011 (Accepted), 0026.
 - **Scope:** host registry for MCP servers consumed by the agent; tool descriptions as untrusted input. No new effect.
@@ -41,7 +41,9 @@ The PDP already requires an exact `ToolProfile` match; MCP servers are not profi
 ## Residual risks
 
 A registered server can still return malicious *output*; that is leg 2 of the trifecta and stays tainted, not blocked.
-Servers started outside the agent's hook path are unseen.
+Servers started outside the agent's hook path are unseen. The tool-list digest is checked only when a human runs
+`adf mcp probe`: a rug-pull between probes is caught at the next probe, not at the call. Managed/enterprise MCP
+settings outside the three Claude Code scopes are not read, so a server defined only there is `unverified`.
 
 ## Validation
 
@@ -52,6 +54,26 @@ closed to `{schema_version, servers: {name: {tools: [...]}}}`: `command`, `args`
 text are **not** pinned in slice 1 because the hook cannot observe them; listing them would be documentation
 pretending to be a control. `hooks/test-mcp-registry.sh` was written first and ran red (9 failures): unconfigured
 = no decision, partial/wrong/swapped pin = deny all, exact names only, malformed names deny, closed shape.
+
+Slice 2 (delivered 2026-11-04), in two parts because the `PreToolUse` payload still carries no tool list:
+
+- **Per call — server definition.** A registry entry may pin `definition: {command, args, env_keys}` (env
+  *values* are secrets and are never pinned). The deny gate reads every definition of that server the Claude
+  Code client would load — `~/.claude.json` user scope, `~/.claude.json` `projects[<root>]` local scope,
+  `<root>/.mcp.json` project scope — and requires **all** of them to equal the pin: `mcp_server_definition_changed`
+  otherwise (INC-05 MCPoison: a repo-shipped `.mcp.json` overriding an approved server is caught);
+  `mcp_server_definition_unverified` when no scope defines it or a config file is unreadable (fail closed).
+  Entries without `definition` keep slice-1 behaviour. Codex `config.toml` is not read: Python 3.10 has no
+  `tomllib`; a Codex definition check needs its own slice.
+- **Offline — tool-list digest.** `adf mcp probe FILE [--write]` (human-run, never from a hook) starts each
+  pinned server over stdio with only its `env_keys` from the environment, lists tools, and digests
+  `name + inputSchema` (descriptions and annotations excluded: they authorize nothing). Status per server:
+  `no_definition | unreachable | unpinned | unchanged | mcp_tool_list_changed`; exit 1 on anything but
+  `unchanged`/`no_definition`; `--write` records the digests, after which the human re-pins. A server that
+  cannot be probed is never reported as unchanged.
+
+`hooks/test-mcp-registry-2.sh` ran red first (6 failures, 2 errors) and probes the repository's own
+`mcp_read_server` as the live target.
 
 ## Rollback
 

@@ -68,6 +68,12 @@ confere schema, canonicalização, digests, integridade do receipt, coerência d
 `read_result_digest`. `logical_replay` projeta a cadeia `intent → pdp → pep → evidence` a partir
 do bundle. `is_authorization(bundle)` retorna sempre `False`.
 
+Desde a [ADR 0029](architecture-decision-records/0029-delivery-mode-in-evidence.md) (Accepted) um bundle escrito por
+uma borda carrega `schema_version: "1.1"` e `delivery_mode`: `gate_only` (Claude `Read`, Codex `cat`: o ADF decidiu, a
+tool nativa entregou os próprios bytes) ou `mediated` (tool MCP stdio, A2A: o ADF entregou os bytes do snapshot). O
+campo está sob o digest do bundle; bundles `1.0` continuam válidos e nunca o carregam. `adf verify` o imprime e
+`make project-reasons` o conta.
+
 `aggregate_trial_observations` (H4-01b) soma só observações cujo bundle verifica offline e cujo
 reason code está no mapeamento versionado; inválidas contam em `evidence_bundle_invalid_total`.
 `make local-evidence-pilot` (H4-01c) executa três trials sobre revisões internas e imprime só o

@@ -104,6 +104,7 @@ def _project_counts(project_dir):
         body = _json(item)
         if not isinstance(body, dict): bundles["unreadable"] += 1; continue
         bundles[str((body.get("receipt") or {}).get("reason_code") or body.get("reason_code", "no_reason_code"))] += 1  # effect layer first, else PDP/edge
+        if isinstance(body.get("delivery_mode"), str): bundles[f"delivery_mode:{body['delivery_mode']}"] += 1  # ADR 0029
         if "_a2a" in item.parts and isinstance(body.get("principal"), dict):  # A2A record: who, outcome, bundle link
             principals.setdefault(str(body["principal"].get("sub")), []).append((body.get("outcome"), body.get("bundle_id")))
         elif isinstance(body.get("bundle_id"), str) and isinstance(body.get("effective_scope"), dict):

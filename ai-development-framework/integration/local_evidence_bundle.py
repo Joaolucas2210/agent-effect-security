@@ -41,10 +41,14 @@ def _read_projection(result):
     }
 
 
-def _bundle(request, decision, result=None, receipt=None):
+DELIVERY_MODES = ("gate_only", "mediated")
+
+
+def _bundle(request, decision, result=None, receipt=None, delivery_mode=None):
     bindings = decision["bindings"]
     bundle = {
-        "schema_version": "1.0", "bundle_id": "", "run_id": bindings["run_id"],
+        "schema_version": "1.0" if delivery_mode is None else "1.1", "bundle_id": "", "run_id": bindings["run_id"],
+        **({} if delivery_mode is None else {"delivery_mode": delivery_mode}),  # ADR 0029: what the bytes prove
         "adapter_id": request["adapter_id"], "created_at": request["created_at"],
         "decision_id": decision["decision_id"], "decision_outcome": decision["outcome"],
         "reason_code": decision["stable_reason_code"], "profile_sha256": bindings["profile_sha256"],
@@ -62,26 +66,31 @@ def _bundle(request, decision, result=None, receipt=None):
     return json.loads(canonical(bundle))
 
 
-def compose(request, schemas, pep, *, decide_fn=None):
-    """Compose H2-02 then H3-01; only the PEP owns the effectful read."""
+def compose(request, schemas, pep, *, decide_fn=None, delivery_mode=None):
+    """Compose H2-02 then H3-01; only the PEP owns the effectful read. `delivery_mode` (ADR 0029) is the caller's
+    honest statement of what it does with the bytes; None keeps the 1.0 bundle byte-identical."""
     required = {"adapter_request", "evidence_bundle", "tool_profile", "tool_call_intent", "policy_bundle", "policy_context", "runtime_workspace_descriptor", "runtime_audit_receipt", "read_result", "admission_decision", "list_files_input"}
+    if delivery_mode is not None and delivery_mode not in DELIVERY_MODES:
+        raise ValueError("invalid_delivery_mode")
     if not isinstance(schemas, dict) or required - set(schemas) or not _valid(request, schemas["adapter_request"]):
         raise ValueError("invalid_adapter_request")
     if not all([_valid(request["intent"], schemas["tool_call_intent"]), _valid(request["policy"], schemas["policy_bundle"]), _valid(request["context"], schemas["policy_context"]), _valid(request["workspace"], schemas["runtime_workspace_descriptor"]), all(_valid(profile, schemas["tool_profile"]) for profile in request["profiles"])]):
         raise ValueError("invalid_referenced_contract")
     decision = (decide if decide_fn is None else decide_fn)(request["intent"], request["profiles"], request["policy"], request["context"], schemas)
     if decision["outcome"] != "admit_read":
-        return _bundle(request, decision)
+        return _bundle(request, decision, delivery_mode=delivery_mode)
     profile = [item for item in request["profiles"] if item["tool_id"] == request["intent"]["tool_ref"]["tool_id"] and item["profile_sha256"] == request["intent"]["tool_ref"]["profile_sha256"]]
     result, receipt = pep.enforce_read(decision, request["intent"], profile[0], request["policy"], request["context"], request["workspace"])
     if not _valid(result, schemas["read_result"]) or result["taint"] != {"classification": "untrusted_workspace_file", "cannot_authorize": True} or not _receipt_valid(receipt, schemas["runtime_audit_receipt"]):
         raise ValueError("invalid_pep_result")
-    return _bundle(request, decision, result, receipt)
+    return _bundle(request, decision, result, receipt, delivery_mode)
 
 
 def verify_offline(bundle, schemas):
     """Pure fail-closed verification. It verifies evidence, never grants authority."""
     if not isinstance(schemas, dict) or not _valid(bundle, schemas.get("evidence_bundle")):
+        return False
+    if ("delivery_mode" in bundle) != (bundle["schema_version"] == "1.1"):  # belt and braces over the schema's if/then
         return False
     if bundle["verification"]["canonicalization"] != CANONICALIZATION:
         return False

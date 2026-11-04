@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 260" role="img" aria-labelledby="title desc">
+  <title id="title">ADF: decisions at the boundary</title>
+  <desc id="desc">An agent intent crosses a clearly marked policy boundary into an allowed read, with a separate evidence record.</desc>
+  <rect width="1200" height="260" rx="18" fill="#0B1220"/>
+  <rect x="32" y="32" width="64" height="64" rx="12" fill="#263548"/>
+  <path d="M64 42v16m0 16v13M42 64h14m16 0h14" fill="none" stroke="#F3F7FC" stroke-width="4"/>
+  <path d="m64 57 7 7-7 7-7-7z" fill="#52D1B0"/>
+  <rect x="76" y="76" width="10" height="10" fill="none" stroke="#52D1B0" stroke-width="2"/>
+  <text x="114" y="65" fill="#F3F7FC" font-family="system-ui, sans-serif" font-size="33" font-weight="750">ADF</text>
+  <text x="114" y="89" fill="#B9C8D8" font-family="system-ui, sans-serif" font-size="16">Agent Effect Security</text>
+  <text x="32" y="157" fill="#F3F7FC" font-family="system-ui, sans-serif" font-size="32" font-weight="650">Decisions at the boundary.</text>
+  <text x="32" y="194" fill="#B9C8D8" font-family="system-ui, sans-serif" font-size="19">A local control plane for reads through supported agent edges.</text>
+  <path d="M785 69h72m0 0 12-12m-12 12 12 12M947 69h67" fill="none" stroke="#B9C8D8" stroke-width="3"/>
+  <path d="M900 30v175" stroke="#52D1B0" stroke-width="3" stroke-dasharray="9 7"/>
+  <rect x="866" y="49" width="69" height="40" rx="8" fill="#263548" stroke="#52D1B0" stroke-width="2"/>
+  <text x="900" y="75" text-anchor="middle" fill="#F3F7FC" font-family="ui-monospace, monospace" font-size="15">PDP</text>
+  <text x="760" y="111" fill="#B9C8D8" font-family="ui-monospace, monospace" font-size="14">INTENT</text>
+  <text x="966" y="111" fill="#B9C8D8" font-family="ui-monospace, monospace" font-size="14">READ</text>
+  <path d="M902 111v43h98" fill="none" stroke="#52D1B0" stroke-width="3"/>
+  <rect x="1001" y="137" width="130" height="36" rx="6" fill="none" stroke="#52D1B0" stroke-width="2"/>
+  <text x="1066" y="161" text-anchor="middle" fill="#F3F7FC" font-family="ui-monospace, monospace" font-size="13">EVIDENCE</text>
+  <text x="760" y="226" fill="#B9C8D8" font-family="system-ui, sans-serif" font-size="13">boundary • decision • record</text>
+</svg>

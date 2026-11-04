@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 410" role="img" aria-labelledby="title desc">
+  <title id="title">ADF read architecture at an installed edge</title>
+  <desc id="desc">A supported edge sends a request through PDP and PEP. Mediated reads return snapshot bytes; gate-only reads let the native tool deliver bytes. Early denies leave a journal, while composed decisions leave a bundle.</desc>
+  <rect width="1200" height="410" rx="16" fill="#F6F8FB"/>
+  <text x="34" y="43" fill="#111827" font-family="system-ui, sans-serif" font-size="23" font-weight="700">Read path at a supported, installed edge</text>
+  <path d="M260 70v286" stroke="#087F6D" stroke-width="3" stroke-dasharray="10 7"/>
+  <text x="272" y="85" fill="#075E50" font-family="system-ui, sans-serif" font-size="15" font-weight="650">ADF boundary</text>
+  <g fill="#FFFFFF" stroke="#263548" stroke-width="2">
+    <rect x="35" y="120" width="175" height="70" rx="8"/>
+    <rect x="300" y="120" width="175" height="70" rx="8"/>
+    <rect x="550" y="120" width="150" height="70" rx="8"/>
+    <rect x="775" y="120" width="160" height="70" rx="8"/>
+    <rect x="1000" y="120" width="165" height="70" rx="8"/>
+  </g>
+  <g fill="#111827" font-family="system-ui, sans-serif" font-size="18" font-weight="650" text-anchor="middle">
+    <text x="122" y="149">Agent intent</text><text x="387" y="149">Installed edge</text><text x="625" y="149">PDP</text><text x="855" y="149">PEP</text><text x="1082" y="149">Snapshot</text>
+  </g>
+  <g fill="#263548" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">
+    <text x="122" y="174">tool request</text><text x="387" y="174">hook / gateway</text><text x="625" y="174">policy decision</text><text x="855" y="174">bound, once</text><text x="1082" y="174">confined read</text>
+  </g>
+  <path d="M210 155h80m185 0h65m160 0h65m170 0h55" stroke="#263548" stroke-width="3" marker-end="url(#arrow)"/>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#263548"/></marker></defs>
+  <path d="M387 192v62m238-62v62m458-62v62" stroke="#263548" stroke-width="2" stroke-dasharray="7 5"/>
+  <rect x="302" y="255" width="170" height="54" rx="7" fill="#E8EEF4" stroke="#263548" stroke-width="2"/>
+  <rect x="539" y="255" width="172" height="54" rx="7" fill="#E3F4EE" stroke="#087F6D" stroke-width="2"/>
+  <rect x="994" y="255" width="173" height="54" rx="7" fill="#E3F4EE" stroke="#087F6D" stroke-width="2"/>
+  <g font-family="system-ui, sans-serif" font-size="15" font-weight="650" text-anchor="middle">
+    <text x="387" y="287" fill="#111827">Early deny → journal</text>
+    <text x="625" y="287" fill="#075E50">Decision → bundle</text>
+    <text x="1082" y="287" fill="#075E50">Mediated bytes</text>
+  </g>
+  <text x="35" y="363" fill="#111827" font-family="system-ui, sans-serif" font-size="15">Gate only: ADF records its decision; the native tool delivers bytes. The bundle does not prove those bytes.</text>
+  <text x="35" y="389" fill="#263548" font-family="system-ui, sans-serif" font-size="14">Dashed line = evidence branch or trust boundary; solid arrow = request path. Denied calls do not reach the snapshot.</text>
+</svg>

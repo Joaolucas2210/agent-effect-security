@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">What ADF evidence records</title>
+  <desc id="desc">Gate-only records the decision but native bytes are unproven. Mediated reads return snapshot bytes. Early denies produce a journal entry. Telemetry is an optional view.</desc>
+  <rect width="1200" height="360" rx="16" fill="#0B1220"/>
+  <text x="32" y="48" fill="#F3F7FC" font-family="system-ui, sans-serif" font-size="24" font-weight="700">Three outcomes. Different proof.</text>
+  <g fill="#263548"><rect x="32" y="75" width="360" height="220" rx="10"/><rect x="420" y="75" width="360" height="220" rx="10"/><rect x="808" y="75" width="360" height="220" rx="10"/></g>
+  <g font-family="system-ui, sans-serif">
+    <text x="54" y="112" fill="#F3F7FC" font-size="20" font-weight="700">01  Gate only</text>
+    <text x="54" y="151" fill="#F3F7FC" font-size="16">ADF decides; native tool reads.</text>
+    <text x="54" y="182" fill="#B9C8D8" font-size="15">Bundle: decision + snapshot check</text>
+    <text x="54" y="213" fill="#F3F7FC" font-size="15">Native bytes: not proven</text>
+    <text x="442" y="112" fill="#F3F7FC" font-size="20" font-weight="700">02  Mediated</text>
+    <text x="442" y="151" fill="#F3F7FC" font-size="16">ADF returns snapshot bytes.</text>
+    <text x="442" y="182" fill="#B9C8D8" font-size="15">Bundle: decision + read receipt</text>
+    <text x="442" y="213" fill="#F3F7FC" font-size="15">Delivered bytes: bound to snapshot</text>
+    <text x="830" y="112" fill="#F3F7FC" font-size="20" font-weight="700">03  Early deny</text>
+    <text x="830" y="151" fill="#F3F7FC" font-size="16">No admitted read.</text>
+    <text x="830" y="182" fill="#B9C8D8" font-size="15">Journal: attempt + reason code</text>
+    <text x="830" y="213" fill="#F3F7FC" font-size="15">No bundle at this stage</text>
+  </g>
+  <path d="M54 246h316M442 246h316" stroke="#52D1B0" stroke-width="3"/>
+  <path d="M830 246h316" stroke="#E9A23B" stroke-width="3" stroke-dasharray="8 7"/>
+  <text x="32" y="331" fill="#B9C8D8" font-family="system-ui, sans-serif" font-size="14">Optional OpenTelemetry spans are a view, never the record. HMAC verification requires the host key.</text>
+</svg>

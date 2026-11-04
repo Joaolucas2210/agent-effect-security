@@ -98,13 +98,13 @@ def _granted(policy_file):
 
 
 def _project_counts(project_dir):
-    bundles, attempts, principals, paths = Counter(), Counter(), {}, {}
+    bundles, attempts, principals, paths, modes = Counter(), Counter(), {}, {}, Counter()
     for item in sorted(project_dir.rglob("*.json")):
         if "_attempts" in item.parts: continue
         body = _json(item)
         if not isinstance(body, dict): bundles["unreadable"] += 1; continue
         bundles[str((body.get("receipt") or {}).get("reason_code") or body.get("reason_code", "no_reason_code"))] += 1  # effect layer first, else PDP/edge
-        if isinstance(body.get("delivery_mode"), str): bundles[f"delivery_mode:{body['delivery_mode']}"] += 1  # ADR 0029
+        if isinstance(body.get("delivery_mode"), str): modes[body["delivery_mode"]] += 1  # ADR 0029: counted apart, never inflating total=
         if "_a2a" in item.parts and isinstance(body.get("principal"), dict):  # A2A record: who, outcome, bundle link
             principals.setdefault(str(body["principal"].get("sub")), []).append((body.get("outcome"), body.get("bundle_id")))
         elif isinstance(body.get("bundle_id"), str) and isinstance(body.get("effective_scope"), dict):
@@ -119,16 +119,16 @@ def _project_counts(project_dir):
         attempts[str(payload.get("reason_code", "no_reason_code"))] += 1
         sub = ((started or {}).get("payload") or {}).get("principal_sub")
         if isinstance(sub, str): principals.setdefault(sub, []).append((payload.get("outcome"), payload.get("bundle_id")))
-    return bundles, attempts, principals, paths
+    return bundles, attempts, principals, paths, modes
 
 
 def cmd_reasons(policy_file=None):
     evidence, granted = hook.adf_home() / "evidence", _granted(policy_file)
     projects = sorted(path for path in evidence.iterdir() if path.is_dir()) if evidence.is_dir() else []
     for project_dir in projects:
-        bundles, attempts, principals, paths = _project_counts(project_dir)
+        bundles, attempts, principals, paths, modes = _project_counts(project_dir)
         name = project_dir.name
-        print(f"{name}  total={sum(bundles.values())}  " + " ".join(f"{code}={n}" for code, n in sorted(bundles.items())))
+        print(f"{name}  total={sum(bundles.values())}  " + " ".join(f"{code}={n}" for code, n in sorted(bundles.items())) + ("  " + " ".join(f"delivery_mode:{mode}={n}" for mode, n in sorted(modes.items())) if modes else ""))
         if attempts: print(f"{name}  attempts={sum(attempts.values())}  " + " ".join(f"{code}={n}" for code, n in sorted(attempts.items())))
         for sub, outcomes in sorted(principals.items()):
             delivered = [bundle for outcome, bundle in outcomes if outcome == "delivered"]

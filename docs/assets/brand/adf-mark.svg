@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
   <title id="title">ADF decision boundary mark</title>
   <desc id="desc">An incoming line meets an open boundary, continues after a decision diamond, and leaves a square evidence record.</desc>
   <rect width="64" height="64" rx="12" fill="#0B1220"/>

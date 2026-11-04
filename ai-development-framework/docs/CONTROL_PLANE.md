@@ -244,7 +244,9 @@ What is **not** covered, deliberately:
   remains invalid: the receipt requires the scope.
 - The Claude Code gate covers only `Read`; the Codex P4 gate below covers only allowlisted Bash.
 - Since ADR 0023 (Accepted), the local edges derive a `CallerPrincipal` from the harness (`claude:<agent_type>`);
-  it appears in the journal and in the span, not in the bundle, and does not change the decision yet.
+  it appears in the journal and in the span, not in the bundle. Since ADR 0033 a subagent carries `act: ["claude:main"]`
+  (depth 1) and a `principal_rules` entry may set `max_act_depth` (`--max-act-depth SUB=N` in the pack): the PDP
+  denies a deeper principal with `act_depth_exceeded`; journal and span record `act_depth`.
 
 ## Codex Bash read-equivalent (P4)
 

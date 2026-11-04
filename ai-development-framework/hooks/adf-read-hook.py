@@ -23,6 +23,11 @@ _DENY_ONLY = "hooks/adf-deny-gate.py"  # ADR 0028 slice 1a: path-only deny, neve
 _GATES = {"Read": "hooks/claude-code-read-gate.py", "Bash": "hooks/codex-bash-read-gate.py", **{tool: _DENY_ONLY for tool in ("Grep", "Glob", "Edit", "Write", "MultiEdit", "NotebookEdit")}}
 
 
+def _gate_for(tool):
+    """`mcp__<server>__<tool>` names go to the deny-only gate (ADR 0031 slice 1); unknown tools get no gate."""
+    return _GATES.get(tool) or (_DENY_ONLY if isinstance(tool, str) and tool.startswith("mcp__") else None)
+
+
 def adf_home(): return Path(os.environ.get("ADF_HOME") or Path.home() / ".adf")
 
 
@@ -60,7 +65,7 @@ def _gate(payload):
     """Import lazily: a broken ADF install must not affect projects that are not enabled."""
     sys.path.insert(0, str(ROOT))
     from importlib.util import module_from_spec, spec_from_file_location
-    spec = spec_from_file_location("adf_edge_gate", ROOT / _GATES[payload["tool_name"]])
+    spec = spec_from_file_location("adf_edge_gate", ROOT / _gate_for(payload["tool_name"]))
     gate = module_from_spec(spec); spec.loader.exec_module(gate)
     return gate.gate(payload)
 
@@ -88,12 +93,12 @@ def decide(raw):
     try:
         if root is None:
             return _deny("project_not_git")
-        if not isinstance(payload, dict) or payload.get("tool_name") not in _GATES:
+        if not isinstance(payload, dict) or _gate_for(payload.get("tool_name")) is None:
             return _deny("unsupported_tool")
         os.environ["ADF_TRUSTED_REPOSITORY"] = root  # host-derived; a stale export for another repo is overridden
         os.environ.setdefault("ADF_TRUSTED_REVISION", "HEAD")
         os.environ.setdefault("ADF_MAX_OUTPUT_BYTES", str(1 << 20))
-        if _GATES[payload["tool_name"]] == _DENY_ONLY:
+        if _gate_for(payload["tool_name"]) == _DENY_ONLY:
             return _gate(payload)  # no evidence dir: the deny-only gate persists nothing
         evidence = adf_home() / "evidence"
         evidence.mkdir(mode=0o700, parents=True, exist_ok=True)

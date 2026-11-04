@@ -1,8 +1,6 @@
-# ADF · Agent Effect Security
+# <img src="docs/assets/brand/adf-mark.svg" alt="Símbolo ADF: fronteira de decisão e registro separado de evidência" width="40" height="40"> ADF · Agent Effect Security
 
 [English](README.md) · **Português (Brasil)**
-
-![Símbolo ADF: um pedido do agente atravessa uma fronteira de decisão e deixa um registro separado](docs/assets/brand/adf-mark.svg)
 
 **Decisões na fronteira.** Um control plane local para leituras nas bordas de agentes suportadas e instaladas. Versão experimental `0.x`; este checkout informa a versão em [`VERSION`](VERSION).
 

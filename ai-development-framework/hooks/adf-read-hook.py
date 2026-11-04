@@ -62,11 +62,12 @@ def _deny(reason):
 
 
 def _tampered():
-    """ADR 0027: with `$ADF_HOME/pins.json` present, any divergence (or an unusable manifest) is tampering; absent = not pinned."""
+    """ADR 0027: with `$ADF_HOME/pins.json` present, any divergence (or an unusable manifest) is tampering; absent = not pinned.
+    -> the divergent labels (code paths relative to the clone, `host:*` names, `registration`), never a host path."""
     sys.path.insert(0, str(ROOT))
     from integration.control_plane_pins import check
     divergent = check(ROOT, adf_home())
-    return divergent is not None and divergent != []
+    return divergent or []
 
 
 def _load(relative):
@@ -116,9 +117,11 @@ def decide(raw):
         evidence = adf_home() / "evidence"
         evidence.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.environ.setdefault("ADF_EVIDENCE_DIR", str(evidence / project_id(root) / datetime.now(timezone.utc).strftime("%Y-%m-%d")))
-        if _tampered():  # ADR 0027: pinned host, divergent code/host file/registration; journaled since ADR 0028 1c
+        divergent = _tampered()
+        if divergent:  # ADR 0027: pinned host, divergent code/host file/registration; journaled since ADR 0028 1c
+            from integration.control_plane_pins import describe
             _load(_DENY_ONLY).journal_deny(payload, "control_plane_tampered")
-            return _deny("control_plane_tampered")
+            return _deny(f"control_plane_tampered: {describe(divergent)} (human: adf doctor)")
         return _gate(payload)
     except Exception:  # enabled project: fail closed
         return _deny("adapter_failed")

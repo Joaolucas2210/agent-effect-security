@@ -9,7 +9,9 @@ ADR 0028's `~/.adf` write deny are the companions).
 import hashlib
 import json
 import os
+import re
 import stat
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,6 +26,47 @@ def _sha256(path):
             return hashlib.sha256(handle.read()).hexdigest()
     except OSError:
         return None  # missing is a value too: a file that appears or disappears is a divergence
+
+
+_ASSIGN = re.compile(r"(?:^|[\s;])(?:export\s+)?(ADF_[A-Z0-9_]+)=([^\s;]+)")
+
+
+def registered_env(home):
+    """Host env files as the registered hook command exports them (`export ADF_X=/path; ...`), so a terminal
+    without those variables sees the same snapshot the hook sees. The shell value, when set, wins."""
+    found = {}
+    try:
+        settings = json.loads((Path(home) / ".claude/settings.json").read_text(encoding="utf-8"))
+        for entry in settings["hooks"]["PreToolUse"]:
+            for hook in entry.get("hooks", []):
+                command = str(hook.get("command", ""))
+                if "adf" in command and " hook" in command:
+                    for name, value in _ASSIGN.findall(command):
+                        found.setdefault(name, value.strip("\"'"))
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        pass
+    return found
+
+
+def host_env(name, home):
+    return os.environ.get(name) or registered_env(home).get(name)
+
+
+def describe(labels, limit=5):
+    """Short, path-free summary for a deny reason: first labels plus a count."""
+    labels = list(labels)
+    head = ", ".join(labels[:limit])
+    return head + (f" +{len(labels) - limit} more" if len(labels) > limit else "")
+
+
+def clone_line(root):
+    """`branch @ short-sha` of the clone the checker runs from; `na` when git cannot say (never a path)."""
+    try:
+        branch = subprocess.run(["git", "-C", str(root), "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip()
+        sha = subprocess.run(["git", "-C", str(root), "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip()
+        return f"{branch} @ {sha}" if branch and sha else "na"
+    except (OSError, subprocess.SubprocessError):
+        return "na"
 
 
 def _registration(home):
@@ -43,11 +86,12 @@ def snapshot(root, adf_home):
         for path in sorted(root.glob(pattern)):
             files[str(path.relative_to(root))] = _sha256(path)
     files["host:enabled-projects"] = _sha256(adf_home / "enabled-projects")
+    home = Path(os.environ.get("HOME") or Path.home())
     for name in _HOST_ENV:
-        value = os.environ.get(name)
+        value = host_env(name, home)
         if value:
             files[f"host:{name}"] = _sha256(value)
-    return {"schema_version": "1.0", "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "files": files, "registration": _registration(Path(os.environ.get("HOME") or Path.home()))}
+    return {"schema_version": "1.0", "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "files": files, "registration": _registration(home)}
 
 
 def write_manifest(path, snap):

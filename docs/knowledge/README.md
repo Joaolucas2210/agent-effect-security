@@ -13,7 +13,8 @@ English only; these are records, not user-facing documents, so they have no pt-B
 | [coverage.md](coverage.md) | — | The single table used in public material |
 
 Rules: an ADR that adds an effect or moves the boundary cites ≥ 1 `THR-`. An `INC-` marked `covered` names a
-green eval. ⚠ marks an unverified CVE id or date: not citable publicly until verified.
+green eval. ⚠ marks an unverified CVE id or date: not citable publicly until verified; "verified <date>" marks a
+check against the primary source (arXiv, vendor advisory, NVD) on that date.
 
 Status vocabulary: `covered` (ADF denies or proves it on a covered edge, eval green) · `residual` (ADF sees
 part of the path; documented gap) · `out_of_scope` (outside the ADR 0026 boundary by design).

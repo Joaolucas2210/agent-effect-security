@@ -1,6 +1,6 @@
 # ADR 0035: knowledge base as decision input
 
-- **Status:** Proposed — awaits human acceptance.
+- **Status:** Accepted — human acceptance on 2026-11-04 (maintainer); previously Proposed. Already practised: `docs/knowledge/` records, coverage map and the verification pass of 2026-11-04.
 - **Date:** 2026-11-04
 - **Depends on:** ADR 0026.
 - **Scope:** `docs/knowledge/` layout and the rule that ties ADRs, incidents and evals together. Documentation only.

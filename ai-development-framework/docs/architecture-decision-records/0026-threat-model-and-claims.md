@@ -65,21 +65,21 @@ non-root agent).
 
 ### OWASP Top 10 for Agentic Applications 2026 mapping
 
-⚠ Category titles are paraphrased from the 2026 list; verify ids and wording against the published document
-before any public use (ADR 0035 rule).
+Titles verified 2026-11-04 against the OWASP GenAI Security Project launch post (2025-12-09) and its Q1/Q3 2026
+exploit round-ups, except ASI05, whose wording came only from secondary sources (⚠).
 
 | ASI | ADF position |
 | --- | --- |
-| ASI01 Goal/instruction hijack | Residual. Only the *effect* of a hijack is gated. |
+| ASI01 Agent Goal Hijack | Residual. Only the *effect* of a hijack is gated. |
 | ASI02 Tool misuse | Covered on covered edges (C1–C3). |
-| ASI03 Identity & privilege abuse | Covered for A2A and `principal_rules`; local principal is asserted by the harness. |
-| ASI04 Supply chain (agents/tools) | Residual; ADR 0031 for MCP; agent vendor out of scope. |
-| ASI05 Unexpected code execution | Residual; ADR 0028 denies config-as-code writes. |
-| ASI06 Memory/context poisoning | Out of scope. |
-| ASI07 Inter-agent trust | Covered on A2A (`act`, `aud`); local subagents ADR 0033. |
+| ASI03 Identity and Privilege Abuse | Covered for A2A and `principal_rules`; local principal is asserted by the harness; ADR 0027 detects tampering with ADF's own host files. |
+| ASI04 Agentic Supply Chain Vulnerabilities | Covered for MCP names/definitions (ADR 0031); agent vendor out of scope. |
+| ASI05 Unexpected Code Execution ⚠ | Covered (deny) for config-as-code writes and Bash read shapes (ADR 0028); execution itself is not gated. |
+| ASI06 Memory and Context Poisoning | Out of scope. |
+| ASI07 Insecure Inter-Agent Communication | Covered on A2A (`act`, `aud`, loopback + proxy TLS); local subagents ADR 0033. |
 | ASI08 Cascading failures | Out of scope. |
-| ASI09 Human-in-the-loop | Partial (`input-required`, effect-bound). |
-| ASI10 Insufficient logging / repudiation | Covered for integrity (C4); authenticity after ADR 0030. |
+| ASI09 Human-Agent Trust Exploitation | Partial: `input-required` is effect-bound (ADR 0022) and evidence comes from the control plane, never the model's narration (ADR 0030). |
+| ASI10 Rogue Agents | Partial: a rogue agent on a covered edge is denied like any other; off the covered edges it is residual. (Logging/repudiation is not an ASI category: C4 + ADR 0030 cover integrity and authenticity of evidence.) |
 
 ## Options considered
 

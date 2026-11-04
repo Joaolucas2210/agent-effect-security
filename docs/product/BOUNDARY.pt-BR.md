@@ -34,7 +34,7 @@ Fora desta tabela, considere **risco residual**: o ADF não vê nem bloqueia ess
 
 | Borda | Superfície coberta | Versão validada | Modos de AuthN | Não coberto (residual) |
 | --- | --- | --- | --- | --- |
-| Claude Code | Hook `PreToolUse`, matcher `Read` | Versão não registrada nos trials (`na`): revalide o formato do payload na versão instalada | Nenhum (processo local, host confiável) | `Bash`, `Grep`, `Glob`, MCP de terceiros, subagentes com outras tools |
+| Claude Code | Hook `PreToolUse`, matcher `Read`; deny-only em `Grep`/`Glob` (paths sensíveis) e `Edit`/`Write`/`MultiEdit`/`NotebookEdit` (paths sensíveis + config de agente, ADR 0028 slice 1a) | Versão não registrada nos trials (`na`): revalide o formato do payload na versão instalada | Nenhum (processo local, host confiável) | `Bash`, `Grep`/`Glob` sem `path`, MCP de terceiros, subagentes com outras tools; gates deny-only não deixam bundle |
 | Codex CLI | `PreToolUse` `Bash` com um único `cat <arquivo>` allowlisted; ativação por host pela mesma lista do Claude (REQ-MP-01) | 0.157.0 (hook global: `na`) | Nenhum (processo local) | `head`, `sed`, `rg`, `python -c`, pipes, redirecionamentos, qualquer outro comando |
 | A2A (HTTP) | Skill `read_workspace_file` via `message/send` | Gateway deste repo, HTTP só em `127.0.0.1` | HS256 (**só piloto**: quem tem o segredo emite qualquer token); RS256 com JWKS pinada por SHA-256 (IdP real, sem rotação automática; [runbook](../../ai-development-framework/docs/runbooks/a2a-rs256-jwks.pt-BR.md)) | Token roubado vale até `exp` (≤ 1 h; sem DPoP/mTLS); bind público só por proxy TLS do host; tasks em memória |
 | MCP stdio | Tool de leitura mediada | Sem validação em cliente Claude/Codex real | Nenhum | Igual à linha do cliente que o usa |

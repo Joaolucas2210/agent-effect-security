@@ -23,10 +23,11 @@ draw.rectangle((x + 46 * scale, y + 45 * scale, x + 56 * scale, y + 55 * scale),
 
 draw.text((385, 92), "ADF", font=font(132, True), fill="#F3F7FC")
 draw.text((391, 262), "Agent Effect Security", font=font(38), fill="#B9C8D8")
-draw.line((85, 425, 1195, 425), fill="#52D1B0", width=4)
-draw.text((85, 466), "Decisions at the boundary.", font=font(52, True), fill="#F3F7FC")
-draw.text((87, 552), "Local control for reads through supported agent edges.", font=font(28), fill="#B9C8D8")
-image.save(OUT, optimize=True)
+draw.line((85, 400, 1195, 400), fill="#52D1B0", width=4)
+draw.text((85, 432), "Decisions at the boundary.", font=font(50, True), fill="#F3F7FC")
+draw.text((85, 497), "Evidence with explicit limits.", font=font(50, True), fill="#52D1B0")  # 9.90:1 on #0B1220
+draw.text((87, 574), "Read decisions at supported, installed coding-agent edges.", font=font(27), fill="#B9C8D8")
+image.save(OUT, optimize=True)  # Pillow writes no text/time chunks unless asked: no metadata to strip
 if OUT.stat().st_size > 1_000_000:
     raise SystemExit("social preview exceeds 1 MB")
 print(f"{OUT}: {image.width}x{image.height}, {OUT.stat().st_size} bytes")

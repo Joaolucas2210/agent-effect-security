@@ -13,7 +13,7 @@ The mark shows an incoming request, a visible boundary with a decision diamond, 
 | [`adf-mark.svg`](../assets/brand/adf-mark.svg) | Square avatar, minimum 24 × 24 px. Its dark tile works on light and dark UI. |
 | [`adf-wordmark-light.svg`](../assets/brand/adf-wordmark-light.svg) | Horizontal lockup on a light background. |
 | [`adf-wordmark-dark.svg`](../assets/brand/adf-wordmark-dark.svg) | Horizontal lockup on a dark background. |
-| [`adf-hero.svg`](../assets/brand/adf-hero.svg) | Opaque README hero, 1200 × 260. It is a concept diagram, never a client screenshot. |
+| [`adf-hero.svg`](../assets/brand/adf-hero.svg) | Opaque concept banner, 1200 × 260, for slides, posts and the release page. The README uses a native HTML hero (mark at 72 px + text) instead, so the identity is not shown twice and the title stays real text. Never a client screenshot. |
 | [`adf-architecture.svg`](../assets/brand/adf-architecture.svg) | Read path at an installed edge, 1200 × 410. |
 | [`adf-evidence-flow.svg`](../assets/brand/adf-evidence-flow.svg) | Proof differences, 1200 × 360. |
 | [`adf-social-preview.png`](../assets/brand/adf-social-preview.png) | 1280 × 640 opaque social card. Committing it does not set GitHub's preview: a maintainer uploads it in repository Settings → General → Social preview. |
@@ -38,12 +38,12 @@ WCAG relative luminance ratios below were computed for the actual foreground/bac
 
 Solid arrows mean a request path. Dashed lines mean a trust boundary or evidence branch and are labeled. `gate_only` means ADF decided and the native tool delivered bytes; `mediated` means ADF returned snapshot bytes. A journal entry marks a pre-adapter attempt, not a verified Evidence Bundle. Optional telemetry is shown as a view only. The SVG diagrams here are their own source of truth; update the SVG and its alt text together when the boundary changes.
 
-English example: “Decisions at the boundary. A local control plane for reads through supported agent edges.”
+English example: “Decisions at the boundary. Evidence with explicit limits.” Subline: “Deterministic read-policy decisions at supported, installed coding-agent tool edges.”
 
-Portuguese example: “Decisões na fronteira. Um control plane local para leituras nas bordas de agente suportadas.”
+Portuguese example: “Decisões na fronteira. Evidências com limites explícitos.” Subline: “Decisões determinísticas de leitura nas bordas instaladas e suportadas de ferramentas de agentes de código.”
 
 Do not add shields, locks, brains, robot faces, neon effects, vendor marks, or claims of complete containment. Keep red for an actual deny; do not use it for a decorative accent.
 
 ## Reproduction and license
 
-The SVGs are hand-authored, static and self-contained. The PNG is rendered by `python3 docs/assets/brand/make-social-preview.py` with Pillow and an installed DejaVu Sans font; the font is rasterized, not redistributed. [The demo GIF](../assets/README.md) is a separate real hook/CLI capture with documented path substitutions. Brand assets are original project work distributed under the repository's [MIT License](../../LICENSE). No third-party logos are included.
+The SVGs are hand-authored, static and self-contained. The PNG is rendered by `python3 docs/assets/brand/make-social-preview.py` with Pillow and an installed DejaVu Sans font; the font is rasterized, not redistributed, and Pillow writes no text or time metadata. `hooks/test-readme-presentation.sh` checks its size (1280 × 640, ≤ 1 MB), that every brand SVG is self-contained with `<title>`/`<desc>`, and the README hero (alt text, ≤ 3 badges, heading order, EN/PT-BR image parity). A raster "editorial" illustration was considered and not adopted: none exists in the repository, and a picture that cannot be regenerated from source would weaken the rule that every image here is reproducible. [The demo GIF](../assets/README.md) is a separate real hook/CLI capture with documented path substitutions. Brand assets are original project work distributed under the repository's [MIT License](../../LICENSE). No third-party logos are included.

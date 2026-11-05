@@ -6,6 +6,20 @@ While the version is `0.x`, a minor release may change contracts; the entry says
 
 ## [Unreleased]
 
+### Added
+
+- **Compatibility matrix** (`docs/product/COMPATIBILITY.md`): each edge with its evidence level — contract test,
+  fresh-clone e2e, or real-client observation with a recorded version — and the steps to record a real-client run.
+  No row claims a real-client version that was not recorded.
+- `make doctor` (read-only `adf doctor`), and `make help` now lists only the product commands in run order;
+  `make help-all` keeps the full list.
+- QUICKSTART: diagnose, update and roll back, including the re-pin required after pulling a new version.
+
+### Changed
+
+- README lead names the problem with a concrete example and separates three questions: who decides, who delivers
+  the bytes, and what is left to verify.
+
 ### Security
 
 - **CI split by permission.** Quality gates, the fresh-clone e2e and gitleaks move to `ci.yml` with

@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="#teste-com-segurança">Início rápido</a> · <a href="#cobertura-e-exclusões">Cobertura</a> · <a href="#modelo-de-confiança-maturidade-e-contribuição">Fronteira de segurança</a>
+  <a href="#teste-com-segurança">Início rápido</a> · <a href="docs/product/COMPATIBILITY.pt-BR.md">Compatibilidade</a> · <a href="#o-que-a-evidência-comprova--e-não-comprova">Evidência</a> · <a href="#modelo-de-confiança-maturidade-e-contribuição">Fronteira de segurança</a>
   <br>
   <sub>experimental <code>0.x</code> — veja <a href="VERSION"><code>VERSION</code></a></sub>
 </p>
@@ -27,11 +27,17 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-263548" alt="Licença MIT"></a>
 </p>
 
-O ADF protege **leituras que passam por uma borda suportada que você instalou** — um hook de cliente, a tool de leitura MCP do ADF ou o seu gateway A2A em loopback. Ele não observa o host inteiro e não é um sandbox de sistema operacional.
+Um agente de código que pode ler `README.md` pode, com a mesma facilidade, pedir `.env`. O ADF responde a esse pedido **de forma determinística, no hook de ferramenta que o agente de fato chama**, e deixa um registro que se confere offline. Ele cobre só as bordas que você instala — um hook do Claude Code ou do Codex, a tool de leitura MCP do ADF, o seu gateway A2A em loopback. Não observa o host inteiro e não é um sandbox de sistema operacional.
 
 ## O problema
 
-Um agente de código que pode ler `README.md` pode, com a mesma facilidade, pedir para ler `.env`. Prompts de permissão perguntam a uma pessoa a cada vez; traces mostram o que aconteceu depois. Nenhum dos dois é uma autoridade determinística sobre esse acesso a arquivo, e nenhum deixa um registro que se possa conferir sem confiar na ferramenta que o escreveu.
+Prompts de permissão perguntam a uma pessoa a cada vez; traces mostram o que aconteceu depois. Nenhum dos dois é uma autoridade determinística sobre um acesso a arquivo, e nenhum deixa um registro que se possa conferir sem confiar na ferramenta que o escreveu. O ADF separa três perguntas:
+
+| Pergunta | Quem responde | Onde ver |
+| --- | --- | --- |
+| **Esta leitura pode acontecer?** | Um PDP puro contra uma policy pinada pelo host, reconferido pelo PEP no momento da leitura | [Como funciona](#como-funciona) |
+| **Quem entrega os bytes?** | A ferramenta do próprio cliente (`gate_only`) ou o ADF a partir de um snapshot Git (`mediated`) | [`gate_only` vs `mediated`](#como-funciona) |
+| **O que fica para verificar?** | Um Evidence Bundle para uma decisão composta, uma entrada no attempt journal para um deny precoce, nada se o hook não rodou | [Evidência](#o-que-a-evidência-comprova--e-não-comprova) |
 
 O ADF coloca uma decisão determinística em **bordas instaladas específicas**: uma policy do host decide quais leituras podem seguir, a decisão é reconferida no momento da leitura e o resultado tem um caminho de evidência explícito. O operador do host, o código instalado do ADF e o registro do hook continuam sendo confiáveis. [Modelo de ameaças e suas seis claims delimitadas](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md).
 
@@ -69,7 +75,7 @@ demo passed
 
 A terceira decisão é um gate deny-only: deixa **só uma entrada no journal de tentativas**, sem bundle. A fixture, o `.env` falso e o `ADF_HOME` temporário são removidos ao final (`DEMO_KEEP=1` os mantém). A versão passo a passo, com os payloads crus do hook, é o [início rápido isolado](docs/product/QUICKSTART.pt-BR.md).
 
-**Ativar um cliente real é um passo separado e opt-in.** `adf hook-snippet claude` ou `adf hook-snippet codex` **imprime** JSON; não instala nada. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando os hooks existentes; reinicie o cliente; rode `adf projects enable /caminho/absoluto/do/repo`; depois `adf doctor --pin`, com o registro já feito. Para uma allowlist revisada, gere uma policy da sessão e pine-a com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. [Ativação e reversão](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois). `make e2e` roda uma checagem de contrato em clone fresco das bordas locais e dos trials; não prova que uma versão específica de cliente chamou o hook.
+**Ativar um cliente real é um passo separado e opt-in.** `adf hook-snippet claude` ou `adf hook-snippet codex` **imprime** JSON; não instala nada. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando os hooks existentes; reinicie o cliente; rode `adf projects enable /caminho/absoluto/do/repo`; depois `adf doctor --pin`, com o registro já feito. Para uma allowlist revisada, gere uma policy da sessão e pine-a com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. [Ativação](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois) · [diagnóstico, atualização e reversão](docs/product/QUICKSTART.pt-BR.md#diagnostique-atualize-e-reverta). `make help` lista os comandos do produto; `make help-all` inclui o harness de desenvolvimento. `make e2e` roda uma checagem de contrato em clone fresco das bordas locais e dos trials; não prova que uma versão específica de cliente chamou o hook.
 
 ## Como funciona
 
@@ -84,7 +90,7 @@ A terceira decisão é um gate deny-only: deixa **só uma entrada no journal de 
 
 ## Cobertura e exclusões
 
-A superfície implementada neste checkout. Testes de fixture local e observações em cliente real são níveis diferentes de evidência; a [matriz de suporte do BOUNDARY](docs/product/BOUNDARY.pt-BR.md#matriz-de-suporte) lista gramáticas, versões e exceções.
+A superfície implementada neste checkout. Testes de contrato, execuções em clone limpo e observações em cliente real são níveis diferentes de evidência: a [matriz de compatibilidade](docs/product/COMPATIBILITY.pt-BR.md) diz qual deles sustenta cada borda e como reproduzi-lo; a [matriz de suporte do BOUNDARY](docs/product/BOUNDARY.pt-BR.md#matriz-de-suporte) lista gramáticas, versões e exceções.
 
 | Borda | Caminho implementado | O que ainda passa |
 | --- | --- | --- |

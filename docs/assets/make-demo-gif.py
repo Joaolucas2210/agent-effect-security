@@ -20,6 +20,9 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "ai-development-framework/e2e"))
+from demo import make_fixture  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 ADF = ROOT / ".venv/bin/adf"
 OUT = ROOT / "docs/assets/adf-demo.gif"
@@ -43,11 +46,8 @@ def hook(env, tool_input, repo):
 def capture():
     """Call the real entry points with synthetic inputs; return the scene list."""
     with tempfile.TemporaryDirectory() as temp:
-        base = Path(temp).resolve(); repo, home = base / "my-app", base / "adf-home"
-        (repo / "config").mkdir(parents=True); home.mkdir()
-        (repo / "README.md").write_text("# my-app\n"); (repo / ".env").write_text("DATABASE_URL=postgres://user:fake-demo-secret@db/app\n"); (repo / ".gitignore").write_text(".env\n")
-        for args in (["init", "-q"], ["config", "user.email", "demo@example.invalid"], ["config", "user.name", "demo"], ["add", "-f", "."], ["commit", "-qm", "init"]):
-            subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
+        base = Path(temp).resolve(); home = base / "adf-home"; home.mkdir()
+        repo = make_fixture(base)  # the same synthetic project `make demo` uses (e2e/demo.py)
         env = {"PATH": os.environ["PATH"], "HOME": str(base), "ADF_HOME": str(home)}
         scenes = []
         scenes.append(("adf projects enable ~/dev/my-app", [sh([str(ADF), "projects", "enable", str(repo)], env)]))

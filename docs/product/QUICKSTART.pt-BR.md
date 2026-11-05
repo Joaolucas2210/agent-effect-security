@@ -4,6 +4,8 @@
 
 Esta demo chama a entrada `PreToolUse` real do ADF com payloads sintéticos. Ela não registra hook no cliente, não toca nas configurações do agente e não afirma ter testado uma sessão real do Claude Code. Requisitos: Git, Make, Python 3.10+ com `venv` e um clone local. `make install-dev` instala o pacote editável no venv ativo; o ADF não é publicado no PyPI. Use um shell e diretório descartáveis.
 
+**Caminho mais curto:** depois de `make install-dev`, `make demo` roda as decisões abaixo e as duas verificações numa fixture descartável e a remove ([código](../../ai-development-framework/e2e/demo.py)). Os passos manuais abaixo mostram cada payload.
+
 ## 1. Instale e prepare um projeto sintético
 
 No clone do ADF:

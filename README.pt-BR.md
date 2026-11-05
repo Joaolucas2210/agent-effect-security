@@ -50,14 +50,24 @@ O ADF coloca uma decisão determinística em **bordas instaladas específicas**:
 
 ## Teste com segurança
 
-O [início rápido isolado](docs/product/QUICKSTART.pt-BR.md) roda o hook real contra uma fixture Git temporária e um `ADF_HOME` temporário. Ele não mexe nas configurações do seu agente, no seu `~/.adf` nem em segredo real algum. Requisitos: Git, Make, Python 3.10+ com `venv`. O ADF não é publicado no PyPI.
+`make demo` roda o hook real contra uma fixture Git temporária, um `HOME` temporário e um `ADF_HOME` temporário. Ele não mexe nas configurações do seu agente, no seu `~/.adf` nem em segredo real algum, e reporta uma decisão ausente como "no decision", nunca como deny. Requisitos: Git, Make, Python 3.10+ com `venv`. O ADF não é publicado no PyPI.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 make install-dev          # instalação editável neste venv; cria o `adf`
-adf version               # deve bater com VERSION
-# depois siga docs/product/QUICKSTART.pt-BR.md: duas decisões, um bundle verificado, limpeza
+make demo                 # três decisões reais numa fixture descartável, depois verificação offline
 ```
+
+```text
+  ✓ Read README.md               allow delivered/read_delivered                 Evidence Bundle
+  ✓ Read .env                    deny  deny/invalid_scope                       Evidence Bundle
+  ✓ Edit .claude/settings.json   deny  uncovered_write_denied_agent_config      attempt journal only
+  ✓ adf verify (no key)          verified                                       authenticity=not_checked
+  ✓ adf verify (demo host key)   verified                                       authenticity=valid
+demo passed
+```
+
+A terceira decisão é um gate deny-only: deixa **só uma entrada no journal de tentativas**, sem bundle. A fixture, o `.env` falso e o `ADF_HOME` temporário são removidos ao final (`DEMO_KEEP=1` os mantém). A versão passo a passo, com os payloads crus do hook, é o [início rápido isolado](docs/product/QUICKSTART.pt-BR.md).
 
 **Ativar um cliente real é um passo separado e opt-in.** `adf hook-snippet claude` ou `adf hook-snippet codex` **imprime** JSON; não instala nada. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando os hooks existentes; reinicie o cliente; rode `adf projects enable /caminho/absoluto/do/repo`; depois `adf doctor --pin`, com o registro já feito. Para uma allowlist revisada, gere uma policy da sessão e pine-a com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. [Ativação e reversão](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois). `make e2e` roda uma checagem de contrato em clone fresco das bordas locais e dos trials; não prova que uma versão específica de cliente chamou o hook.
 

@@ -50,14 +50,24 @@ ADF puts a deterministic decision at **specific installed edges**: a host-owned 
 
 ## Try it safely
 
-The [isolated quickstart](docs/product/QUICKSTART.md) runs the real hook against a temporary Git fixture and a temporary `ADF_HOME`. It does not touch your agent settings, your `~/.adf` or any real secret. Requirements: Git, Make, Python 3.10+ with `venv`. ADF is not published to PyPI.
+`make demo` runs the real hook against a temporary Git fixture, a temporary `HOME` and a temporary `ADF_HOME`. It does not touch your agent settings, your `~/.adf` or any real secret, and it reports a missing decision as "no decision", never as a deny. Requirements: Git, Make, Python 3.10+ with `venv`. ADF is not published to PyPI.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 make install-dev          # editable install into this venv; creates `adf`
-adf version               # must match VERSION
-# then follow docs/product/QUICKSTART.md: two decisions, one verified bundle, clean-up
+make demo                 # three real decisions on a throwaway fixture, then offline verification
 ```
+
+```text
+  ✓ Read README.md               allow delivered/read_delivered                 Evidence Bundle
+  ✓ Read .env                    deny  deny/invalid_scope                       Evidence Bundle
+  ✓ Edit .claude/settings.json   deny  uncovered_write_denied_agent_config      attempt journal only
+  ✓ adf verify (no key)          verified                                       authenticity=not_checked
+  ✓ adf verify (demo host key)   verified                                       authenticity=valid
+demo passed
+```
+
+The third decision is a deny-only gate: it leaves an **attempt journal entry only**, no bundle. The fixture, its fake `.env` and the temporary `ADF_HOME` are removed afterwards (`DEMO_KEEP=1` keeps them). The step-by-step version with the raw hook payloads is the [isolated quickstart](docs/product/QUICKSTART.md).
 
 **Enabling a real client is a separate, opt-in step.** `adf hook-snippet claude` or `adf hook-snippet codex` **prints** JSON; it installs nothing. Review and merge its `hooks.PreToolUse` entries into the client's settings, keeping existing hooks; restart the client; run `adf projects enable /absolute/path/to/repo`; then `adf doctor --pin` once the registration is in place. For a reviewed allowlist, build a session policy and pin it with `ADF_READ_POLICY_FILE` and `ADF_READ_POLICY_SHA256`. [Opt-in and rollback](docs/product/QUICKSTART.md#opt-in-a-real-client-later). `make e2e` runs a fresh-clone contract check of the local edges and trials; it is not proof that a particular client version invoked its hook.
 

@@ -11,7 +11,7 @@ RTK := $(shell command -v rtk 2>/dev/null)
 RUN := $(if $(RTK),rtk,)
 DRY_RUN ?= 1
 
-.PHONY: help setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e
+.PHONY: help setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -118,6 +118,9 @@ project-disable: ## Disable one project: PROJECT=/abs/git/root
 
 project-reasons: ## reason_code counts per project and per principal from ~/.adf/evidence (counts only); POLICY=/abs/policy.json adds granted vs unused
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/hooks/adf-projects.py reasons $(if $(POLICY),--policy "$(POLICY)",)
+
+demo: ## Three real decisions on a throwaway fixture + offline verify; touches no client settings or ~/.adf (needs `make install-dev`)
+	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/e2e/demo.py
 
 e2e: ## Release check: fresh clone of the committed tree, new venv, adf CLI, both edges, both trials (needs network or a pip cache)
 	@bash $(ADF)/e2e/quickstart.sh

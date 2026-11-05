@@ -55,3 +55,16 @@ Expect `verified ... authenticity=valid ... delivery_mode=gate_only`. `--key` ve
 `adf hook-snippet claude` or `adf hook-snippet codex` **prints JSON; it does not install anything**. Review and merge the emitted `hooks.PreToolUse` entries into the client's settings without replacing existing hooks. Restart the client so it loads the new registration. Then run `adf projects enable /absolute/path/to/repository` and `adf doctor --pin` from the host **after** the registration is in place. The hook command exports the evidence-key path only if a key existed when the snippet was printed; regenerate and review the snippet after key creation. A real allowlist is session-bound and must be pinned separately. See the [host install and trial guide](../../ai-development-framework/docs/trials.md#many-projects-one-hook-req-mp-01) and the [support matrix](BOUNDARY.md#support-matrix) before enabling a working repository.
 
 To disable a project, run `adf projects disable /absolute/path/to/repository`. To remove the integration, remove only ADF's hook entries, preserve other hooks, restart the client and have the host review the pin. If ADF's executable is missing or fails before a decision, the supplied wrapper exits without a decision; the client may proceed under its own permissions. This is not a global fail-closed boundary.
+
+## Diagnose, update and roll back
+
+| Symptom or task | Command | What it tells you |
+| --- | --- | --- |
+| Is the installed control plane the one I pinned? | `make doctor` (`adf doctor`) | Exit 0 intact, 1 tampered (lists each changed file), 3 not pinned. Read-only. |
+| Which reasons did ADF decide, per project? | `make project-reasons` | `reason_code` counts from `~/.adf/evidence`; counts only, no paths or content. |
+| Is this repository enabled at all? | `make projects` | The host list and how the global hook treats each entry. |
+| Was a bundle altered? | `adf verify FILE --key ~/.adf/evidence.key` | `verified` plus `authenticity=valid`; without `--key`, structure and digests only. |
+
+**After you pull a new version**, every enabled project is denied with `control_plane_tampered` until the host re-pins: that is the self-integrity check (ADR 0027) working, not a bug. Review the diff you pulled (`git log -p ORIG_HEAD..HEAD -- ai-development-framework/hooks ai-development-framework/integration ai-development-framework/tools ai-development-framework/policy-packs`), run `make demo`, then `adf doctor --pin`. Never re-pin a change you have not reviewed.
+
+**To roll back**, in order of reach: `adf projects disable PATH` stops decisions for one repository; `git checkout <previous tag>` followed by `adf doctor --pin` returns the clone to a reviewed version; removing ADF's `PreToolUse` entries from the client settings (keep other hooks, restart the client) removes the integration. Evidence and the attempt journal under `~/.adf` are kept; delete them yourself only after you no longer need the record.

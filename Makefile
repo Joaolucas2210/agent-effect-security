@@ -11,9 +11,18 @@ RTK := $(shell command -v rtk 2>/dev/null)
 RUN := $(if $(RTK),rtk,)
 DRY_RUN ?= 1
 
-.PHONY: help setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo
+.PHONY: help help-all doctor setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo
 
-help: ## Show this help
+# Product commands, in the order a new user runs them. Everything else is the development harness.
+PRODUCT_TARGETS := install-dev demo doctor project-enable projects project-reasons project-disable e2e
+
+help: ## Product commands (install, first decision, diagnose, roll back); `make help-all` lists the harness too
+	@echo "ADF product commands (first run: install-dev, then demo):"
+	@for t in $(PRODUCT_TARGETS); do grep -hE "^$$t:.*## " $(MAKEFILE_LIST) \
+	  | awk 'BEGIN{FS=":.*## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'; done
+	@echo "Development harness and maintenance loops: make help-all"
+
+help-all: ## Every target, product and development harness, sorted
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
 	  | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}' \
 	  | sort
@@ -118,6 +127,9 @@ project-disable: ## Disable one project: PROJECT=/abs/git/root
 
 project-reasons: ## reason_code counts per project and per principal from ~/.adf/evidence (counts only); POLICY=/abs/policy.json adds granted vs unused
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/hooks/adf-projects.py reasons $(if $(POLICY),--policy "$(POLICY)",)
+
+doctor: ## Read-only diagnosis: is the installed control plane intact against the host pin? (exit 0 intact, 1 tampered, 3 not pinned)
+	@adf doctor || { rc=$$?; [ $$rc = 1 ] && echo "  → after reviewing an update you pulled: adf doctor --pin (see docs/product/QUICKSTART.md#diagnose-update-and-roll-back)"; exit $$rc; }
 
 demo: ## Three real decisions on a throwaway fixture + offline verify; touches no client settings or ~/.adf (needs `make install-dev`)
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/e2e/demo.py

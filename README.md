@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="#try-it-safely">Quickstart</a> · <a href="#coverage-and-exclusions">Coverage</a> · <a href="#trust-model-status-and-contributing">Security boundary</a>
+  <a href="#try-it-safely">Quickstart</a> · <a href="docs/product/COMPATIBILITY.md">Compatibility</a> · <a href="#what-evidence-does--and-does-not--prove">Evidence</a> · <a href="#trust-model-status-and-contributing">Security boundary</a>
   <br>
   <sub>experimental <code>0.x</code> — see <a href="VERSION"><code>VERSION</code></a></sub>
 </p>
@@ -27,11 +27,17 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-263548" alt="MIT license"></a>
 </p>
 
-ADF protects **reads that pass through a supported edge you installed** — a client hook, ADF's MCP read tool or its loopback A2A gateway. It does not watch the whole host, and it is not an OS sandbox.
+A coding agent that may read `README.md` can just as easily ask for `.env`. ADF answers that request **deterministically, at the tool hook the agent actually calls**, and leaves a record you can check offline. It covers only the edges you install — a Claude Code or Codex hook, ADF's MCP read tool, its loopback A2A gateway. It does not watch the whole host, and it is not an OS sandbox.
 
 ## The problem
 
-A coding agent that may read `README.md` can just as easily ask to read `.env`. Permission prompts ask a person each time; traces show what happened afterwards. Neither is a deterministic authority for that file access, and neither leaves a record you can check without trusting the tool that wrote it.
+Permission prompts ask a person each time; traces show what happened afterwards. Neither is a deterministic authority for a file access, and neither leaves a record you can check without trusting the tool that wrote it. ADF keeps three questions apart:
+
+| Question | Who answers | Where to look |
+| --- | --- | --- |
+| **May this read happen?** | A pure PDP against a host-pinned policy, re-checked by the PEP at the moment of the read | [How it works](#how-it-works) |
+| **Who delivers the bytes?** | The client's own tool (`gate_only`), or ADF from a Git snapshot (`mediated`) | [`gate_only` vs `mediated`](#how-it-works) |
+| **What is left to verify?** | An Evidence Bundle for a composed decision, an attempt-journal entry for an early deny, nothing if the hook never ran | [Evidence](#what-evidence-does--and-does-not--prove) |
 
 ADF puts a deterministic decision at **specific installed edges**: a host-owned policy decides which reads may proceed, the decision is re-checked at the moment of the read, and the outcome has an explicit evidence path. The host operator, installed ADF code and hook registration stay trusted. [Threat model and its six bounded claims](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md).
 
@@ -69,7 +75,7 @@ demo passed
 
 The third decision is a deny-only gate: it leaves an **attempt journal entry only**, no bundle. The fixture, its fake `.env` and the temporary `ADF_HOME` are removed afterwards (`DEMO_KEEP=1` keeps them). The step-by-step version with the raw hook payloads is the [isolated quickstart](docs/product/QUICKSTART.md).
 
-**Enabling a real client is a separate, opt-in step.** `adf hook-snippet claude` or `adf hook-snippet codex` **prints** JSON; it installs nothing. Review and merge its `hooks.PreToolUse` entries into the client's settings, keeping existing hooks; restart the client; run `adf projects enable /absolute/path/to/repo`; then `adf doctor --pin` once the registration is in place. For a reviewed allowlist, build a session policy and pin it with `ADF_READ_POLICY_FILE` and `ADF_READ_POLICY_SHA256`. [Opt-in and rollback](docs/product/QUICKSTART.md#opt-in-a-real-client-later). `make e2e` runs a fresh-clone contract check of the local edges and trials; it is not proof that a particular client version invoked its hook.
+**Enabling a real client is a separate, opt-in step.** `adf hook-snippet claude` or `adf hook-snippet codex` **prints** JSON; it installs nothing. Review and merge its `hooks.PreToolUse` entries into the client's settings, keeping existing hooks; restart the client; run `adf projects enable /absolute/path/to/repo`; then `adf doctor --pin` once the registration is in place. For a reviewed allowlist, build a session policy and pin it with `ADF_READ_POLICY_FILE` and `ADF_READ_POLICY_SHA256`. [Opt-in](docs/product/QUICKSTART.md#opt-in-a-real-client-later) · [diagnose, update and roll back](docs/product/QUICKSTART.md#diagnose-update-and-roll-back). `make help` lists the product commands; `make help-all` adds the development harness. `make e2e` runs a fresh-clone contract check of the local edges and trials; it is not proof that a particular client version invoked its hook.
 
 ## How it works
 
@@ -84,7 +90,7 @@ The third decision is a deny-only gate: it leaves an **attempt journal entry onl
 
 ## Coverage and exclusions
 
-The surface implemented in this checkout. Local fixture tests and real-client observations are different levels of evidence; [BOUNDARY's support matrix](docs/product/BOUNDARY.md#support-matrix) lists grammars, versions and exceptions.
+The surface implemented in this checkout. Contract tests, fresh-clone runs and real-client observations are different levels of evidence: the [compatibility matrix](docs/product/COMPATIBILITY.md) says which one backs each edge and how to reproduce it; [BOUNDARY's support matrix](docs/product/BOUNDARY.md#support-matrix) lists grammars, versions and exceptions.
 
 | Edge | Implemented path | What still gets through |
 | --- | --- | --- |

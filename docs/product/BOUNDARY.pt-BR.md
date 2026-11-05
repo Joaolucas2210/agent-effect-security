@@ -2,7 +2,7 @@
 
 [English](BOUNDARY.md) · **Português (Brasil)**
 
-Atualizado: 2026-11-04 · Versão deste checkout 0.1.0 (experimental)
+Atualizado: 2026-11-04 · Versão deste checkout 0.2.0 (experimental)
 
 **Categoria:** *agent effect security*, um control plane local para coding agents. Em uma borda suportada e instalada,
 o ADF decide se uma leitura observada pode prosseguir e, quando o pedido chega à composição, deixa um bundle

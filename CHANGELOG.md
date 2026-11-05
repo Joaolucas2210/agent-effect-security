@@ -4,6 +4,59 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 While the version is `0.x`, a minor release may change contracts; the entry says so when it does.
 
+## [0.2.0] - 2026-11-05
+
+Still experimental and read-only: one effect (`read`), local host only. This release closes edges that 0.1.0 left
+open, makes evidence say how the bytes were delivered, and records what ADF does not see. ADR 0032 (write effect)
+stays Proposed and blocked; ADRs 0037 (hook bootstrap failure) and 0038 (evidence key lifecycle) are Proposed and
+change no behavior.
+
+### Changed — contracts
+
+- **Deny-only gates for uncovered tools** (ADR 0028). In an enabled project, `Grep`, `Glob`, `Edit`, `Write`,
+  `MultiEdit` and `NotebookEdit` are denied on sensitive paths and agent configuration; Bash read-equivalent
+  commands (`head`, `sed`, `grep`, pipes…) are parsed by a quote-aware grammar and denied on sensitive paths;
+  network tools are denied for the rest of a run after a sensitive attempt. Every such deny writes an attempt
+  journal entry and a span, not a bundle: no decision was admitted. Unknown commands are not ADF's call.
+- **EvidenceBundle 1.1** (ADR 0029): `delivery_mode` is `gate_only` (the client's native tool delivers the bytes;
+  the bundle does not prove them) or `mediated` (ADF delivers them). A 1.1 bundle without it fails verification;
+  1.0 bundles stay valid.
+- **Path rule 1.1 and `sensitive_path_policy_v2`** (ADR 0036). Root dotfiles such as `.gitignore` and `.github/`
+  are readable with a bundle; `.env`, `.env.*` and `.git/**` are denied with a bundle instead of a bundle-less
+  contract deny; v2 names credential files (`.npmrc`, `.netrc`, `.aws`, `.ssh`, `.config`, …) that 0.1.0 refused
+  only because they started with a dot. v1 stays loadable.
+- **Subagent principals** (ADR 0033): the `act` chain of a subagent is propagated and bounded by `max_act_depth`.
+
+### Added
+
+- **Evidence authenticity** (ADR 0030): bundles carry an HMAC under a host-held key (`adf key init`).
+  `adf verify` without a key reports `authenticity=not_checked`; `--key` checks the shared-secret HMAC. It is not
+  public verification.
+- **Control-plane self-integrity** (ADR 0027): `adf doctor --pin` pins the installed control plane; a tampered
+  checkout is denied before the gate (`control_plane_tampered`).
+- **MCP registry** (ADR 0031): pinned MCP server definitions for Claude Code and Codex `config.toml`, an offline
+  tool-list probe, drift and probe age in `adf doctor`; tool effects of unregistered servers are denied.
+- **`make demo`**: three real decisions on a throwaway fixture (allow with a bundle, deny with a bundle, deny with
+  a journal entry only), then offline verification. It touches no client settings, `~/.adf` or real secret.
+- **Threat model and claims** (ADR 0026), the sensitive-path governance process (ADR 0034), a knowledge base of
+  verified incidents (ADR 0035), and two host pilot reports (`docs/product/PILOT-*`).
+- **Presentation**: decision-first README with the ADF identity, a presentation gate (`hooks/readme_check.py`)
+  and a self-test that characterises hook failure semantics end to end.
+
+### Fixed
+
+- Pilot day-0 ergonomics in the CLI: tamper labels, `adf doctor` environment and clone lines, key export in the
+  hook snippet.
+- `adf projects reasons` no longer inflates `total=`; the journal test follows ADR 0033 depth.
+
+### Security
+
+- Coverage is unchanged in kind: reads outside the gated edges and supported clients are not covered, and the
+  hook path is not fail-closed in general. A missing `adf` executable or a hook script that cannot load gives
+  **no decision** and leaves no record; inside an enabled project, adapter failures deny. No ADF record never
+  means blocked. See [docs/product/BOUNDARY.md](docs/product/BOUNDARY.md) and ADR 0037.
+- `tomli` requirement raised to `>=2.5.0` (Dependabot).
+
 ## [0.1.0] - 2026-06-04
 
 First public release. Experimental: one effect (`read`), local host only.
@@ -41,4 +94,5 @@ First public release. Experimental: one effect (`read`), local host only.
   [docs/product/BOUNDARY.md](docs/product/BOUNDARY.md#support-matrix) and report vulnerabilities as described in
   [SECURITY.md](SECURITY.md).
 
+[0.2.0]: https://github.com/Joaolucas2210/agent-effect-security/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Joaolucas2210/agent-effect-security/releases/tag/v0.1.0

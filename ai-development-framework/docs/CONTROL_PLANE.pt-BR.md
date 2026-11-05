@@ -2,7 +2,7 @@
 
 [English](CONTROL_PLANE.md) · **Português (Brasil)**
 
-Data: 2026-09-25 · Versão do repositório: 0.1.0 (experimental)
+Data: 2026-09-25 · Versão do repositório: 0.2.0 (experimental)
 
 Este documento descreve a visão de produto do control plane do ADF e o que dela já existe em
 `main`. Cada claim aponta para código ou ADR. O que não tem ponteiro é futuro.

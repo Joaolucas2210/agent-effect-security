@@ -1,6 +1,6 @@
 # Roadmap
 
-Atualizado: 2026-10-16 · Versão: 0.1.0 (experimental)
+Atualizado: 2026-10-16 · Versão: 0.2.0 (experimental)
 
 > **Produto:** posicionamento, Now/Next/Later/Not doing e pacotes de trabalho estão em
 > [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md) e no

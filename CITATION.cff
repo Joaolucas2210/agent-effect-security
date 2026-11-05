@@ -11,5 +11,5 @@ authors:
     family-names: "Camargo"
 repository-code: "https://github.com/Joaolucas2210/agent-effect-security"
 license: MIT
-version: "0.1.0"
+version: "0.2.0"
 keywords: [ai-agents, coding-agents, security, authorization, policy-enforcement, evidence, a2a, mcp]

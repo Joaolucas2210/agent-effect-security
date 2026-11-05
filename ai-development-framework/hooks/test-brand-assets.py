@@ -54,8 +54,10 @@ def main():
         assert contrast(foreground, background) >= 4.5
     for readme in (ROOT / "README.md", ROOT / "README.pt-BR.md"):
         text = readme.read_text(encoding="utf-8")
-        assert re.search(r'^# <img src="docs/assets/brand/adf-mark\.svg" alt="[^"]+" width="40" height="40"> ADF · Agent Effect Security$', text, re.M), readme
-        for name in ("adf-hero.svg", "adf-architecture.svg", "adf-evidence-flow.svg"):
+        # Native HTML hero: the official mark at 64-80 px, then the real-text title (adf-hero.svg is for slides/posts).
+        assert re.search(r'<img src="docs/assets/brand/adf-mark\.svg" alt="[^"]{8,}" width="(6[4-9]|7\d|80)" height="\1">', text), readme
+        assert re.search(r'<h1 align="center">ADF</h1>\s*<p align="center"><b>Agent Effect Security</b></p>', text), readme
+        for name in ("adf-architecture.svg", "adf-evidence-flow.svg"):
             assert re.search(r"!\[[^\]]+\]\(docs/assets/brand/" + re.escape(name) + r"\)", text), (readme, name)
     print(f"brand assets: {len(SVGS)} safe SVGs, 1280x640 PNG under 1 MB, contrast and alt text OK")
 

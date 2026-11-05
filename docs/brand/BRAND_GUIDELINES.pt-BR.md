@@ -13,7 +13,7 @@ O símbolo mostra um pedido entrando, uma fronteira visível com o losango da de
 | [`adf-mark.svg`](../assets/brand/adf-mark.svg) | Avatar quadrado, mínimo de 24 × 24 px. A base escura funciona em interfaces claras e escuras. |
 | [`adf-wordmark-light.svg`](../assets/brand/adf-wordmark-light.svg) | Assinatura horizontal sobre fundo claro. |
 | [`adf-wordmark-dark.svg`](../assets/brand/adf-wordmark-dark.svg) | Assinatura horizontal sobre fundo escuro. |
-| [`adf-hero.svg`](../assets/brand/adf-hero.svg) | Hero opaco do README, 1200 × 260. É um diagrama conceitual, nunca uma captura de cliente. |
+| [`adf-hero.svg`](../assets/brand/adf-hero.svg) | Banner conceitual opaco, 1200 × 260, para slides, posts e a página de release. O README usa um hero HTML nativo (símbolo a 72 px + texto), para a identidade não aparecer duas vezes e o título continuar sendo texto real. Nunca uma captura de cliente. |
 | [`adf-architecture.svg`](../assets/brand/adf-architecture.svg) | Caminho de leitura em uma borda instalada, 1200 × 410. |
 | [`adf-evidence-flow.svg`](../assets/brand/adf-evidence-flow.svg) | Diferenças entre provas, 1200 × 360. |
 | [`adf-social-preview.png`](../assets/brand/adf-social-preview.png) | Card social opaco, 1280 × 640. O commit não configura a prévia do GitHub: um mantenedor faz upload em Settings → General → Social preview do repositório. |
@@ -38,12 +38,12 @@ As proporções de luminância relativa WCAG abaixo foram calculadas para os par
 
 Setas sólidas representam o caminho do pedido. Linhas tracejadas representam uma fronteira de confiança ou ramo da evidência e recebem rótulos. `gate_only` significa que o ADF decidiu e a ferramenta nativa entregou bytes; `mediated` significa que o ADF devolveu bytes do snapshot. Uma entrada no journal marca uma tentativa anterior ao adapter, não um Evidence Bundle verificado. A telemetria opcional aparece só como visualização. Os próprios SVGs são a fonte destes diagramas; atualize SVG e texto alternativo juntos quando a fronteira mudar.
 
-Exemplo em inglês: “Decisions at the boundary. A local control plane for reads through supported agent edges.”
+Exemplo em inglês: “Decisions at the boundary. Evidence with explicit limits.” Subtítulo: “Deterministic read-policy decisions at supported, installed coding-agent tool edges.”
 
-Exemplo em português: “Decisões na fronteira. Um control plane local para leituras nas bordas de agente suportadas.”
+Exemplo em português: “Decisões na fronteira. Evidências com limites explícitos.” Subtítulo: “Decisões determinísticas de leitura nas bordas instaladas e suportadas de ferramentas de agentes de código.”
 
 Não adicione escudos, cadeados, cérebros, rostos de robô, efeitos neon, marcas de fornecedores ou alegações de contenção total. Reserve vermelho para uma negação real; não o use como ornamento.
 
 ## Reprodução e licença
 
-Os SVGs foram escritos à mão, são estáticos e autocontidos. O PNG é gerado por `python3 docs/assets/brand/make-social-preview.py` com Pillow e uma fonte DejaVu Sans instalada; a fonte é rasterizada, não redistribuída. [O GIF da demo](../assets/README.md) é uma captura separada do hook/CLI reais com substituições de caminho documentadas. Os assets da marca são trabalho original do projeto distribuído sob a [Licença MIT](../../LICENSE). Nenhuma marca de terceiros foi incluída.
+Os SVGs foram escritos à mão, são estáticos e autocontidos. O PNG é gerado por `python3 docs/assets/brand/make-social-preview.py` com Pillow e uma fonte DejaVu Sans instalada; a fonte é rasterizada, não redistribuída, e o Pillow não grava metadados de texto ou data. `hooks/test-readme-presentation.sh` confere o tamanho (1280 × 640, ≤ 1 MB), que todo SVG da marca é autocontido e tem `<title>`/`<desc>`, e o hero do README (alt text, ≤ 3 badges, ordem de headings, paridade de imagens EN/PT-BR). Uma ilustração "editorial" raster foi considerada e não adotada: nenhuma existe no repositório, e uma imagem que não se regenera a partir de fonte enfraqueceria a regra de que toda imagem aqui é reproduzível. [O GIF da demo](../assets/README.md) é uma captura separada do hook/CLI reais com substituições de caminho documentadas. Os assets da marca são trabalho original do projeto distribuído sob a [Licença MIT](../../LICENSE). Nenhuma marca de terceiros foi incluída.

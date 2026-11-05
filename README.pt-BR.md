@@ -1,83 +1,106 @@
-# <img src="docs/assets/brand/adf-mark.svg" alt="Símbolo ADF: fronteira de decisão e registro separado de evidência" width="40" height="40"> ADF · Agent Effect Security
+<a id="top"></a>
 
 [English](README.md) · **Português (Brasil)**
 
-**Decisões na fronteira.** Um control plane local para leituras nas bordas de agentes suportadas e instaladas. Versão experimental `0.x`; este checkout informa a versão em [`VERSION`](VERSION).
+<p align="center">
+  <img src="docs/assets/brand/adf-mark.svg" alt="Símbolo ADF: uma linha de requisição encontra uma fronteira aberta, passa por um losango de decisão e deixa um quadrado de evidência separado" width="72" height="72">
+</p>
 
-[![Workflow de CI](https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/quality-gates.yml) [![Release mais recente](https://img.shields.io/github/v/release/Joaolucas2210/agent-effect-security)](https://github.com/Joaolucas2210/agent-effect-security/releases) [![Licença MIT](https://img.shields.io/badge/license-MIT-263548)](LICENSE)
+<h1 align="center">ADF</h1>
 
-[Teste uma decisão isolada](#início-rápido) · [Veja a cobertura](#cobertura-atual) · [Audite a fronteira](docs/product/BOUNDARY.pt-BR.md) · [Reporte uma vulnerabilidade em privado](SECURITY.pt-BR.md)
+<p align="center"><b>Agent Effect Security</b></p>
 
-![Diagrama conceitual: uma intenção do agente chega à fronteira da policy, uma decisão permite a leitura e a evidência é registrada separadamente](docs/assets/brand/adf-hero.svg)
+<p align="center">
+  <b>Decisões na fronteira. Evidências com limites explícitos.</b><br>
+  Decisões determinísticas de leitura nas bordas instaladas e suportadas de ferramentas de agentes de código.
+</p>
 
-## Por que isso existe
+<p align="center">
+  <a href="#teste-com-segurança">Início rápido</a> · <a href="#cobertura-e-exclusões">Cobertura</a> · <a href="#modelo-de-confiança-maturidade-e-contribuição">Fronteira de segurança</a>
+  <br>
+  <sub>experimental <code>0.x</code> — veja <a href="VERSION"><code>VERSION</code></a></sub>
+</p>
 
-Um agente de código pode pedir para ler `.env` durante o trabalho comum em um repositório. Prompts e traces ajudam a entender a sessão, mas não são a autoridade para esse acesso. O ADF coloca uma decisão determinística em **bordas específicas instaladas**: uma policy controlada pelo host limita quais leituras podem prosseguir, e o resultado tem um caminho de evidência explícito. O operador do host, o código ADF instalado e o registro do hook continuam confiáveis. [Modelo de ameaças e seis claims limitados](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md).
+<p align="center">
+  <a href="https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/quality-gates.yml"><img src="https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/quality-gates.yml/badge.svg" alt="Status do workflow de CI"></a>
+  <a href="https://github.com/Joaolucas2210/agent-effect-security/releases"><img src="https://img.shields.io/github/v/release/Joaolucas2210/agent-effect-security" alt="Release mais recente no GitHub"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-263548" alt="Licença MIT"></a>
+</p>
 
-## Veja funcionar
+O ADF protege **leituras que passam por uma borda suportada que você instalou** — um hook de cliente, a tool de leitura MCP do ADF ou o seu gateway A2A em loopback. Ele não observa o host inteiro e não é um sandbox de sistema operacional.
 
-Na fixture sintética desta demo, `Read README.md` é permitido e `Read .env` é negado com `invalid_scope`. Ambos os pedidos chegam ao adapter e produzem Evidence Bundles. Uma negação por gate deny-only ou contrato inválido pode deixar **só uma entrada no journal**. O GIF captura CLI e hook reais em um repositório descartável; os caminhos mostrados são substituídos, e isso não representa uma sessão de cliente real. [Como reproduzir](docs/assets/README.md).
+## O problema
 
-![Sessão sintética gravada: leitura de README permitida, leitura de .env negada, HMAC conferido com a chave do host da demo e contagens por motivo](docs/assets/adf-demo.gif)
+Um agente de código que pode ler `README.md` pode, com a mesma facilidade, pedir para ler `.env`. Prompts de permissão perguntam a uma pessoa a cada vez; traces mostram o que aconteceu depois. Nenhum dos dois é uma autoridade determinística sobre esse acesso a arquivo, e nenhum deixa um registro que se possa conferir sem confiar na ferramenta que o escreveu.
 
-## Início rápido
+O ADF coloca uma decisão determinística em **bordas instaladas específicas**: uma policy do host decide quais leituras podem seguir, a decisão é reconferida no momento da leitura e o resultado tem um caminho de evidência explícito. O operador do host, o código instalado do ADF e o registro do hook continuam sendo confiáveis. [Modelo de ameaças e suas seis claims delimitadas](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md).
 
-**Primeiro, sem configurar agentes:** siga o [início rápido isolado](docs/product/QUICKSTART.pt-BR.md). Ele cria uma fixture Git e um `ADF_HOME` temporários, instala o pacote editável em um venv, chama o `adf hook` real com dois pedidos sintéticos e verifica um bundle com chave temporária. Requisitos: Git, Make e Python 3.10+ com `venv`. Não presume instalação pública por PyPI.
+## Veja uma decisão
+
+<p align="center">
+  <img src="docs/assets/adf-demo.gif" alt="Gravação de terminal numa fixture sintética: um Read de README.md é permitido, um Read de .env é negado com invalid_scope, adf verify confere o bundle da negação com uma chave temporária do host e adf projects reasons conta as duas decisões" width="900">
+  <br>
+  <sub>Fixture sintética, CLI e hook reais do <code>adf</code> — não é uma sessão de cliente ao vivo. <a href="docs/assets/README.pt-BR.md">Como é gravado</a>.</sub>
+</p>
+
+| Requisição na fixture do GIF | Decisão | Artefato | O que prova |
+| --- | --- | --- | --- |
+| `Read README.md` | `allow` — `delivered/read_delivered` | Evidence Bundle, `delivery_mode=gate_only` | O ADF admitiu a leitura e conferiu o snapshot; não os bytes que uma ferramenta nativa devolveria |
+| `Read .env` | `deny` — `invalid_scope` | Evidence Bundle | A policy recusou o path antes de qualquer leitura |
+
+## Teste com segurança
+
+O [início rápido isolado](docs/product/QUICKSTART.pt-BR.md) roda o hook real contra uma fixture Git temporária e um `ADF_HOME` temporário. Ele não mexe nas configurações do seu agente, no seu `~/.adf` nem em segredo real algum. Requisitos: Git, Make, Python 3.10+ com `venv`. O ADF não é publicado no PyPI.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-make install-dev
-adf version
-# Continue com a fixture sintética e a verificação em docs/product/QUICKSTART.pt-BR.md
+python3 -m venv .venv && source .venv/bin/activate
+make install-dev          # instalação editável neste venv; cria o `adf`
+adf version               # deve bater com VERSION
+# depois siga docs/product/QUICKSTART.pt-BR.md: duas decisões, um bundle verificado, limpeza
 ```
 
-**Depois, habilite um cliente real:** `adf hook-snippet claude` ou `adf hook-snippet codex` imprime JSON. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando hooks existentes; reinicie o cliente; habilite um repositório com `adf projects enable /caminho/absoluto/do/repo`; então execute `adf doctor --pin` depois do registro. Para uma allowlist real, gere e pine uma policy de sessão com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. [Passos completos e reversão](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois).
-
-`make e2e` executa separadamente uma fixture em clone fresco, bordas locais e trials. É um teste de contrato, não prova de que uma versão específica do cliente instalado chamou o hook.
+**Ativar um cliente real é um passo separado e opt-in.** `adf hook-snippet claude` ou `adf hook-snippet codex` **imprime** JSON; não instala nada. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando os hooks existentes; reinicie o cliente; rode `adf projects enable /caminho/absoluto/do/repo`; depois `adf doctor --pin`, com o registro já feito. Para uma allowlist revisada, gere uma policy da sessão e pine-a com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. [Ativação e reversão](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois). `make e2e` roda uma checagem de contrato em clone fresco das bordas locais e dos trials; não prova que uma versão específica de cliente chamou o hook.
 
 ## Como funciona
 
-![Arquitetura ADF: uma borda suportada envia a intenção pelo PDP, PEP e leitura confinada do snapshot; negações precoces vão ao journal e decisões compostas ao bundle](docs/assets/brand/adf-architecture.svg)
+1. **Borda** — um hook ou gateway suportado traduz o pedido do agente num intent fechado. Ela nunca decide.
+2. **PDP** — uma função pura decide contra uma policy pinada pelo host: default deny, reason codes estáveis, sem relógio, sem I/O, sem LLM.
+3. **PEP e runtime** — no momento da leitura, os bindings são reconferidos e a decisão é consumida uma vez; um único arquivo regular é aberto por handle a partir de um snapshot Git preparado pelo host, com teto de bytes e regra de paths sensíveis.
+4. **Evidência** — a decisão composta vira um Evidence Bundle; uma tentativa recusada antes da composição fica registrada no journal de tentativas.
 
-A borda traduz um pedido observado. O **PDP** decide conforme a policy pinada pelo host. O **PEP** revalida os vínculos no momento do efeito e consome a decisão uma vez. O runtime de leitura abre um arquivo regular em um snapshot Git preparado pelo host, com teto de bytes e regra de caminhos sensíveis. [Arquitetura](ai-development-framework/docs/CONTROL_PLANE.pt-BR.md) · [policy pack](ai-development-framework/policy-packs/effect-security-read-v0/README.md).
+![Caminho de leitura do ADF: um intent do agente chega a uma borda instalada, depois ao PDP, ao PEP e a uma leitura confinada do snapshot. Negações precoces seguem para uma entrada de journal, decisões compostas para um bundle, e só leituras mediadas devolvem bytes do snapshot](docs/assets/brand/adf-architecture.svg)
 
-`gate_only` (Claude `Read`, hooks de `cat` suportados) significa que o ADF decide e verifica um snapshot, enquanto a ferramenta nativa entrega os bytes. O bundle **não** prova esses bytes nativos. `mediated` (leitura MCP stdio do ADF e caminho A2A suportado) significa que o ADF devolve bytes da leitura controlada. Nenhum modo cobre um pedido que não entra em uma borda instalada.
+`gate_only` (Claude `Read`, hooks de `cat` suportados): o ADF decide e confere um snapshot, depois a ferramenta nativa entrega os próprios bytes — o bundle **não** prova esses bytes. `mediated` (leitura MCP stdio do ADF e o caminho A2A): o ADF devolve bytes da sua própria leitura controlada. Nenhum dos dois cobre um pedido que nunca chega a uma borda instalada. [Control plane em detalhe](ai-development-framework/docs/CONTROL_PLANE.pt-BR.md) · [policy pack](ai-development-framework/policy-packs/effect-security-read-v0/README.md).
 
-## Cobertura atual
+## Cobertura e exclusões
 
-Esta é a superfície implementada neste checkout; testes locais com fixtures e observações em cliente real são níveis diferentes de evidência. Consulte a [matriz de suporte da BOUNDARY](docs/product/BOUNDARY.pt-BR.md#matriz-de-suporte) para gramática, versões e exceções.
+A superfície implementada neste checkout. Testes de fixture local e observações em cliente real são níveis diferentes de evidência; a [matriz de suporte do BOUNDARY](docs/product/BOUNDARY.pt-BR.md#matriz-de-suporte) lista gramáticas, versões e exceções.
 
-| Borda | Caminho implementado | Principal risco residual |
+| Borda | Caminho implementado | O que ainda passa |
 | --- | --- | --- |
-| Claude Code | Gate de `Read`; leituras `Bash` selecionadas; gates deny-only para chamadas selecionadas de leitura, escrita, rede e MCP pinado | Outras rotas Bash/script/interpretador e tools de subagente não observadas; versão do cliente não registrada nos trials |
-| Codex CLI | Hook para um único `cat PATH` suportado; negações Bash selecionadas | Outros comandos e chamadas MCP fora do hook; versão do cliente com hook global `na` |
-| A2A | Gateway em loopback com `read_workspace_file`, validação de bearer e decisões vinculadas ao efeito | Bearer roubado vale até expirar; sem gateway público nem DPoP/mTLS |
-| MCP | Leitura mediada via stdio ADF; gate de registry/definition no hook Claude | Servers sem hook, drift da lista entre probes e output não observado |
+| Claude Code | Gate de `Read`; leituras `Bash` selecionadas; gates deny-only em chamadas selecionadas de leitura, escrita, rede e MCP pinado | Outras rotas por Bash, script ou interpretador; tools de subagente fora desses gates; versão do cliente não registrada nos trials |
+| Codex CLI | Hook para um único `cat PATH` suportado; negações Bash selecionadas | Outros comandos; chamadas MCP (o Codex não as envia a hooks); versão do cliente no hook global `na` |
+| A2A | Gateway `read_workspace_file` em loopback com validação de bearer e decisões amarradas ao efeito | Um bearer roubado vale até expirar; sem gateway público, sem DPoP/mTLS |
+| MCP | Leitura mediada stdio do ADF; gate deny de registry e definição no hook do Claude | Servers sem hook, mudança na lista de tools entre probes, o output do próprio server |
 
-Não há alegação de sandbox de SO ou interceptação universal de Bash. Um agente com outra rota para o disco pode contornar esses gates. [Mapa de cobertura de incidentes](docs/knowledge/coverage.md).
+Não há claim de sandbox de SO nem de interceptação universal de Bash. Um agente com outra rota até o disco passa por fora desses gates. [Doze incidentes reais mapeados como cobertos, residuais ou fora de escopo](docs/knowledge/coverage.md).
 
-## O que a evidência comprova
+## O que a evidência comprova — e não comprova
 
-![Três resultados de evidência: bundle gate-only não prova bytes nativos; bundle mediado vincula a leitura controlada; negação precoce deixa entrada no journal](docs/assets/brand/adf-evidence-flow.svg)
+![Três desfechos de evidência: um bundle gate-only não prova os bytes nativos; um bundle mediado amarra uma leitura controlada; uma negação precoce deixa só uma entrada de journal](docs/assets/brand/adf-evidence-flow.svg)
 
-- **Evidence Bundle:** decisão composta, vínculos e receipt de leitura, sem conteúdo do arquivo. `delivery_mode` indica se o ADF entregou bytes (`mediated`) ou apenas fez o gate de uma ferramenta nativa (`gate_only`). Um pedido negado antes da composição pode não ter bundle.
-- **Journal de tentativas:** registro local encadeado por hash para tentativas pré-adapter e deny-only. Registra um motivo, não um receipt de leitura verificado; sem hook, não há registro ADF.
-- **OpenTelemetry:** visualização opcional e redigida para correlação. A falta de um span não muda a admissão, e um span não é evidência de autorização.
+| Registro | Comprova | Não comprova |
+| --- | --- | --- |
+| **Evidence Bundle** | Uma decisão composta, seus bindings e o recibo da leitura; `delivery_mode` diz se o ADF entregou os bytes (`mediated`) ou só fez o gate de uma ferramenta nativa (`gate_only`) | Os bytes que uma ferramenta nativa devolveu em `gate_only`; qualquer coisa que nunca chegou à borda |
+| **Journal de tentativas** | Um registro local, encadeado por hash, de que uma tentativa chegou ao ADF e de por que foi recusada | Uma leitura verificada; um hook ausente **não** deixa registro algum do ADF |
+| **Span OpenTelemetry** (opcional) | Correlação redigida para dashboards | Nada: um span nunca é evidência de autorização e sua ausência não muda decisão alguma |
 
-`adf verify ARQUIVO` confere estrutura e digests offline e informa `authenticity=not_checked`. `adf verify ARQUIVO --key CHAVE_DO_HOST` confere também um **HMAC de segredo compartilhado**. Isso autentica em relação à chave do host, não perante um verificador público independente; não compartilhe a chave com auditor externo. A evidência ainda pode expor metadados, como IDs e scopes relativos ao repositório; revise antes de compartilhar. [Fronteira da evidência](docs/product/BOUNDARY.pt-BR.md#evidência-é-o-registro-telemetria-só-visualiza) · [decisão sobre HMAC](ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md).
+`adf verify ARQUIVO` confere estrutura e digests offline e reporta `authenticity=not_checked`. `adf verify ARQUIVO --key CHAVE_DO_HOST` também confere um **HMAC de segredo compartilhado**: autentica contra a chave daquele host, não perante um verificador público independente. Mantenha a chave no host; não a entregue a um auditor externo. Um bundle guarda IDs e escopos relativos ao repositório, mas nunca conteúdo de arquivo — revise-o antes de compartilhar. [Fronteira da evidência](docs/product/BOUNDARY.pt-BR.md#evidência-é-o-registro-telemetria-só-visualiza) · [decisão sobre o HMAC](ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md).
 
-## Fronteira de segurança
+## Modelo de confiança, maturidade e contribuição
 
-O operador do host precisa proteger o registro do hook, a lista de projetos habilitados, os pins de policy e a chave de evidência. Se o wrapper fornecido não encontrar o executável `adf`, ele sai **sem decisão**; `adf hook` também suprime exceções inesperadas. O cliente pode então prosseguir com as próprias permissões. O ADF não alega fail-closed global. Mesmo a negação dentro do processo de um projeto habilitado não contém código arbitrário fora da borda observada. [Modelo de ameaças](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md) · [fronteira e premissas de confiança](docs/product/BOUNDARY.pt-BR.md) · [divulgação privada](SECURITY.pt-BR.md).
+**Modelo de confiança.** O operador do host precisa proteger o registro do hook, a lista de projetos habilitados, os pins de policy e a chave de evidência. Se o wrapper fornecido não encontra o executável `adf`, ele sai **sem decisão**; `adf hook` também não devolve decisão se não consegue carregar o script do hook ou falha antes de saber se o projeto está habilitado. O cliente então segue com as próprias permissões. Dentro de um projeto habilitado, uma falha do adapter é um deny. O ADF não alega comportamento fail-closed global, e um deny em processo não contém código que roda fora da borda observada. [Modelo de ameaças](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md) · [fronteira e premissas de confiança](docs/product/BOUNDARY.pt-BR.md).
 
-## Status e próximos passos
+**Maturidade.** Experimental `0.x`. O efeito de leitura e gates deny-only selecionados estão implementados; um piloto no host está em curso; o efeito de escrita é uma [proposta bloqueada](ai-development-framework/docs/architecture-decision-records/0032-write-effect-admit-path.md) à espera de demanda de design partner. `ai-development-framework/` é o harness de desenvolvimento usado para construir o ADF, não faz parte da sua fronteira de enforcement. [Roadmap](docs/product/ROADMAP.pt-BR.md) · [changelog](CHANGELOG.md).
 
-O repositório é experimental `0.x`. O efeito de leitura e gates deny-only selecionados estão implementados; o piloto no host do mantenedor é experimental, e o efeito de escrita continua uma [proposta bloqueada](ai-development-framework/docs/architecture-decision-records/0032-write-effect-admit-path.md) à espera de demanda de design partner. O harness de desenvolvimento em `ai-development-framework/` ajuda a construir o ADF, mas fica fora da fronteira de enforcement. [Roadmap](docs/product/ROADMAP.pt-BR.md) · [changelog](CHANGELOG.md).
-
-## Documentação e contribuição
-
-- **Integre:** [início rápido isolado](docs/product/QUICKSTART.pt-BR.md), [guia de host/trials](ai-development-framework/docs/trials.pt-BR.md), [policy pack](ai-development-framework/policy-packs/effect-security-read-v0/README.md).
-- **Opere e verifique:** [boundary](docs/product/BOUNDARY.pt-BR.md), [control plane](ai-development-framework/docs/CONTROL_PLANE.pt-BR.md), [ameaças e claims](ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md), [autoavaliação OSPS Baseline](docs/security/OSPS-BASELINE-2026-08-28.pt-BR.md).
-- **Contribua:** [CONTRIBUTING](CONTRIBUTING.pt-BR.md), [Código de Conduta](CODE_OF_CONDUCT.pt-BR.md), [Licença MIT](LICENSE), [assets da marca](docs/brand/BRAND_GUIDELINES.pt-BR.md).
-- **Reporte falha:** use o [canal privado de segurança](SECURITY.pt-BR.md); não abra issue pública com segredos.
+**Contribuição.** Comece por [CONTRIBUTING](CONTRIBUTING.pt-BR.md) e pelo [Código de Conduta](CODE_OF_CONDUCT.pt-BR.md). Reporte vulnerabilidades pela [rota privada do SECURITY](SECURITY.pt-BR.md), nunca em issue pública. Leituras adicionais: [guia de host e trials](ai-development-framework/docs/trials.pt-BR.md), [autoavaliação OSPS Baseline](docs/security/OSPS-BASELINE-2026-08-28.md), [assets de marca](docs/brand/BRAND_GUIDELINES.pt-BR.md). Distribuído sob a [Licença MIT](LICENSE).

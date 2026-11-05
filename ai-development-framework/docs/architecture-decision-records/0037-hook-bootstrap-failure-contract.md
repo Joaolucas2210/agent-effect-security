@@ -44,8 +44,14 @@ No ADF evidence can prove the absence of an unobserved tool invocation.
 ## Validation available now
 
 `hooks/test-adf-cli.sh` checks the current fail-safe wrapper and suppressed exception;
-`hooks/test-adf-read-hook.sh` checks enabled internal failures and disabled pass-through. These are local
-fixture/contract tests. Real-client behavior for the matrix above is **not verified** in this ADR.
+`hooks/test-adf-read-hook.sh` checks enabled internal failures and disabled pass-through.
+`hooks/test-hook-failure-semantics.sh` (2026-11-05) characterises the whole path in one place and asserts, per
+case, the client-visible answer and whether ADF left any record: **no decision and no record** for a missing
+executable in the emitted wrapper (even for an enabled project), a hook script that cannot load, a failure before
+the project is known to be enabled, and a project that is not enabled; **deny** for an adapter exception, an
+unsupported tool and a malformed payload *when the host supplies `CLAUDE_PROJECT_DIR`*. The same malformed payload
+in the Codex shape (project only from the payload's `cwd`) is **no decision**, because the project cannot be
+identified. These are local fixture/contract tests. Real-client behavior for the matrix above is **not verified** in this ADR.
 
 ## Rollback
 

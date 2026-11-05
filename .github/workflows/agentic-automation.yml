@@ -1,0 +1,152 @@
+name: agentic-automation
+
+# Write automations for the Issue → Spec PR → Implementation PR flow. Every job is inert unless the
+# repository owner sets the Actions variable ADF_AGENTIC_AUTOMATION=true. Quality gates are in ci.yml.
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+concurrency:
+  group: agentic-automation-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  spec-pr:
+    if: >-
+      vars.ADF_AGENTIC_AUTOMATION == 'true' && (
+        (github.event_name == 'issues' && github.event.label.name == 'agent:spec') ||
+        (github.event_name == 'issue_comment' && github.event.issue.pull_request == null &&
+         github.event.comment.body == '/agent proceed' &&
+         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - name: Create draft Spec PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          branch="agent/spec/issue-$ISSUE_NUMBER"
+          gh label create agent:spec --color 1D76DB --description "Agent-generated specification" --force || true
+          gh label create agent:approved-plan --color 0E8A16 --description "Authorized actor approved the spec plan" --force || true
+          git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null && exit 0
+          title="$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER" --jq .title)"
+          git switch -c "$branch" "origin/$DEFAULT_BRANCH"
+          mkdir -p docs/specs
+          {
+            printf '# Spec: %s\n\n' "$title"
+            printf -- '- Source issue: #%s\n- Status: draft — authorized actor approval required\n\n' "$ISSUE_NUMBER"
+            printf '## Problem\n\nDescribe the observable outcome and constraints from the issue.\n\n'
+            printf '## Smallest plan\n\n- [ ] Identify reuse with Graphify\n- [ ] Add one vertical slice and its gate\n\n'
+            printf '## Non-goals\n\n- No new dependency or MCP server without inventory and audit.\n'
+          } > "docs/specs/issue-$ISSUE_NUMBER.md"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "docs/specs/issue-$ISSUE_NUMBER.md"
+          git commit -m "docs: draft spec for issue $ISSUE_NUMBER"
+          git push -u origin "$branch"
+          gh pr create --base "$DEFAULT_BRANCH" --head "$branch" --draft --label agent:spec \
+            --title "spec: $title" --body "Closes #$ISSUE_NUMBER\n\nApprove the plan with \`/approve-plan\`, then merge to create the Implementation PR."
+
+  approve-plan:
+    if: >-
+      vars.ADF_AGENTIC_AUTOMATION == 'true' && (
+        github.event_name == 'issue_comment' && github.event.issue.pull_request != null &&
+        github.event.comment.body == '/approve-plan' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Mark the Spec PR approved
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx agent:spec || exit 0
+          gh pr edit "$PR_NUMBER" --add-label agent:approved-plan
+          gh pr comment "$PR_NUMBER" --body "Plan approval recorded. Merge this Spec PR to create the draft Implementation PR."
+
+  implementation-pr:
+    if: >-
+      vars.ADF_AGENTIC_AUTOMATION == 'true' && (
+        github.event_name == 'pull_request' && github.event.action == 'closed' &&
+        github.event.pull_request.merged == true &&
+        contains(github.event.pull_request.labels.*.name, 'agent:spec') &&
+        contains(github.event.pull_request.labels.*.name, 'agent:approved-plan'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - name: Create draft Implementation PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SPEC_PR: ${{ github.event.pull_request.number }}
+          SPEC_BRANCH: ${{ github.event.pull_request.head.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          issue="${SPEC_BRANCH##*/issue-}"
+          [[ "$issue" =~ ^[0-9]+$ ]] || { echo "::error::spec branch must end in issue-<number>"; exit 1; }
+          branch="agent/implementation/issue-$issue"
+          gh label create agent:implementation --color 5319E7 --description "Agent implementation ready for Builder" --force || true
+          gh label create agent:implementation-ready --color FBCA04 --description "Implementation may begin" --force || true
+          git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null && exit 0
+          git switch -c "$branch" "origin/$DEFAULT_BRANCH"
+          mkdir -p docs/implementation
+          {
+            printf '# Implementation: issue %s\n\n' "$issue"
+            printf -- '- Spec PR: #%s\n- Status: draft — Builder work has not started\n\n' "$SPEC_PR"
+            printf '## Required gates\n\n- [ ] `make quality`\n- [ ] `make mcp-audit`, `make skill-audit`, `make graph-check`\n- [ ] `make observability-complete` and `make metrics`\n'
+          } > "docs/implementation/issue-$issue.md"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "docs/implementation/issue-$issue.md"
+          git commit -m "docs: start implementation for issue $issue"
+          git push -u origin "$branch"
+          gh pr create --base "$DEFAULT_BRANCH" --head "$branch" --draft --label agent:implementation \
+            --title "implement: issue $issue" --body "Implements the approved plan in #$SPEC_PR. Comment \`/agent implement\` to mark Builder work ready."
+
+  implementation-ready:
+    if: >-
+      vars.ADF_AGENTIC_AUTOMATION == 'true' && (
+        github.event_name == 'issue_comment' && github.event.issue.pull_request != null &&
+        github.event.comment.body == '/agent implement' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Mark Builder work ready
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx agent:implementation || exit 0
+          gh pr edit "$PR_NUMBER" --add-label agent:implementation-ready
+          gh pr comment "$PR_NUMBER" --body 'Builder work is authorized. Follow `/build → /test → /review → /ship`; agents propose, humans retain architectural taste.'

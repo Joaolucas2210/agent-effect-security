@@ -19,7 +19,7 @@ class HostDeploymentTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.host = Path(self.temp.name)
         self.core = self.host / "ai-development-framework"
-        for name in ("quality-gates.yml", "maintenance-routines.yml"):
+        for name in ("ci.yml", "maintenance-routines.yml"):
             target = self.core / ".github/workflows" / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text("canonical fixture\n")
@@ -36,7 +36,7 @@ class HostDeploymentTest(unittest.TestCase):
         path.write_text(json.dumps(config))
         path = self.host / ".github/workflows"
         path.mkdir(parents=True)
-        for name in ("quality-gates.yml", "maintenance-routines.yml"):
+        for name in ("ci.yml", "maintenance-routines.yml"):
             (path / name).write_text("canonical fixture\n")
 
     def test_missing_clone_deployments_fail(self):
@@ -63,12 +63,12 @@ class HostDeploymentTest(unittest.TestCase):
         (self.host / "Makefile.adf").write_text("# portable installation\n")
         self.configured()
         self.assertEqual(self.check()[0], 0)
-        (self.host / ".github/workflows/quality-gates.yml").write_text("drift\n")
+        (self.host / ".github/workflows/ci.yml").write_text("drift\n")
         self.assertEqual(self.check()[0], 1)
 
     def test_missing_package_template_is_failure(self):
         (self.host / "Makefile.adf").write_text("# portable installation\n")
-        (self.core / ".github/workflows/quality-gates.yml").unlink()
+        (self.core / ".github/workflows/ci.yml").unlink()
         self.assertEqual(self.check()[0], 1)
 
 

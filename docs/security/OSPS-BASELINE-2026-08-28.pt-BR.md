@@ -12,7 +12,7 @@ Data da avaliação: 2026-11-04. Fonte: [OpenSSF OSPS Baseline, versão 2026.08.
 | OSPS-AC-02.01 | Pendente | Permissões padrão de novos colaboradores não foram inspecionadas. |
 | OSPS-AC-03.01 | Pendente | Regras de branch que impeçam commits diretos em `main` não foram inspecionadas. CI sozinho não é regra de branch. |
 | OSPS-AC-03.02 | Pendente | Proteção contra exclusão do branch principal não foi inspecionada. |
-| OSPS-BR-01.01 | Parcial | O [guard do workflow](../../.github/workflows/quality-gates.yml) valida contagem e paths alterados; todos os usos de metadados não confiáveis de issue/PR ainda precisam de revisão. |
+| OSPS-BR-01.01 | Parcial | O [guard do workflow](../../.github/workflows/ci.yml) valida contagem e paths alterados; todos os usos de metadados não confiáveis de issue/PR ainda precisam de revisão. |
 | OSPS-BR-01.03 | Parcial | O job de gates pede `contents: read` e checkout desativa credenciais persistidas; todos os jobs e eventos ainda precisam de revisão dos ativos privilegiados. |
 | OSPS-BR-03.01 | Parcial | Links oficiais do GitHub no [README](../../README.pt-BR.md) usam HTTPS; exclusividade do canal não foi auditada. |
 | OSPS-BR-03.02 | Pendente | Não há avaliação registrada do transporte do canal de distribuição. |

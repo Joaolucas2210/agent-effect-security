@@ -46,7 +46,7 @@ for hook in ci-quality-gates.sh eval-agent-flow.sh eval-required.sh eval-diagnos
 done
 cp "$ROOT/rules/quality-thresholds.md" "$fw/rules/"
 mkdir -p "$fw/.github/workflows"
-cp "$ROOT/.github/workflows/quality-gates.yml" "$ROOT/.github/workflows/maintenance-routines.yml" "$fw/.github/workflows/"
+cp "$ROOT/.github/workflows/ci.yml" "$ROOT/.github/workflows/maintenance-routines.yml" "$fw/.github/workflows/"
 printf '# portable gate fixture\n' > "$tmp/Makefile.adf"
 ( cd "$tmp" && git init -q && git config user.email test@example.invalid && git config user.name 'Eval Check Test' && git add fw && git commit -q -m init )
 

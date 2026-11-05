@@ -22,6 +22,11 @@ jobs:
       DRY_RUN: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The local evidence pilot snapshots HEAD~1 and HEAD~2; a shallow clone fails with
+          # workspace_revision_unavailable.
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.11'

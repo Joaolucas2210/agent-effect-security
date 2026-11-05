@@ -12,7 +12,7 @@ Assessment date: 2026-11-04. Source: [OpenSSF OSPS Baseline, version 2026.08.28]
 | OSPS-AC-02.01 | Pending | Default collaborator permissions were not inspected. |
 | OSPS-AC-03.01 | Pending | Branch rules preventing direct commits to `main` were not inspected. CI alone is not a branch rule. |
 | OSPS-AC-03.02 | Pending | Primary-branch deletion protection was not inspected. |
-| OSPS-BR-01.01 | Partial | [Workflow guard](../../.github/workflows/quality-gates.yml) validates changed-file count and paths; all untrusted issue/PR metadata uses need review. |
+| OSPS-BR-01.01 | Partial | [Workflow guard](../../.github/workflows/ci.yml) validates changed-file count and paths; all untrusted issue/PR metadata uses need review. |
 | OSPS-BR-01.03 | Partial | Gates job requests `contents: read` and checkout disables persisted credentials; all jobs and event paths still need a privileged-asset review. |
 | OSPS-BR-03.01 | Partial | Official GitHub links in [README](../../README.md) use HTTPS; exclusive channel delivery was not audited. |
 | OSPS-BR-03.02 | Pending | No release-channel transport assessment was recorded. |

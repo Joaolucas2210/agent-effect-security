@@ -1,21 +1,23 @@
-<!-- Evidence over claims. Fill the table; "n/a" is a valid answer for what this repo can't measure yet. -->
+<!-- ADF is a security control: evidence over claims. "n/a" is a valid answer; a guess is not. See CONTRIBUTING.md. -->
 
-## Summary
+## Why
 
-<!-- What changed and why. -->
+<!-- The pain this addresses, and the issue or ADR it follows. -->
 
-## Evidence
+## Effect and boundary
 
-| Signal          | Result | How measured                                  |
-| --------------- | ------ | --------------------------------------------- |
-| Tests / gates   |        | `make quality` (verdict + gate count, or "no gates" for stackless repos) |
-| Graph freshness |        | `make graph-check` (fresh / stale)            |
-| Token cost      |        | `make rtk-report` → `docs/metrics/rtk-report.txt` (or n/a if no RTK) |
-| Metrics row     |        | `make metrics-snapshot` appended a row to `docs/metrics/history.csv`? |
+<!-- Which effect, edge or contract this touches (read, a hook, the PDP, evidence, CI, docs only).
+     A change to the authorization boundary needs an ADR. Which residual risk remains? -->
 
-> Small / stackless projects: `n/a` is honest — don't invent numbers. `make quality`
-> reporting "no gates evaluated" is a valid, non-green result, not a failure to hide.
+## Gates
 
-## Risks / follow-ups
+| Gate | Result |
+| --- | --- |
+| `make test` | <!-- pass / fail; list every skipped gate by name --> |
+| `make eval-required` | |
+| `make e2e` (contracts, hooks, CLI, packaging) | |
+| `make demo` (user-facing behaviour) | |
 
-<!-- Known risks, what stayed out of scope, and anything a reviewer should watch. -->
+<!-- A gate that could not run is "skipped", never green. Bilingual doc changed? Change X.pt-BR.md in this PR. -->
+
+## Risks and follow-ups

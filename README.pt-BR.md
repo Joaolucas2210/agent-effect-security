@@ -59,10 +59,11 @@ O ADF coloca uma decisão determinística em **bordas instaladas específicas**:
 `make demo` roda o hook real contra uma fixture Git temporária, um `HOME` temporário e um `ADF_HOME` temporário. Ele não mexe nas configurações do seu agente, no seu `~/.adf` nem em segredo real algum, e reporta uma decisão ausente como "no decision", nunca como deny. Requisitos: Git, Make, Python 3.10+ com `venv`. O ADF não é publicado no PyPI.
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-make install-dev          # instalação editável neste venv; cria o `adf`
+make bootstrap            # cria a .venv se faltar e instala o `adf` nela; sem precisar ativar
 make demo                 # três decisões reais numa fixture descartável, depois verificação offline
 ```
+
+Já está no seu próprio venv? `make install-dev` instala nele.
 
 ```text
   ✓ Read README.md               allow delivered/read_delivered                 Evidence Bundle

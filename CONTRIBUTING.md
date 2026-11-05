@@ -20,11 +20,27 @@ Requirements: Git, Make, Python 3.10+ and Bash 4+ (on macOS, Homebrew's `bash` f
 
 ```bash
 git clone https://github.com/Joaolucas2210/agent-effect-security.git && cd agent-effect-security
-python3 -m venv .venv && source .venv/bin/activate
-export ADF_CONTRACTS_PYTHON="$PWD/.venv/bin/python3"
-make install-dev          # editable install; creates the `adf` command
-adf version
+make bootstrap            # .venv + editable install; the Makefile uses .venv without activation
+make test                 # the CI quality gates
 ```
+
+`make help` lists the product and contributor commands; `make help-all` adds the harness. Using your own venv,
+activate it and run `make install-dev`; an explicit `ADF_CONTRACTS_PYTHON` always overrides `.venv`.
+
+## Repository layout
+
+The product and the harness that builds it share this repository. Only the first group is ADF.
+
+| Path | What it is |
+| --- | --- |
+| `ai-development-framework/tools/`, `runtime/`, `integration/` | **Product.** PDP, PEP and read runtime, edges and the `adf` CLI (the installed packages) |
+| `ai-development-framework/contracts/`, `policy-packs/` | **Product.** Closed JSON Schemas and the read policy pack |
+| `ai-development-framework/hooks/adf-*.py`, `*-read-gate.py` | **Product.** The hook entry points a client calls |
+| `ai-development-framework/hooks/test-*` | Contract self-tests; `make test` runs all of them |
+| `ai-development-framework/e2e/`, `docs/product/`, `docs/security/` | `make demo` and `make e2e`; user-facing and security docs |
+| `ai-development-framework/docs/architecture-decision-records/` | ADRs: the record of why |
+| `agents/`, `commands/`, `skills/`, `rules/`, `modes/`, `loops/`, `sandbox/`, `setup-adf.sh`, `.codex/` | **Harness.** The agent development framework used to build ADF; not part of its enforcement boundary |
+
 
 ## Workflow
 
@@ -37,7 +53,7 @@ adf version
 4. Run the gates before pushing:
 
    ```bash
-   make quality-check     # every self-test and stack gate, without persisting eval evidence
+   make test              # every self-test and stack gate, without persisting eval evidence
    make eval-required     # evaluation coverage of the diff
    ```
 

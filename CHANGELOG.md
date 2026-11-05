@@ -14,9 +14,15 @@ While the version is `0.x`, a minor release may change contracts; the entry says
 - `make doctor` (read-only `adf doctor`), and `make help` now lists only the product commands in run order;
   `make help-all` keeps the full list.
 - QUICKSTART: diagnose, update and roll back, including the re-pin required after pulling a new version.
+- `make bootstrap`: creates `.venv` when missing (checks Python 3.10+) and installs `adf`; the first decision is
+  `make bootstrap demo`, with no `source .venv/bin/activate`. The Makefile uses `.venv` automatically, and an
+  explicit `ADF_CONTRACTS_PYTHON` still wins. `make test` runs the CI quality gates.
+- CONTRIBUTING: a repository layout that separates the product from the development harness.
 
 ### Changed
 
+- `make help` has two sections, *Use ADF* and *Contribute*; the harness stays under `make help-all`. The PR template
+  asks what CONTRIBUTING asks: why, effect and boundary, gates with skips, risks.
 - README lead names the problem with a concrete example and separates three questions: who decides, who delivers
   the bytes, and what is left to verify.
 

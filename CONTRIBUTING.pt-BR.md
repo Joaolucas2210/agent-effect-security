@@ -20,11 +20,27 @@ Requisitos: Git, Make, Python 3.10+ e Bash 4+ (no macOS, o `bash` do Homebrew pr
 
 ```bash
 git clone https://github.com/Joaolucas2210/agent-effect-security.git && cd agent-effect-security
-python3 -m venv .venv && source .venv/bin/activate
-export ADF_CONTRACTS_PYTHON="$PWD/.venv/bin/python3"
-make install-dev          # instalação editável; cria o comando `adf`
-adf version
+make bootstrap            # .venv + instalação editável; o Makefile usa a .venv sem ativar
+make test                 # os quality gates do CI
 ```
+
+`make help` lista os comandos de produto e de contribuição; `make help-all` inclui o harness. Com o seu próprio
+venv, ative-o e rode `make install-dev`; um `ADF_CONTRACTS_PYTHON` explícito sempre prevalece sobre a `.venv`.
+
+## Organização do repositório
+
+O produto e o harness que o constrói dividem este repositório. Só o primeiro grupo é o ADF.
+
+| Caminho | O que é |
+| --- | --- |
+| `ai-development-framework/tools/`, `runtime/`, `integration/` | **Produto.** PDP, PEP e runtime de leitura, bordas e o CLI `adf` (os pacotes instalados) |
+| `ai-development-framework/contracts/`, `policy-packs/` | **Produto.** JSON Schemas fechados e o policy pack de leitura |
+| `ai-development-framework/hooks/adf-*.py`, `*-read-gate.py` | **Produto.** Os pontos de entrada de hook que um cliente chama |
+| `ai-development-framework/hooks/test-*` | Self-tests de contrato; `make test` roda todos |
+| `ai-development-framework/e2e/`, `docs/product/`, `docs/security/` | `make demo` e `make e2e`; documentação para usuários e de segurança |
+| `ai-development-framework/docs/architecture-decision-records/` | ADRs: o registro do porquê |
+| `agents/`, `commands/`, `skills/`, `rules/`, `modes/`, `loops/`, `sandbox/`, `setup-adf.sh`, `.codex/` | **Harness.** O framework de desenvolvimento com agentes usado para construir o ADF; não faz parte da fronteira de enforcement |
+
 
 ## Fluxo
 
@@ -37,7 +53,7 @@ adf version
 4. Rode os gates antes do push:
 
    ```bash
-   make quality-check     # todos os self-tests e gates de stack, sem persistir evidência de eval
+   make test              # todos os self-tests e gates de stack, sem persistir evidência de eval
    make eval-required     # cobertura de eval do diff
    ```
 

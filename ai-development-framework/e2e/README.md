@@ -5,7 +5,7 @@ on the **committed** tree only, and fails at the first step that differs from th
 
 | Step | What it proves |
 | --- | --- |
-| Fresh clone (`--no-local`), new venv, `make install-dev` | The quickstart works from nothing; `adf version` matches `VERSION` |
+| Fresh clone (`--no-local`), `make bootstrap` (new `.venv`, no activation) | The quickstart works from nothing; `adf version` matches `VERSION` |
 | Enable a fixture project on an isolated `ADF_HOME` | Host activation (REQ-MP-01) through `adf projects` |
 | Claude `Read` and Codex `cat` through `adf hook` | Allow (`README.md`, `.gitignore`), `invalid_scope` with a bundle (`config/.env`, root `.env` since ADR 0036), `invalid_referenced_contract` (traversal), `unsafe_read_command`; no decision for a project that is not enabled |
 | Subagent payload (`agent_type`) | The local principal of ADR 0023 reaches the journal |

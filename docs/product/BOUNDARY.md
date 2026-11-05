@@ -37,7 +37,9 @@ unexpected `adf hook` exception. The enabled-project dispatcher returns a deny f
 it has identified the enabled project. These facts do not establish client-wide fail-closed behavior. A missing
 registration, a failed wrapper, an unobserved tool, or a client that ignores hook output can proceed under the
 client's own rules. [ADR 0037](../../ai-development-framework/docs/architecture-decision-records/0037-hook-bootstrap-failure-contract.md)
-records the open design and the client-version tests required before any semantic change.
+records the open design and the client-version tests required before any semantic change;
+`hooks/test-hook-failure-semantics.sh` pins today's behaviour case by case (no decision vs deny, and whether any ADF
+record exists). No ADF record never means "blocked".
 
 <a id="matriz-de-suporte"></a>
 ## Support matrix

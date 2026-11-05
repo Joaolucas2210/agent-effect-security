@@ -37,7 +37,9 @@ faltar, não há decisão ADF. `integration/cli.py` também retorna 0 sem decis�
 projeto. Esses fatos não estabelecem fail-closed para o cliente inteiro. Registro ausente, wrapper que falha,
 tool não observada ou cliente que ignora a saída do hook podem seguir as regras do próprio cliente. A
 [ADR 0037](../../ai-development-framework/docs/architecture-decision-records/0037-hook-bootstrap-failure-contract.md)
-registra o desenho aberto e os testes de versão de cliente necessários antes de qualquer mudança semântica.
+registra o desenho aberto e os testes de versão de cliente necessários antes de qualquer mudança semântica;
+`hooks/test-hook-failure-semantics.sh` fixa o comportamento de hoje caso a caso (sem decisão vs deny, e se existe algum
+registro do ADF). Ausência de registro do ADF nunca significa "bloqueado".
 
 ## Matriz de suporte
 

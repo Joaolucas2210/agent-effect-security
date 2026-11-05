@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adf-control-plane"
-version = "0.1.0"  # keep aligned with ../VERSION (hooks/test-packaging.sh enforces it)
+version = "0.2.0"  # keep aligned with ../VERSION (hooks/test-packaging.sh enforces it)
 description = "Read-only local control plane: PDP, PEP + confined read runtime, evidence bundle and reference adapter"
 license = {text = "MIT"}
 requires-python = ">=3.10"

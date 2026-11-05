@@ -2,7 +2,7 @@
 
 **English** · [Português (Brasil)](CONTROL_PLANE.pt-BR.md)
 
-Date: 2026-09-25 · Repository version: 0.1.0 (experimental)
+Date: 2026-09-25 · Repository version: 0.2.0 (experimental)
 
 This document describes the product vision for the ADF control plane and what of it already exists on
 `main`. Every claim points to code or an ADR. Anything without a pointer is future work.

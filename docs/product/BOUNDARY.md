@@ -2,7 +2,7 @@
 
 **English** · [Português (Brasil)](BOUNDARY.pt-BR.md)
 
-Updated: 2026-11-04 · Checkout version 0.1.0 (experimental)
+Updated: 2026-11-04 · Checkout version 0.2.0 (experimental)
 
 **Category:** *agent effect security*, a local control plane for coding agents. At a supported, installed edge,
 ADF decides whether an observed read may proceed and, when the request reaches composition, leaves a bundle

@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/quality-gates.yml"><img src="https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/quality-gates.yml/badge.svg" alt="Status do workflow de CI"></a>
+  <a href="https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/ci.yml"><img src="https://github.com/Joaolucas2210/agent-effect-security/actions/workflows/ci.yml/badge.svg?branch=main&event=push" alt="Status do workflow de CI"></a>
   <a href="https://github.com/Joaolucas2210/agent-effect-security/releases"><img src="https://img.shields.io/github/v/release/Joaolucas2210/agent-effect-security" alt="Release mais recente no GitHub"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-263548" alt="Licença MIT"></a>
 </p>

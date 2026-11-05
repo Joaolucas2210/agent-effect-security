@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TEMPLATE="$ROOT/.github/workflows/quality-gates.yml"
+TEMPLATE="$ROOT/.github/workflows/ci.yml"
 for workflow in "$TEMPLATE"; do
   checkout="$(grep -nE 'uses: actions/checkout@[0-9a-f]{40} # v4' "$workflow" | head -1 | cut -d: -f1)"  # pinned by commit SHA
   preflight="$(grep -n 'name: Verify pilot history prerequisites' "$workflow" | cut -d: -f1)"
@@ -19,12 +19,12 @@ for workflow in "$TEMPLATE"; do
   grep -q 'pilot_history_prerequisite_unavailable' <<< "$section"
   grep -q 'exit 1' <<< "$section"
   grep -q 'make local-evidence-pilot' <<< "$section"
-  ! grep -Eq 'git fetch|git remote|HEAD~[0-9]+[^\^]' <<< "$(sed -n "${preflight},$((preflight + 5))p" "$workflow")"
+  if grep -Eq 'git fetch|git remote|HEAD~[0-9]+[^\^]' <<< "$(sed -n "${preflight},$((preflight + 5))p" "$workflow")"; then echo 'failed: forbidden match' >&2; exit 1; fi
   guard_section="$(sed -n "${guard},$((pilot - 1))p" "$workflow")"
   grep -Fq 'base="origin/$BASE_REF"' <<< "$guard_section"
   grep -Fq '"${base}^{commit}"' <<< "$guard_section"
   grep -q 'change_safety_base_ref_unavailable' <<< "$guard_section"
-  ! grep -Eq 'git fetch|git remote|https?://|/home|/tmp|runner/work' <<< "$guard_section"
+  if grep -Eq 'git fetch|git remote|https?://|/home|/tmp|runner/work' <<< "$guard_section"; then echo 'failed: forbidden match' >&2; exit 1; fi
 done
 
 echo "✓ local evidence pilot CI history prerequisites"

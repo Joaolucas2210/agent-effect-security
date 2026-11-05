@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 While the version is `0.x`, a minor release may change contracts; the entry says so when it does.
 
+## [Unreleased]
+
+### Security
+
+- **CI split by permission.** Quality gates, the fresh-clone e2e and gitleaks move to `ci.yml` with
+  `contents: read` only. The Spec/Implementation PR automations move to `agentic-automation.yml`, inert until the
+  owner sets `ADF_AGENTIC_AUTOMATION=true`. `hooks/test-workflow-permissions.sh` enforces both.
+- The change-safety guard's `.env`/`.pem`/`.key` path check was a no-op (`! cmd` does not trip `bash -e`); it now
+  fails the job. Two self-tests had the same no-op negative assertion and now fail on a forbidden match.
+
+### Fixed
+
+- `maintenance-routines.yml` checks out full history; the shallow clone failed the evidence pilot with
+  `workspace_revision_unavailable`.
+- `post-observability.yml` follows `ci` and validates only the first summary line; the added `evals:` line made
+  every post fail.
+- `implementation-ready` no longer runs its backticked text as a command substitution.
+
 ## [0.2.0] - 2026-11-05
 
 Still experimental and read-only: one effect (`read`), local host only. This release closes edges that 0.1.0 left

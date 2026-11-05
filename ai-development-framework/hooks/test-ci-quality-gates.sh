@@ -13,7 +13,7 @@ for h in thresholds.sh shell-complexity.sh shell-complexity.awk observability.sh
 done
 cp "$ROOT/rules/quality-thresholds.md" "$fw/rules/"
 mkdir -p "$fw/.github/workflows"
-cp "$ROOT/.github/workflows/quality-gates.yml" "$ROOT/.github/workflows/maintenance-routines.yml" "$fw/.github/workflows/"
+cp "$ROOT/.github/workflows/ci.yml" "$ROOT/.github/workflows/maintenance-routines.yml" "$fw/.github/workflows/"
 printf '# portable gate fixture\n' > "$tmp/Makefile.adf"
 ( cd "$tmp" && git init -q . && git config user.email t@t && git config user.name t )
 # GitHub Actions exports CI=true globally. Each scenario must choose its own mode,

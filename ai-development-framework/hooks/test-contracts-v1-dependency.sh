@@ -13,5 +13,5 @@ output="$(cat "$tmp/stdout" "$tmp/stderr")"
 [ "$rc" -ne 0 ]
 grep -q 'jsonschema' <<< "$output"
 grep -Fxq 'python -m pip install -r ai-development-framework/requirements-test.txt' <<< "$output"
-! grep -q 'Traceback (most recent call last):' <<< "$output"
+if grep -q 'Traceback (most recent call last):' <<< "$output"; then echo 'failed: forbidden match' >&2; exit 1; fi
 echo "missing jsonschema self-test: passed (internal exit code: $rc)"

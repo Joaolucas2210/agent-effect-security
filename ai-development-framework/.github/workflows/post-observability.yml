@@ -2,8 +2,10 @@ name: post-observability
 
 on:
   workflow_run:
-    workflows: [agentic-pipeline]
+    workflows: [ci]
     types: [completed]
+
+permissions: {}
 
 concurrency:
   group: post-observability-${{ github.event.workflow_run.id }}
@@ -30,6 +32,7 @@ jobs:
           gh run download "$RUN_ID" --repo "$GH_REPO" --name observability-summary --dir "$dir"
           file="$(find "$dir" -name observability-summary.txt -type f -print -quit)"
           [ -n "$file" ] || exit 0
-          summary="$(tr '\n' ' ' < "$file")"
+          # The artifact also carries an evals: line; only the first, fixed-format line is posted.
+          summary="$(head -n 1 "$file")"
           [[ "$summary" =~ ^observability:\ events=[0-9]+\ success=[0-9]+\ success_rate=(na|[0-9]+[.][0-9]%)\ failure=[0-9]+\ switches=[0-9]+\ switch_rate=(na|[0-9]+[.][0-9]%)\ tokens=(na|[0-9]+)\ cost_usd_estimate=(na|[0-9]+[.][0-9]+)\ eval_runs=[0-9]+[[:space:]]*$ ]] || exit 1
           printf '### Observability\n`%s`\n' "$summary" | gh pr comment "$PR_NUMBER" --repo "$GH_REPO" --body-file -

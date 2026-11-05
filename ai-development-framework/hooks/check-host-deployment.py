@@ -10,7 +10,7 @@ def check_host_deployment(core):
     runner = host / "Makefile.adf"
     portable = runner.is_file() and not runner.is_symlink()
     failures, skipped = 0, 0
-    paths = [".codex/hooks.json", ".github/workflows/quality-gates.yml", ".github/workflows/maintenance-routines.yml"]
+    paths = [".codex/hooks.json", ".github/workflows/ci.yml", ".github/workflows/maintenance-routines.yml"]
     for name in paths:
         path = host / name
         template = core / name if name.startswith(".github/") else None

@@ -1,5 +1,5 @@
-# AI Development Framework — task runner
-# `make` or `make help` lists targets. Thin wrappers over setup-adf.sh + the framework hooks.
+# ADF (Agent Effect Security) — task runner. `make help`: product and contributor commands; `make help-all`: everything,
+# including the development harness (setup-adf.sh, loops, maintenance routines) that builds ADF but is not part of it.
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 ADF   := ai-development-framework
@@ -11,16 +11,38 @@ RTK := $(shell command -v rtk 2>/dev/null)
 RUN := $(if $(RTK),rtk,)
 DRY_RUN ?= 1
 
-.PHONY: help help-all doctor setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo
+# The clone's .venv is used when it exists, so nothing needs `source .venv/bin/activate`. An explicit
+# ADF_CONTRACTS_PYTHON (CI, e2e, your own venv) always wins. Recipes and hook self-tests read the exported value.
+# ponytail: resolved when make parses, so in `make bootstrap demo` the demo still sees python3; demo.py finds
+# .venv/bin/adf itself. A target that needs the venv's packages in the same run would need a re-exec of make.
+VENV := $(CURDIR)/.venv
+export ADF_CONTRACTS_PYTHON ?= $(if $(wildcard $(VENV)/bin/python3),$(VENV)/bin/python3,python3)
+ADF_CLI := $(or $(wildcard $(dir $(ADF_CONTRACTS_PYTHON))adf),adf)
 
-# Product commands, in the order a new user runs them. Everything else is the development harness.
-PRODUCT_TARGETS := install-dev demo doctor project-enable projects project-reasons project-disable e2e
+.PHONY: help help-all bootstrap test doctor setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo
 
-help: ## Product commands (install, first decision, diagnose, roll back); `make help-all` lists the harness too
-	@echo "ADF product commands (first run: install-dev, then demo):"
+# Product commands in the order a new user runs them, then the contributor loop. The rest is the harness.
+PRODUCT_TARGETS := bootstrap demo doctor project-enable projects project-reasons project-disable
+CONTRIB_TARGETS := test eval-required e2e install-dev
+
+help: ## Product and contributor commands; `make help-all` lists the development harness too
+	@printf 'ADF — first decision in one line: make bootstrap demo\n\nUse ADF:\n'
 	@for t in $(PRODUCT_TARGETS); do grep -hE "^$$t:.*## " $(MAKEFILE_LIST) \
 	  | awk 'BEGIN{FS=":.*## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'; done
-	@echo "Development harness and maintenance loops: make help-all"
+	@printf '\nContribute (see CONTRIBUTING.md):\n'
+	@for t in $(CONTRIB_TARGETS); do grep -hE "^$$t:.*## " $(MAKEFILE_LIST) \
+	  | awk 'BEGIN{FS=":.*## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'; done
+	@printf '\nDevelopment harness and maintenance loops: make help-all\n'
+
+bootstrap: ## Create .venv if missing (Python 3.10+), editable install, `adf` ready; no activation needed
+	@python3 -c 'import sys; sys.exit(sys.version_info < (3, 10))' \
+	  || { echo "✗ Python 3.10+ required; found $$(python3 --version 2>&1)"; exit 1; }
+	@[ -x "$(VENV)/bin/python3" ] || { python3 -m venv "$(VENV)" && echo "✓ created $(VENV)"; } \
+	  || { echo "✗ python3 -m venv failed (Debian/Ubuntu: apt install python3-venv)"; exit 1; }
+	@$(MAKE) -s install-dev ADF_CONTRACTS_PYTHON="$(VENV)/bin/python3"
+	@"$(VENV)/bin/adf" version && echo "next: make demo"
+
+test: quality-check ## The CI quality gates: every self-test and stack gate, without persisting eval evidence
 
 help-all: ## Every target, product and development harness, sorted
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -33,7 +55,7 @@ install-dev: ## Editable local install of the control-plane packages + test deps
 	  && echo "✓ tools/runtime/integration importable from $$PYTHON (editable, local only)" \
 	  || { echo "✗ editable install needs pip ≥ 21.3 (PEP 660); Ubuntu's patched system pip 22.0 rejects it — use a venv: python3 -m venv .venv && . .venv/bin/activate && make install-dev"; exit 1; }
 
-setup: ## Full activation for Claude + Codex + Cursor (links, hooks, Graphify, RTK)
+setup: ## Harness only, not needed to use ADF: activate the dev framework for Claude + Codex + Cursor (links, hooks, Graphify, RTK)
 	@./setup-adf.sh all
 
 install-metrics: export DEST := $(DEST)
@@ -116,7 +138,7 @@ local-session-trial: ## P0-D: project one closed session; requires EVIDENCE_DIR,
 	  || exit 1; \
 	  $(RUN) "$$PYTHON" $(ADF)/hooks/run-session-trial.py --evidence-dir "$(EVIDENCE_DIR)" --trial-id "$(TRIAL_ID)" --task-id "$(TASK_ID)" --session-id "$(SESSION_ID)" --agent-name "$(AGENT_NAME)" --agent-version "$(AGENT_VERSION)" --revision-sha "$(REVISION_SHA)" --acceptance-sha256 "$(ACCEPTANCE_SHA256)"
 
-projects: ## REQ-MP-01: list host-enabled projects (~/.adf/enabled-projects) and how the global read hook treats each
+projects: ## List host-enabled projects (~/.adf/enabled-projects) and how the global read hook treats each
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/hooks/adf-projects.py list
 
 project-enable: ## Enable one project for the global ADF read hook: PROJECT=/abs/git/root (canonical path, no ..)
@@ -129,9 +151,9 @@ project-reasons: ## reason_code counts per project and per principal from ~/.adf
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/hooks/adf-projects.py reasons $(if $(POLICY),--policy "$(POLICY)",)
 
 doctor: ## Read-only diagnosis: is the installed control plane intact against the host pin? (exit 0 intact, 1 tampered, 3 not pinned)
-	@adf doctor || { rc=$$?; [ $$rc = 1 ] && echo "  → after reviewing an update you pulled: adf doctor --pin (see docs/product/QUICKSTART.md#diagnose-update-and-roll-back)"; exit $$rc; }
+	@"$(ADF_CLI)" doctor || { rc=$$?; [ $$rc = 1 ] && echo "  → after reviewing an update you pulled: adf doctor --pin (see docs/product/QUICKSTART.md#diagnose-update-and-roll-back)"; exit $$rc; }
 
-demo: ## Three real decisions on a throwaway fixture + offline verify; touches no client settings or ~/.adf (needs `make install-dev`)
+demo: ## Three real decisions on a throwaway fixture + offline verify; touches no client settings or ~/.adf (after `make bootstrap`)
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/e2e/demo.py
 
 e2e: ## Release check: fresh clone of the committed tree, new venv, adf CLI, both edges, both trials (needs network or a pip cache)

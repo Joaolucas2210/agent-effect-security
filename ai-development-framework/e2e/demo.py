@@ -45,7 +45,7 @@ def find_adf():
     for candidate in (shutil.which("adf"), str(REPO / ".venv/bin/adf"), str(Path(sys.executable).parent / "adf")):
         if _executable(candidate):
             return candidate
-    raise Missing("adf executable not found. From the clone: `python3 -m venv .venv && source .venv/bin/activate && make install-dev`, then rerun.")
+    raise Missing("adf executable not found. From the clone: `make bootstrap`, then rerun.")
 
 
 def make_fixture(base):

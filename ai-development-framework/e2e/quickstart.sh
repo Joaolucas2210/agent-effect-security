@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # End-to-end release check: what a stranger does with a fresh clone, on the committed tree only.
 #
-#   clone (no local hardlinks) -> new venv -> make install-dev -> adf CLI
+#   clone (no local hardlinks) -> make bootstrap (new .venv, editable install) -> adf CLI
 #   -> enable a fixture project on an isolated ADF_HOME -> Claude Read and Codex cat through `adf hook`
 #   -> subagent principal in the journal -> per-principal policy -> `adf verify` (and a tampered copy)
 #   -> `adf projects reasons` -> make local-evidence-trial -> make a2a-live-trial
@@ -35,12 +35,12 @@ claude_hook() { CLAUDE_PROJECT_DIR="$PROJECT" adf hook; }
 codex_hook() { (cd "$PROJECT" && env -u CLAUDE_PROJECT_DIR adf hook); }
 
 install_clone() {
-  step "fresh clone and editable install"
+  step "fresh clone and make bootstrap (the README's path, no venv activated)"
   git clone --quiet --no-local "$REPO" "$WORK/adf"
   cd "$WORK/adf"
-  python3 -m venv .venv
+  env -u VIRTUAL_ENV -u ADF_CONTRACTS_PYTHON make -s bootstrap >/dev/null
+  [ -x .venv/bin/adf ] || fail "make bootstrap did not create .venv/bin/adf"
   export ADF_CONTRACTS_PYTHON="$PWD/.venv/bin/python3" PATH="$PWD/.venv/bin:$PATH"
-  make -s install-dev >/dev/null
   [ "$(adf version)" = "$(tr -d '[:space:]' < VERSION)" ] || fail "adf version != VERSION"
   ok "adf $(adf version) on $(git rev-parse --short HEAD)"
 }

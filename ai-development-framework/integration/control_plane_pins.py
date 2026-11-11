@@ -15,6 +15,9 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+# The hook code that runs is integration/{read_hook,claude_read_gate,codex_bash_read_gate,deny_gate,projects}.py, pinned by
+# the integration/*.py glob in the clone and in a wheel (ROOT = site-packages). The hooks/ shims stay pinned: a direct
+# registration runs them; in a wheel they are absent, which is a stable value (None), not a divergence.
 _CODE = ("hooks/adf-read-hook.py", "hooks/adf-deny-gate.py", "hooks/claude-code-read-gate.py", "hooks/codex-bash-read-gate.py", "hooks/adf-projects.py")
 _CODE_GLOBS = ("integration/*.py", "tools/*.py", "runtime/*.py", "runtime/v1/policies/*.json", "policy-packs/*/build.py")
 _HOST_ENV = ("ADF_READ_POLICY_FILE", "ADF_MCP_REGISTRY_FILE", "ADF_A2A_JWKS_FILE", "ADF_EVIDENCE_KEY_FILE")

@@ -83,7 +83,8 @@ class CodexGateTest(unittest.TestCase):
                     self.assertEqual(json.loads(deployed.stdout), {})
                     self.assertEqual(len(list((evidence / "deployed-check").glob("*.json"))), 1)
             for forbidden in ("import subprocess", "from subprocess", "socket", "urllib", "http.client", "requests"):
-                self.assertNotIn(forbidden, (ROOT / "hooks/codex-bash-read-gate.py").read_text().lower())
+                for source in ("hooks/codex-bash-read-gate.py", "integration/codex_bash_read_gate.py"):  # the shim and the code it runs
+                    self.assertNotIn(forbidden, (ROOT / source).read_text().lower())
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)

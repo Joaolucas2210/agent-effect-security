@@ -1,6 +1,7 @@
-# Local, editable install only: `make install-dev` / `python3 -m pip install -e ./ai-development-framework`.
-# Not published to PyPI (README non-goals, ADR 0008). One console script, `adf`, dispatching to the clone's
-# existing scripts (ADR 0025); it is an operator CLI, not a published runtime.
+# Supported install: the source clone, editable: `make install-dev` / `python3 -m pip install -e ./ai-development-framework`.
+# It also builds as a local sdist + wheel (packages, the hook modules integration/*.py, their v1/v2 JSON contracts;
+# hooks/test-packaging-wheel.sh, test-hook-wheel-equivalence.sh); only `adf policy build` needs the clone. Not published to PyPI (README
+# non-goals, ADR 0008). One console script, `adf` (ADR 0025); it is an operator CLI, not a published runtime.
 [build-system]
 requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"

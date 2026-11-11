@@ -33,6 +33,47 @@ Estado em `0.2.0`. `na` significa não registrado, nunca "provavelmente funciona
 
 O GIF do `make demo` é nível C: CLI e hook reais, payloads sintéticos, rotulados como tal.
 
+## Garantia Community por integração
+
+O que a edição Community (MIT) garante, borda a borda. **Não há enforcement global**: cada linha vale só enquanto a
+ativação no host vale (hook registrado e invocado, executável presente, projeto listado em
+`~/.adf/enabled-projects`; [ADR 0026](../../ai-development-framework/docs/architecture-decision-records/0026-threat-model-and-claims.md)).
+
+| Status | Significado |
+| --- | --- |
+| **enforced** | Toda chamada que chega a esta borda recebe uma decisão do ADF antes do efeito; um teste de contrato prova isso |
+| **partial** | Só nega, ou só alguns formatos recebem decisão; o resto passa **sem decisão** |
+| **unsupported** | O ADF não decide; valem as permissões do próprio cliente |
+| **unverified** | Implementado e testado em contrato, mas nenhuma execução registrada em cliente real (nível R) mostra o cliente chamando |
+
+| Integração | Status | Mecanismo | Policy de leitura | Teste |
+| --- | --- | --- | --- | --- |
+| Claude Code `Read` | enforced (`gate_only`) | `adf-read-hook.py` → `claude-code-read-gate.py` → PDP, PEP, leitura do snapshot; bundle | policy do host pinada, senão a demo de referência | [teste do hook de leitura](../../ai-development-framework/hooks/test-adf-read-hook.py), [teste do adaptador](../../ai-development-framework/hooks/test-local-read-adapter.py) |
+| Gate de negação Claude Code `Grep`/`Glob`/`Edit`/`Write` | partial (só nega) | `adf-deny-gate.py`: paths sensíveis e de configuração do agente negados, nunca um allow; `Grep`/`Glob` sem `path` não cobertos; journal, sem bundle | nenhuma: policy fixa de paths sensíveis | [teste do deny gate](../../ai-development-framework/hooks/test-adf-deny-gate.py), [teste do journal](../../ai-development-framework/hooks/test-deny-gate-journal.py) |
+| Claude Code `Bash` | partial | `cat PATH` único decidido como no Codex; equivalentes de leitura listados sobre paths sensíveis e rede após tentativa sensível negados (ADR 0028 1b/1c); outros formatos sem decisão | `cat`: pinada ou demo; regras só-nega: nenhuma | [gramática Bash](../../ai-development-framework/hooks/test-bash-read-grammar.py), [gramática 2](../../ai-development-framework/hooks/test-bash-grammar-2.py) |
+| Codex CLI `cat PATH` | enforced (`gate_only`) | `codex-bash-read-gate.py`: um `cat` na allowlist → adaptador; bundle. Registro não pinado pelo `adf doctor` | policy do host pinada, senão a demo de referência | [teste do gate Codex](../../ai-development-framework/hooks/test-codex-bash-read-gate.py) |
+| Codex CLI outros comandos de shell | partial (só nega) | mesma gramática só-nega do `Bash` do Claude; scripts, interpretadores e binários não listados ficam sem decisão | nenhuma | [gramática Bash](../../ai-development-framework/hooks/test-bash-read-grammar.py) |
+| Servidor MCP stdio de leitura | unverified | `mcp_read_server.py` devolve os bytes do snapshot do adaptador, `delivery_mode=mediated`; sem execução em cliente real | policy do host pinada, senão a demo de referência | [teste cliente MCP ↔ A2A](../../ai-development-framework/hooks/test-mcp-a2a-client.py) |
+| Gateway A2A loopback | enforced (só loopback) | bearer verificado no transporte e revalidado no efeito; não executa leituras sem policy pinada válida | **somente** policy do host pinada, nunca a demo | [teste do gateway](../../ai-development-framework/hooks/test-a2a-gateway.py) (`test_missing_or_tampered_host_policy_fails_closed_without_demo_grants`) |
+| Subagentes do Claude Code | partial | mesmo hook e mesmos gates da thread principal; principal `claude:<agent_type>` afirmado pelo harness, não autenticado (ADR 0023, 0033) | a da borda que o subagente usa | [teste de principal de subagente](../../ai-development-framework/hooks/test-subagent-principal.py) |
+| Hook não registrado, ou falha de bootstrap | unsupported | o wrapper e o `adf hook` saem com 0 sem decisão; não existe registro do ADF | — | [teste de semântica de falha](../../ai-development-framework/hooks/test-hook-failure-semantics.py), [teste da CLI](../../ai-development-framework/hooks/test-adf-cli.py) |
+
+**Demo de referência vs policy pinada.** Sem `ADF_READ_POLICY_FILE` nem `ADF_READ_POLICY_SHA256` no ambiente do
+hook, as bordas de leitura marcadas acima rodam a **demo de referência**: ela concede cada path não sensível
+solicitado. Paths sensíveis continuam negados, mas não é uma allowlist revisada. Só uma das duas variáveis, valor
+vazio, path relativo, arquivo ausente ou malformado, ou pin divergente nega toda leitura com
+`host_policy_invalid`; nunca cai para a demo. `adf doctor`, `adf hook-snippet` e
+`adf projects enable` dizem qual está em vigor ([teste](../../ai-development-framework/hooks/test-demo-policy-defaults.py)).
+Os bundles registram `policy_sha256`, não se a policy veio da demo.
+
+**Escopo do `gate_only`.** Nas bordas `gate_only` (Claude `Read`, Codex `cat`) o ADF decide sobre o snapshot Git e a
+ferramenta nativa do cliente lê depois a working tree viva. O bundle prova a decisão e uma leitura confinada do
+snapshot, nunca os bytes que a ferramenta nativa entregou (ADR 0026, claim C5). Quando os bytes entregues precisam
+ser os decididos, use uma borda mediada.
+
+**Princípio (intenção).** Os defaults da Community nunca são mais fracos que qualquer pack pago. Uma oferta paga
+futura pode acrescentar conteúdo mantido ou serviços. Ela não muda o que as bordas Community decidem para a mesma entrada.
+
 ## Reproduza
 
 Níveis C e E, a partir de um clone, sem tocar nas configurações de nenhum cliente:

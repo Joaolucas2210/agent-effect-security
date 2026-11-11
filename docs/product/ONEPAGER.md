@@ -69,8 +69,11 @@ Optional: the live A2A trial with spans in Jaeger
 | --- | --- |
 | PDP, PEP, runtime, contracts, evidence, offline verification | Policy packs maintained per stack and language |
 | Claude / Codex / A2A edges, redacted OTel export | Trial reports conducted with the AppSec team |
-| Policy pack v0, repeatable trials | JWKS/IdP runbooks for a pilot |
-| | Design partner support |
+| Policy pack v0, repeatable trials | Design partner support |
+| [A2A RS256 + pinned JWKS runbook](../../ai-development-framework/docs/runbooks/a2a-rs256-jwks.md) | |
+
+Community defaults are never weaker than any paid pack (statement of intent). What each Community edge
+guarantees today is in the [Community guarantee](COMPATIBILITY.md#community-guarantee-per-integration).
 
 ## What it is not
 

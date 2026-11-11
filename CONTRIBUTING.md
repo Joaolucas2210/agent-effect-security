@@ -42,6 +42,28 @@ The product and the harness that builds it share this repository. Only the first
 | `agents/`, `commands/`, `skills/`, `rules/`, `modes/`, `loops/`, `sandbox/`, `setup-adf.sh`, `.codex/` | **Harness.** The agent development framework used to build ADF; not part of its enforcement boundary |
 
 
+## Packaging
+
+The supported install is the source clone, editable (`make bootstrap` / `make install-dev`). The package
+`adf-control-plane` (`tools`, `runtime`, `integration` and their `v1/`/`v2/` JSON contracts, console script `adf`)
+also builds as a local sdist and wheel. It is never published to a registry.
+
+| From a wheel (non-editable) | Needs the source clone |
+| --- | --- |
+| `adf hook` (same allow/deny decisions and evidence as the clone), the registration from `adf hook-snippet`, `adf projects`, `adf doctor` and `adf doctor --pin` (pins the installed hook modules), `adf version`, `adf verify`, `adf key init`, `adf mcp pin/probe`, `adf a2a`; imports, schema loading and the reference demo policy | `adf policy build` (exit 2 with a message) |
+
+The hook logic lives in `integration/` modules (`read_hook`, `claude_read_gate`, `codex_bash_read_gate`, `deny_gate`,
+`projects`); the `hooks/*.py` files are shims that run them, so existing registrations keep working. When the hook
+module cannot load, `adf doctor` and `adf hook-snippet` print `NOT PROTECTED`; the hook itself still makes no
+decision (ADR 0037, Proposed). `hooks/test-hook-wheel-equivalence.sh` checks that the wheel and the clone give the
+same output for the same payloads.
+
+`hooks/test-packaging-wheel.sh` builds both archives offline in `TMPDIR`, checks metadata and contents, installs the
+wheel in a throwaway venv, runs the smoke tests and uninstalls it. Nothing is written to the repository or `.venv`.
+With no Python that has setuptools 64+ it prints `SKIPPED` and exits 77, which the gates report as a skip, never as a pass; `ADF_PACKAGING_REQUIRED=1` turns that
+into a failure. To build by hand, do it from a copy, because setuptools writes `build/` and `*.egg-info` next to the
+sources.
+
 ## Workflow
 
 1. Issue, then a spec or plan in the PR description, then the implementation. Keep PRs small: the CI change-safety

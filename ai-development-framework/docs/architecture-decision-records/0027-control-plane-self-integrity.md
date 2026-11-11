@@ -53,7 +53,7 @@ when the shell lacks them, so a terminal and the hook compute the same snapshot.
 
 ## Consequences
 
-- Positive: tampering becomes a reason code with evidence; the claim "evidence cannot be silenced by a non-root agent" becomes testable.
+- Positive: tampering becomes a reason code with evidence ~~; the claim "evidence cannot be silenced by a non-root agent" becomes testable~~ for every project that is still enabled while the manifest exists. That narrower claim is the tested one; see *Errata (2026-11-09)*.
 - Negative: operators re-pin after every legitimate change (`adf doctor --pin`); one more file in `~/.adf`.
 - Reversibility: cheap (remove manifest; gates fall back to current behaviour).
 
@@ -65,9 +65,32 @@ it; ADR 0030 (host-held key) is the companion.
 
 ## Validation
 
-`hooks/test-self-integrity.sh`: remove hook line, edit `enabled-projects`, swap policy bytes with same pin,
+~~`hooks/test-self-integrity.sh`~~ (never created) → `hooks/test-control-plane-pins.sh`: remove hook line, edit `enabled-projects`, swap policy bytes with same pin,
 replace gate script → each yields `control_plane_tampered` and deny; unchanged install yields no event.
+`hooks/test-trust-self-integrity.sh` (2026-11-09) pins the silent paths listed in the errata below.
 
 ## Rollback
 
 Delete `~/.adf/pins.json` and the check; everything else unchanged.
+
+## Errata (2026-11-09, Phase 2A review)
+
+The decision is unchanged; this note narrows the claims to what the code does. Evidence:
+`hooks/test-trust-self-integrity.sh` (characterisation, throwaway `HOME`/`ADF_HOME`).
+
+- **Scope of the check.** `hooks/adf-read-hook.py` returns no decision for a project that is not in
+  `enabled-projects` *before* it calls the pin check. Removing a project's own line (or the whole file) therefore
+  silences that project with no deny and no journal entry. Only projects that are still enabled are denied with
+  `control_plane_tampered`; `adf doctor` (run out of band by a human) reports `host:enabled-projects`.
+- **Manifest absence is "not pinned".** `read_manifest` maps a missing `pins.json` to `None`. The owner can unlink
+  a `0400` file in their own directory, after which later tampering is not detected and `adf doctor` exits 3.
+- **Codex registration is not pinned.** The snapshot reads only `~/.claude/settings.json`; removing the hook from
+  `~/.codex/hooks.json` is not a divergence (`adf doctor` stays 0).
+- **Agent reach.** The deny-only gate denies `Edit`/`Write` under `$ADF_HOME`, but a Bash write (`rm`, `sed -i`,
+  redirection) outside the ADR 0028 1b read grammar returns no ADF decision.
+- **`control_plane_missing` was never implemented** (deviation (1) above): a missing `adf` binary is no decision.
+
+Accurate claim: *while a project stays enabled and `pins.json` exists, a divergence in the pinned set is denied
+and journaled before any gate runs.* There is no global tamper-resistance claim against a same-user agent.
+Closing the silent paths (for example a host-held list of pinned projects or an out-of-band `adf doctor` schedule)
+needs its own ADR; ROADMAP keeps it as a residual.

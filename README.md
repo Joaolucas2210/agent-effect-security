@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="#try-it-safely">Quickstart</a> · <a href="docs/product/COMPATIBILITY.md">Compatibility</a> · <a href="#what-evidence-does--and-does-not--prove">Evidence</a> · <a href="#trust-model-status-and-contributing">Security boundary</a>
+  <a href="#try-it-safely">Quickstart</a> · <a href="docs/product/COMPATIBILITY.md">Compatibility</a> · <a href="docs/product/PUBLIC-CONTRACTS.md">Public contracts</a> · <a href="#what-evidence-does--and-does-not--prove">Evidence</a> · <a href="#trust-model-status-and-contributing">Security boundary</a>
   <br>
   <sub>experimental <code>0.x</code> — see <a href="VERSION"><code>VERSION</code></a></sub>
 </p>
@@ -76,7 +76,7 @@ demo passed
 
 The third decision is a deny-only gate: it leaves an **attempt journal entry only**, no bundle. The fixture, its fake `.env` and the temporary `ADF_HOME` are removed afterwards (`DEMO_KEEP=1` keeps them). The step-by-step version with the raw hook payloads is the [isolated quickstart](docs/product/QUICKSTART.md).
 
-**Enabling a real client is a separate, opt-in step.** `adf hook-snippet claude` or `adf hook-snippet codex` **prints** JSON; it installs nothing. Review and merge its `hooks.PreToolUse` entries into the client's settings, keeping existing hooks; restart the client; run `adf projects enable /absolute/path/to/repo`; then `adf doctor --pin` once the registration is in place. For a reviewed allowlist, build a session policy and pin it with `ADF_READ_POLICY_FILE` and `ADF_READ_POLICY_SHA256`. [Opt-in](docs/product/QUICKSTART.md#opt-in-a-real-client-later) · [diagnose, update and roll back](docs/product/QUICKSTART.md#diagnose-update-and-roll-back). `make help` lists the product commands; `make help-all` adds the development harness. `make e2e` runs a fresh-clone contract check of the local edges and trials; it is not proof that a particular client version invoked its hook.
+**Enabling a real client is a separate, opt-in step.** `adf hook-snippet claude` or `adf hook-snippet codex` **prints** JSON; it installs nothing. Review and merge its `hooks.PreToolUse` entries into the client's settings, keeping existing hooks; restart the client; run `adf projects enable /absolute/path/to/repo`; then `adf doctor --pin` once the registration is in place. For a reviewed allowlist, build a session policy and pin it with `ADF_READ_POLICY_FILE` and `ADF_READ_POLICY_SHA256`. Without them, enabled projects run the reference demo policy (each requested non-sensitive path is granted); `adf doctor` says which one is in effect. [Community guarantee](docs/product/COMPATIBILITY.md#community-guarantee-per-integration) · [Opt-in](docs/product/QUICKSTART.md#opt-in-a-real-client-later) · [diagnose, update and roll back](docs/product/QUICKSTART.md#diagnose-update-and-roll-back). `make help` lists the product commands; `make help-all` adds the development harness. `make e2e` runs a fresh-clone contract check of the local edges and trials; it is not proof that a particular client version invoked its hook.
 
 ## How it works
 
@@ -109,7 +109,7 @@ No OS sandbox and no universal Bash interception are claimed. An agent with anot
 | Record | Proves | Does not prove |
 | --- | --- | --- |
 | **Evidence Bundle** | A composed decision, its bindings and the read receipt; `delivery_mode` says whether ADF delivered bytes (`mediated`) or only gated a native tool (`gate_only`) | The bytes a native tool returned in `gate_only`; anything that never reached the edge |
-| **Attempt journal** | A local, hash-chained record that an attempt reached ADF and why it was refused | A verified read; a missing hook leaves **no** ADF record at all |
+| **Attempt journal** | A local record that an attempt reached ADF and why it was refused; the two events of each attempt are digest-linked, attempts are not chained to each other | A verified read or a complete history (a deleted attempt leaves no gap); a missing hook leaves **no** ADF record at all |
 | **OpenTelemetry span** (optional) | Redacted correlation for dashboards | Nothing: a span is never authorization evidence and its absence changes no decision |
 
 `adf verify FILE` checks structure and digests offline and reports `authenticity=not_checked`. `adf verify FILE --key HOST_KEY` also checks a **shared-secret HMAC**: it authenticates against that host's key, not to an independent public verifier. Keep the key on the host; do not hand it to an external auditor. A bundle holds IDs and repository-relative scopes but never file content — review it before sharing. [Evidence boundary](docs/product/BOUNDARY.md#evidence-is-the-record-telemetry-only-visualizes) · [HMAC decision](ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md).

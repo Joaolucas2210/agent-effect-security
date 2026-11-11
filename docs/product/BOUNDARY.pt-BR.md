@@ -41,6 +41,12 @@ registra o desenho aberto e os testes de versão de cliente necessários antes d
 `hooks/test-hook-failure-semantics.sh` fixa o comportamento de hoje caso a caso (sem decisão vs deny, e se existe algum
 registro do ADF). Ausência de registro do ADF nunca significa "bloqueado".
 
+Os pins do control plane ([ADR 0027](../../ai-development-framework/docs/architecture-decision-records/0027-control-plane-self-integrity.md#errata-2026-11-09-phase-2a-review))
+detectam divergência só enquanto o projeto continua em `enabled-projects` e `pins.json` existe. Remover a linha do
+projeto ou apagar o manifesto devolve "sem decisão" e não deixa registro; `adf doctor`, rodado por um humano, ainda
+reporta. O registro do Codex não é pinado. O ADF não afirma resistência global a adulteração contra um agente do
+mesmo usuário.
+
 ## Matriz de suporte
 
 Fora desta tabela, considere **risco residual**: o ADF não vê nem bloqueia esses caminhos.
@@ -73,6 +79,9 @@ um bundle não assinado ainda pode passar na checagem de integridade. A evidênc
 repositório e IDs; revise antes de compartilhar. A [ADR 0030](../../ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md)
 define o esquema implementado; a [ADR 0038](../../ai-development-framework/docs/architecture-decision-records/0038-evidence-key-lifecycle.md)
 registra o desenho ainda aberto para rotação e verificação por terceiros.
+Integridade, autenticidade por chave do host, encadeamento do journal (dois eventos dentro de uma tentativa; sem
+cadeia entre tentativas), proveniência e custódia da chave são propriedades separadas; o [CONTROL_PLANE](../../ai-development-framework/docs/CONTROL_PLANE.pt-BR.md#o-que-a-evidência-prova-propriedade-por-propriedade)
+diz o que cada uma prova e não prova.
 
 ## Contrato do cliente A2A
 

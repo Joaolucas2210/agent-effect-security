@@ -50,3 +50,22 @@ can read it can forge evidence; deny-only gates reduce observed agent access but
 
 Documentation only. Any future scheme must continue to verify existing HMAC sidecars with an explicitly
 provided old key and preserve `not_checked` for verification without a key.
+
+## Open proposal — Phase 2A review (2026-11-09)
+
+Status stays **Proposed**. The five properties below are distinct and must not be merged in public wording
+(evidence: `hooks/test-trust-evidence-scope.sh`, `hooks/test-evidence-signing.sh`):
+
+1. **Integrity** — `verify_offline` / `verify_record` recompute digests of one bundle or record; anyone can do it.
+2. **Host-key authenticity** — the HMAC sidecar proves a holder of this host's key produced the file. Deleting the
+   sidecar yields `unsigned`, not `invalid`; any key holder, a verifier included, can mint `valid`.
+3. **Journal linking** — each attempt file links its `completed` event to its `started` event. Nothing links
+   attempts, bundles or days to each other, so deleting a whole file is not detectable from what remains.
+4. **Provenance** — a bundle carries component versions and the Git tree `snapshot_digest`, not the repository,
+   commit or ADF clone revision.
+5. **Key custody** — one 32-byte key, never overwritten; `key_id` is a digest prefix with no validity window.
+
+Proposed decision order: first a written verifier need (who, how long), then rotation with a keyring that keeps old
+keys verify-only, then an append-only sequence or chain across attempts if deletion detection is required, and only
+then an asymmetric scheme. Tests needed before acceptance: verify an old sidecar after rotation, reject a revoked
+key, detect a removed attempt in a sequence, cross-version vectors.

@@ -57,3 +57,33 @@ identified. These are local fixture/contract tests. Real-client behavior for the
 
 Documentation only. A later implementation must retain a host-side rollback that removes only ADF's hook
 entries, preserves other hooks and does not block unenabled projects.
+
+## Open proposal — Phase 2A review (2026-11-09)
+
+Status stays **Proposed**; acceptance is a human decision. This review adds observed behaviour and a candidate
+contract; it changes no host behaviour.
+
+**Observed per surface** (ADF output only; how the client acts on it is not tested). Evidence:
+`hooks/test-hook-failure-semantics.sh`, `hooks/test-bootstrap-matrix.sh`, `hooks/test-trust-self-integrity.sh`,
+`hooks/test-a2a-gateway.sh`.
+
+| Surface | Hook/registration missing | Executable missing | Import error | Unexpected exception | Policy missing / invalid | Pins divergent |
+| --- | --- | --- | --- | --- | --- | --- |
+| Claude `PreToolUse` read hook (`adf hook`) | no decision, not tested (no ADF code runs) | no decision (`exit 0`) | no decision (`cli.py`) | no decision before the project is known enabled; deny `adapter_failed` after | demo policy decides / deny `host_policy_invalid` | deny `control_plane_tampered`, only while enabled and pinned |
+| Deny-only gate (inside the read hook) | as above | as above | deny `adapter_failed` (enabled) | deny `adapter_failed`; standalone bad stdin → deny | n/a (paths only) | deny before the gate |
+| Codex hook (`adf hook`, `^Bash$`) | no decision, not tested | no decision (`exit 0`) | as Claude | as Claude; malformed payload without `cwd` → no decision | not tested (same adapter as Claude) | deny; Codex registration itself not pinned |
+| Legacy `codex-bash-read-gate.wrapper.sh` | not tested | nonzero exit, no JSON (client reading not tested) | not tested | not tested (code: deny `adapter_failed`) | not tested | not checked |
+| MCP read server (stdio) | server absent = tool absent, not tested | not tested | not tested | tool error; missing host env → `host_configuration_invalid` | as adapter | not checked |
+| A2A gateway | n/a (HTTP) | n/a | not tested | not tested (hypothesis: connection closed, no response) | 503 `host_policy_invalid` | not checked |
+
+**Candidate contract (proposal, not decided).** (1) Every state above has one named outcome per surface:
+`deny`, `no_decision` or `tool_error`, documented next to the support matrix. (2) An enabled project never
+receives `no_decision` from code ADF controls after the project is identified (holds today). (3) States before
+that point stay `no_decision` unless a host-held launcher can identify enabled projects without the Python
+package; disabled projects keep their behaviour. (4) `adf doctor` is the out-of-band signal for registration,
+executable and pin state, and a fleet "enforced" metric may count only hosts where it exits 0. (5) Any change
+ships with the real-client matrix from *Decision needed* recorded per client version.
+
+**Tests still needed.** Real Claude Code and Codex runs per client version for: empty stdout, nonzero exit,
+malformed JSON, timeout, unregistered hook. A2A unexpected exception at the HTTP layer. MCP server absent or
+crashing at start. An `adf doctor` exit-code test for a removed registration on each client.

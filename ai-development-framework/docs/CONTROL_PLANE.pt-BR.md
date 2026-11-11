@@ -488,6 +488,13 @@ qualquer divergência, ou um manifesto inutilizável, nega com `control_plane_ta
 o usuário reescrevem o manifesto; um checker substituído pode pular a própria checagem; um binário `adf`
 removido é "sem decisão" pelo fail-safe do hook e só aparece em `adf doctor`.
 
+Escopo ([errata 2026-11-09](architecture-decision-records/0027-control-plane-self-integrity.md#errata-2026-11-09-phase-2a-review)):
+a checagem de pins roda só para um projeto listado em `enabled-projects`, e só enquanto `pins.json` existe.
+Remover a própria linha do projeto, apagar a lista ou apagar o manifesto deixa aquele projeto sem decisão e sem
+registro; só projetos ainda habilitados são negados, e `adf doctor` reporta a divergência fora de banda. O
+registro do Codex (`~/.codex/hooks.json`) não é pinado, e uma escrita via Bash em `$ADF_HOME` não recebe decisão
+do ADF. Isto é detecção de divergência, não resistência a adulteração (`hooks/test-trust-self-integrity.sh`).
+
 ## Autenticidade da evidência (ADR 0030)
 
 [ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md) (Accepted). Desligado por
@@ -498,6 +505,18 @@ Uma chave configurada que não consegue assinar não entrega nada (`evidence_sig
 `authenticity=valid|invalid|unsigned` ao veredito de integridade. Residual: o agente roda como o usuário e pode
 ler a chave a menos que o gate da ADR 0028 negue `~/.adf/`; HMAC não dá não-repúdio para terceiros (Ed25519 é o
 caminho de upgrade).
+
+## O que a evidência prova, propriedade por propriedade
+
+Cinco propriedades diferentes; nenhuma implica outra. Caracterizadas em `hooks/test-trust-evidence-scope.sh`.
+
+| Propriedade | Mecanismo | Prova | Não prova |
+| --- | --- | --- | --- |
+| Integridade | `verify_offline` (bundle), `verify_record` (record A2A → seu único bundle), `verify_attempt` (journal) | O arquivo é internamente consistente: digests, bindings, schema | Quem o escreveu; qualquer um compõe um arquivo que verifica |
+| Autenticidade por chave do host | `<arquivo>.sig` HMAC-SHA256 destacado ([ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md)), opt-in | Quem tem a chave deste host produziu estes bytes | Não-repúdio para terceiros; um verificador com a chave pode forjar; sidecar apagado lê `unsigned`, não `invalid` |
+| Encadeamento do journal | Cada arquivo de tentativa: `completed.previous_event_sha256` = `started.event_sha256` | Os dois eventos de uma tentativa pertencem juntos e não foram editados | Completude: não há cadeia entre tentativas, bundles ou dias, então um arquivo de tentativa apagado não deixa lacuna |
+| Proveniência | `provenance` do bundle (versões de componentes) + `snapshot_digest` (árvore Git na revisão confiável) | Qual conteúdo de árvore e quais versões produziram a decisão | Identidade do repositório, id do commit ou revisão do clone ADF; origem da policy demo vs pinada (R-10) |
+| Custódia da chave | Uma chave de 32 bytes, `0400`, nunca sobrescrita; `key_id` = prefixo de digest | Qual chave assinou | Rotação, revogação, janelas de validade ([ADR 0038](architecture-decision-records/0038-evidence-key-lifecycle.md), Proposed) |
 
 ## Observabilidade (OTel, ADR 0020)
 

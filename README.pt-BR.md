@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="#teste-com-segurança">Início rápido</a> · <a href="docs/product/COMPATIBILITY.pt-BR.md">Compatibilidade</a> · <a href="#o-que-a-evidência-comprova--e-não-comprova">Evidência</a> · <a href="#modelo-de-confiança-maturidade-e-contribuição">Fronteira de segurança</a>
+  <a href="#teste-com-segurança">Início rápido</a> · <a href="docs/product/COMPATIBILITY.pt-BR.md">Compatibilidade</a> · <a href="docs/product/PUBLIC-CONTRACTS.pt-BR.md">Contratos públicos</a> · <a href="#o-que-a-evidência-comprova--e-não-comprova">Evidência</a> · <a href="#modelo-de-confiança-maturidade-e-contribuição">Fronteira de segurança</a>
   <br>
   <sub>experimental <code>0.x</code> — veja <a href="VERSION"><code>VERSION</code></a></sub>
 </p>
@@ -76,7 +76,7 @@ demo passed
 
 A terceira decisão é um gate deny-only: deixa **só uma entrada no journal de tentativas**, sem bundle. A fixture, o `.env` falso e o `ADF_HOME` temporário são removidos ao final (`DEMO_KEEP=1` os mantém). A versão passo a passo, com os payloads crus do hook, é o [início rápido isolado](docs/product/QUICKSTART.pt-BR.md).
 
-**Ativar um cliente real é um passo separado e opt-in.** `adf hook-snippet claude` ou `adf hook-snippet codex` **imprime** JSON; não instala nada. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando os hooks existentes; reinicie o cliente; rode `adf projects enable /caminho/absoluto/do/repo`; depois `adf doctor --pin`, com o registro já feito. Para uma allowlist revisada, gere uma policy da sessão e pine-a com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. [Ativação](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois) · [diagnóstico, atualização e reversão](docs/product/QUICKSTART.pt-BR.md#diagnostique-atualize-e-reverta). `make help` lista os comandos do produto; `make help-all` inclui o harness de desenvolvimento. `make e2e` roda uma checagem de contrato em clone fresco das bordas locais e dos trials; não prova que uma versão específica de cliente chamou o hook.
+**Ativar um cliente real é um passo separado e opt-in.** `adf hook-snippet claude` ou `adf hook-snippet codex` **imprime** JSON; não instala nada. Revise e mescle as entradas `hooks.PreToolUse` nas configurações do cliente, preservando os hooks existentes; reinicie o cliente; rode `adf projects enable /caminho/absoluto/do/repo`; depois `adf doctor --pin`, com o registro já feito. Para uma allowlist revisada, gere uma policy da sessão e pine-a com `ADF_READ_POLICY_FILE` e `ADF_READ_POLICY_SHA256`. Sem elas, os projetos habilitados rodam a policy demo de referência (cada path não sensível solicitado é concedido); o `adf doctor` diz qual está em vigor. [Garantia Community](docs/product/COMPATIBILITY.pt-BR.md#garantia-community-por-integração) · [Ativação](docs/product/QUICKSTART.pt-BR.md#ative-um-cliente-real-depois) · [diagnóstico, atualização e reversão](docs/product/QUICKSTART.pt-BR.md#diagnostique-atualize-e-reverta). `make help` lista os comandos do produto; `make help-all` inclui o harness de desenvolvimento. `make e2e` roda uma checagem de contrato em clone fresco das bordas locais e dos trials; não prova que uma versão específica de cliente chamou o hook.
 
 ## Como funciona
 
@@ -109,7 +109,7 @@ Não há claim de sandbox de SO nem de interceptação universal de Bash. Um age
 | Registro | Comprova | Não comprova |
 | --- | --- | --- |
 | **Evidence Bundle** | Uma decisão composta, seus bindings e o recibo da leitura; `delivery_mode` diz se o ADF entregou os bytes (`mediated`) ou só fez o gate de uma ferramenta nativa (`gate_only`) | Os bytes que uma ferramenta nativa devolveu em `gate_only`; qualquer coisa que nunca chegou à borda |
-| **Journal de tentativas** | Um registro local, encadeado por hash, de que uma tentativa chegou ao ADF e de por que foi recusada | Uma leitura verificada; um hook ausente **não** deixa registro algum do ADF |
+| **Journal de tentativas** | Um registro local de que uma tentativa chegou ao ADF e de por que foi recusada; os dois eventos de cada tentativa são ligados por digest, as tentativas não são encadeadas entre si | Uma leitura verificada ou um histórico completo (uma tentativa apagada não deixa lacuna); um hook ausente **não** deixa registro algum do ADF |
 | **Span OpenTelemetry** (opcional) | Correlação redigida para dashboards | Nada: um span nunca é evidência de autorização e sua ausência não muda decisão alguma |
 
 `adf verify ARQUIVO` confere estrutura e digests offline e reporta `authenticity=not_checked`. `adf verify ARQUIVO --key CHAVE_DO_HOST` também confere um **HMAC de segredo compartilhado**: autentica contra a chave daquele host, não perante um verificador público independente. Mantenha a chave no host; não a entregue a um auditor externo. Um bundle guarda IDs e escopos relativos ao repositório, mas nunca conteúdo de arquivo — revise-o antes de compartilhar. [Fronteira da evidência](docs/product/BOUNDARY.pt-BR.md#evidência-é-o-registro-telemetria-só-visualiza) · [decisão sobre o HMAC](ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md).

@@ -42,6 +42,27 @@ O produto e o harness que o constrói dividem este repositório. Só o primeiro 
 | `agents/`, `commands/`, `skills/`, `rules/`, `modes/`, `loops/`, `sandbox/`, `setup-adf.sh`, `.codex/` | **Harness.** O framework de desenvolvimento com agentes usado para construir o ADF; não faz parte da fronteira de enforcement |
 
 
+## Empacotamento
+
+A instalação suportada é o clone do código-fonte, editável (`make bootstrap` / `make install-dev`). O pacote
+`adf-control-plane` (`tools`, `runtime`, `integration` e seus contratos JSON `v1/`/`v2/`, console script `adf`)
+também gera sdist e wheel locais. Ele nunca é publicado em um registry.
+
+| A partir de um wheel (não editável) | Exige o clone do código-fonte |
+| --- | --- |
+| `adf hook` (mesmas decisões allow/deny e mesma evidência do clone), o registro do `adf hook-snippet`, `adf projects`, `adf doctor` e `adf doctor --pin` (pina os módulos de hook instalados), `adf version`, `adf verify`, `adf key init`, `adf mcp pin/probe`, `adf a2a`; imports, carga de schemas e a política demo de referência | `adf policy build` (exit 2 com mensagem) |
+
+A lógica dos hooks fica em módulos de `integration/` (`read_hook`, `claude_read_gate`, `codex_bash_read_gate`,
+`deny_gate`, `projects`); os arquivos `hooks/*.py` são shims que os executam, então registros existentes continuam
+funcionando. Quando o módulo do hook não carrega, `adf doctor` e `adf hook-snippet` imprimem `NOT PROTECTED`; o hook
+em si continua sem decidir (ADR 0037, Proposed). `hooks/test-hook-wheel-equivalence.sh` confere que wheel e clone
+dão a mesma saída para os mesmos payloads.
+
+`hooks/test-packaging-wheel.sh` gera os dois arquivos offline no `TMPDIR`, confere metadados e conteúdo, instala o
+wheel num venv descartável, roda os smoke tests e desinstala. Nada é escrito no repositório nem na `.venv`. Sem um
+Python com setuptools 64+, imprime `SKIPPED` e sai com 77, que os gates reportam como skip, nunca como aprovação; `ADF_PACKAGING_REQUIRED=1` transforma isso em falha.
+Para gerar à mão, faça a partir de uma cópia, porque o setuptools escreve `build/` e `*.egg-info` junto do código.
+
 ## Fluxo
 
 1. Issue, depois spec ou plano na descrição do PR, depois a implementação. Mantenha PRs pequenos: o guard de

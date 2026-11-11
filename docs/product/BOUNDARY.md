@@ -41,6 +41,11 @@ records the open design and the client-version tests required before any semanti
 `hooks/test-hook-failure-semantics.sh` pins today's behaviour case by case (no decision vs deny, and whether any ADF
 record exists). No ADF record never means "blocked".
 
+Control-plane pins ([ADR 0027](../../ai-development-framework/docs/architecture-decision-records/0027-control-plane-self-integrity.md#errata-2026-11-09-phase-2a-review))
+detect divergence only while the project stays in `enabled-projects` and `pins.json` exists. Removing the project's
+line or deleting the manifest returns no decision and leaves no record; `adf doctor`, run by a human, still reports
+it. The Codex registration is not pinned. ADF makes no global tamper-resistance claim against a same-user agent.
+
 <a id="matriz-de-suporte"></a>
 ## Support matrix
 
@@ -74,6 +79,9 @@ bundle can still pass integrity checks. Evidence may contain repository-relative
 sharing. [ADR 0030](../../ai-development-framework/docs/architecture-decision-records/0030-evidence-authenticity-host-key.md)
 defines the implemented scheme; [ADR 0038](../../ai-development-framework/docs/architecture-decision-records/0038-evidence-key-lifecycle.md)
 records the unresolved rotation and third-party verification design.
+Integrity, host-key authenticity, journal linking (two events inside one attempt; no chain across attempts),
+provenance and key custody are separate properties; [CONTROL_PLANE](../../ai-development-framework/docs/CONTROL_PLANE.md#what-evidence-proves-property-by-property)
+states what each proves and does not.
 
 ## A2A client contract
 

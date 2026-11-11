@@ -70,8 +70,11 @@ Opcional: o trial A2A ao vivo com spans no Jaeger
 | --- | --- |
 | PDP, PEP, runtime, contratos, evidência, verificação offline | Policy packs mantidos por stack e linguagem |
 | Bordas Claude / Codex / A2A, export OTel redigido | Trial reports conduzidos com o time de AppSec |
-| Policy pack v0, trials repetíveis | Runbooks JWKS/IdP para piloto |
-| | Suporte a design partners |
+| Policy pack v0, trials repetíveis | Suporte a design partners |
+| [Runbook A2A RS256 + JWKS pinado](../../ai-development-framework/docs/runbooks/a2a-rs256-jwks.pt-BR.md) | |
+
+Os defaults da Community nunca são mais fracos que qualquer pack pago (declaração de intenção). O que cada borda
+Community garante hoje está na [garantia Community](COMPATIBILITY.pt-BR.md#garantia-community-por-integração).
 
 ## O que não é
 

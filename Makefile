@@ -19,7 +19,7 @@ VENV := $(CURDIR)/.venv
 export ADF_CONTRACTS_PYTHON ?= $(if $(wildcard $(VENV)/bin/python3),$(VENV)/bin/python3,python3)
 ADF_CLI := $(or $(wildcard $(dir $(ADF_CONTRACTS_PYTHON))adf),adf)
 
-.PHONY: help help-all bootstrap test doctor setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo
+.PHONY: help help-all bootstrap test doctor setup install-into install-metrics install-dev adf-claude adf-codex adf-cursor setup-graphify check quality quality-check complexity graph-check metrics metrics-snapshot observability-record observability-complete test-observability test-maintenance-routine test-all local-evidence-pilot local-evidence-trial a2a-live-trial local-session-trial rtk-report graph-hit-rate skill-audit mcp-audit routine-dead-code routine-abstractions routine-security routine-graph routine-token-budget routine-governance routine-all eval eval-check eval-agent-flow eval-agent-flow-all eval-required eval-diagnose learn learn-apply test-learn test-loop hooks ci clean-links loop token-budget projects project-enable project-disable project-reasons e2e demo package-check
 
 # Product commands in the order a new user runs them, then the contributor loop. The rest is the harness.
 PRODUCT_TARGETS := bootstrap demo doctor project-enable projects project-reasons project-disable
@@ -110,7 +110,7 @@ complexity: ## Cyclomatic complexity + function length for shell (report mode: m
 
 test-all: ## Run every framework self-test (the contracts `make quality` enforces)
 	@rc=0; for t in $(ADF)/hooks/test-*.sh; do \
-	  bash "$$t" || { echo "✗ $$t"; rc=1; }; \
+	  s=0; bash "$$t" || s=$$?; [ "$$s" -eq 77 ] && echo "SKIPPED $$t"; [ "$$s" -eq 0 ] || [ "$$s" -eq 77 ] || { echo "✗ $$t"; rc=1; }; \
 	done; status=0; "$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/hooks/check-host-deployment.py $(ADF) || status=$$?; \
 	[ "$$status" -eq 0 ] || [ "$$status" -eq 77 ] || rc=1; exit $$rc
 
@@ -155,6 +155,10 @@ doctor: ## Read-only diagnosis: is the installed control plane intact against th
 
 demo: ## Three real decisions on a throwaway fixture + offline verify; touches no client settings or ~/.adf (after `make bootstrap`)
 	@"$${ADF_CONTRACTS_PYTHON:-python3}" $(ADF)/e2e/demo.py
+
+package-check: ## Build sdist + wheel offline, throwaway-venv smoke + wheel/clone hook equivalence, uninstall (strict: a skip fails)
+	@ADF_PACKAGING_REQUIRED=1 bash $(ADF)/hooks/test-packaging-wheel.sh
+	@ADF_PACKAGING_REQUIRED=1 bash $(ADF)/hooks/test-hook-wheel-equivalence.sh
 
 e2e: ## Release check: fresh clone of the committed tree, new venv, adf CLI, both edges, both trials (needs network or a pip cache)
 	@bash $(ADF)/e2e/quickstart.sh

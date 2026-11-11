@@ -489,6 +489,13 @@ exits 0 intact, 1 tampered, 3 not pinned. Re-pin after every legitimate change. 
 can rewrite the manifest; a replaced checker could skip its own check; a removed `adf` binary is "no
 decision" by the hook's fail-safe and is visible only in `adf doctor`.
 
+Scope ([errata 2026-11-09](architecture-decision-records/0027-control-plane-self-integrity.md#errata-2026-11-09-phase-2a-review)):
+the pin check runs only for a project listed in `enabled-projects`, and only while `pins.json` exists. Removing
+a project's own line, deleting the list, or deleting the manifest gives that project no decision and no record;
+only projects that are still enabled are denied, and `adf doctor` reports the divergence out of band. The Codex
+registration (`~/.codex/hooks.json`) is not pinned, and a Bash write to `$ADF_HOME` gets no ADF decision. This is
+divergence detection, not tamper resistance (`hooks/test-trust-self-integrity.sh`).
+
 ## Evidence authenticity (ADR 0030)
 
 [ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md) (Accepted). Off by
@@ -498,6 +505,18 @@ configured key that cannot sign delivers nothing (`evidence_signing_unavailable`
 `attempt_evidence_failed`). `adf verify FILE --key KEYFILE` adds `authenticity=valid|invalid|unsigned` to the
 integrity verdict. Residual: the agent runs as the user and can read the key unless the ADR 0028 gate denies
 `~/.adf/`; HMAC gives no third-party non-repudiation (Ed25519 is the upgrade path).
+
+## What evidence proves, property by property
+
+Five different properties; none implies another. Characterised in `hooks/test-trust-evidence-scope.sh`.
+
+| Property | Mechanism | Proves | Does not prove |
+| --- | --- | --- | --- |
+| Integrity | `verify_offline` (bundle), `verify_record` (A2A record → its one bundle), `verify_attempt` (journal) | The file is internally consistent: digests, bindings, schema | Who wrote it; anyone can compose a file that verifies |
+| Host-key authenticity | Detached HMAC-SHA256 `<file>.sig` ([ADR 0030](architecture-decision-records/0030-evidence-authenticity-host-key.md)), opt-in | A holder of this host's key produced these bytes | Third-party non-repudiation; a verifier with the key can forge; a deleted sidecar reads `unsigned`, not `invalid` |
+| Journal linking | Each attempt file: `completed.previous_event_sha256` = `started.event_sha256` | The two events of one attempt belong together and were not edited | Completeness: there is no chain across attempts, bundles or days, so a deleted attempt file leaves no gap |
+| Provenance | Bundle `provenance` (component versions) + `snapshot_digest` (Git tree at the trusted revision) | Which tree content and component versions produced the decision | Repository identity, commit id, or ADF clone revision; policy origin demo vs pinned (R-10) |
+| Key custody | One 32-byte key, `0400`, never overwritten; `key_id` = digest prefix | Which key signed | Rotation, revocation, validity windows ([ADR 0038](architecture-decision-records/0038-evidence-key-lifecycle.md), Proposed) |
 
 ## Observability (OTel, ADR 0020)
 

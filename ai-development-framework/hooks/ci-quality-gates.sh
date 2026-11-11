@@ -92,15 +92,20 @@ gate_evals() {
   gate "eval coverage of changed behaviour" "$ADF/hooks/eval-required.sh"
 }
 
+# Exit 77 = the self-test could not run (missing tooling): reported as a skip, never counted green.
+contract_status() { [ "$1" -eq 0 ] && return 0; [ "$1" -eq 77 ] && { skip "contract: $2 (exit 77, tooling missing)"; return 0; }; fail "contract: $2"; }
+
 # 6. Framework contracts — every self-test must pass. Not counted as a stack gate: contracts
 # prove the framework works, they say nothing about the code being shipped.
 gate_contracts() {
   local t status=0
   for t in "$ADF"/hooks/test-*.sh; do
     [ -f "$t" ] || continue
-    bash "$t" >/dev/null || fail "contract: $(basename "$t")"
+    status=0; bash "$t" >/dev/null || status=$?
+    contract_status "$status" "$(basename "$t")"
   done
-  echo "  ✓ contracts: $(ls "$ADF"/hooks/test-*.sh 2>/dev/null | wc -l | tr -d ' ') self-test(s)"
+  echo "  ✓ contracts: $(ls "$ADF"/hooks/test-*.sh 2>/dev/null | wc -l | tr -d ' ') self-test(s), skips listed below"
+  status=0
   "${ADF_CONTRACTS_PYTHON:-python3}" "$ADF/hooks/check-host-deployment.py" "$ADF" || status=$?
   if [ "$status" -eq 77 ]; then
     skip "host deployment checks (not installed; package self-tests executed)"

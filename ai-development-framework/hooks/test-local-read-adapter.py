@@ -374,7 +374,7 @@ class LocalReadAdapterTest(unittest.TestCase):
         self.assertEqual(len(list((self.evidence / "run-p0").glob("*.json"))), 2, "bundles are never overwritten")
 
     def test_source_boundaries(self):
-        for name in ("integration/local_read_adapter.py", "hooks/claude-code-read-gate.py"):
+        for name in ("integration/local_read_adapter.py", "hooks/claude-code-read-gate.py", "integration/claude_read_gate.py"):
             source = (ROOT / name).read_text().lower()
             for forbidden in ("import subprocess", "from subprocess", "socket", "urllib", "http.client", "requests", "docker", "mcp", "shell", "sys.argv"):
                 self.assertNotIn(forbidden, source, f"{name}: {forbidden}")

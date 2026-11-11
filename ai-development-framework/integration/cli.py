@@ -1,7 +1,7 @@
 """`adf`: one entry point over the existing control-plane scripts. Thin dispatch; no command changes behaviour.
 
-  adf projects list|enable PATH|disable PATH|reasons [...]   host project list and aggregate (hooks/adf-projects.py)
-  adf hook                                                   the global PreToolUse hook (stdin JSON; hooks/adf-read-hook.py)
+  adf projects list|enable PATH|disable PATH|reasons [...]   host project list and aggregate (integration/projects.py)
+  adf hook                                                   the global PreToolUse hook (stdin JSON; integration/read_hook.py)
   adf hook-snippet [claude|codex]                            print the hook registration for this clone, fail-safe included
   adf policy build --run-id ID --allow PATH ... --out FILE   build a pinned host policy (policy pack effect-security-read-v0)
   adf a2a serve | a2a mint SUB SCOPE [...]                    loopback A2A gateway and its pilot-only HS256 token double
@@ -9,12 +9,15 @@
   adf key init [KEYFILE]                                     create the host evidence key (0400, never overwritten); default $ADF_HOME/evidence.key
   adf mcp pin FILE                                           validate a host MCP registry and print its pin (ADR 0031); export ADF_MCP_REGISTRY_FILE/_SHA256
   adf mcp probe FILE [--write]                               start each pinned server, digest its live tool list, compare (exit 1 on any change/unpinned); --write records digests, then re-pin
-  adf doctor [--pin]                                         check the control plane against $ADF_HOME/pins.json (exit 0 intact, 1 tampered, 3 not pinned); --pin (re)writes it (ADR 0027); with a registry also MCP definition drift and probe age (ADF_MCP_PROBE_MAX_AGE_DAYS, default 30)
+  adf doctor [--pin]                                         check the control plane against $ADF_HOME/pins.json (exit 0 intact, 1 tampered, 3 not pinned); --pin (re)writes it (ADR 0027); with a registry also MCP definition drift and probe age (ADF_MCP_PROBE_MAX_AGE_DAYS, default 30); always reports the read policy in effect (pinned / reference demo / host_policy_invalid), without changing the exit code
   adf version
 
-Arguments after the command go to the underlying script unchanged. Editable install only (`make install-dev`):
-the hook and policy scripts live in the clone, not in the package.
+Arguments after the command go to the underlying script unchanged. Supported install: the source clone, editable
+(`make install-dev`). A wheel carries the packages, the hook modules and their JSON contracts: every command but
+policy build (its script lives in the clone; exit 2) works from it, and `adf hook` decides exactly as in the clone.
+A hook module that cannot load makes no decision; doctor and hook-snippet then print NOT PROTECTED.
 """
+import importlib
 import importlib.util
 import json
 import sys
@@ -23,8 +26,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent  # ai-development-framework/
 
 
+_MODULES = {"hooks/adf-read-hook.py": "integration.read_hook", "hooks/adf-projects.py": "integration.projects"}
+
+
 def _script(relative):
-    """Hooks and the pack builder are scripts with dashes in their names, not importable modules."""
+    """The hook and the project list are package modules (the hooks/ files are checkout shims running the same source),
+    so clone and wheel run one implementation. The pack builder is a clone script with dashes in its name."""
+    if relative in _MODULES:
+        return importlib.import_module(_MODULES[relative])
     path = ROOT / relative
     if not path.is_file():
         raise FileNotFoundError(relative)
@@ -39,7 +48,56 @@ def _usage(code=2):
     return code
 
 
+_POLICY_ENV = ("ADF_READ_POLICY_FILE", "ADF_READ_POLICY_SHA256")
+DEMO_POLICY_WARNING = ("no pinned read policy (ADF_READ_POLICY_FILE/ADF_READ_POLICY_SHA256 unset): enabled projects run the "
+                       "reference demo policy, which grants each requested non-sensitive path; it is not a reviewed allowlist")
+
+
+def read_policy_status(lookup):
+    """Diagnostic only, mirrors read_gate_host.host_policy_settings + load_host_policy; never changes a decision.
+    `lookup(name)` -> value or None. -> ("demo", None) | ("pinned", policy_id) | ("invalid", detail). Path-free."""
+    path, pin = (lookup(name) for name in _POLICY_ENV)
+    if path is None and pin is None:
+        return "demo", None
+    if path is None or pin is None:
+        return "invalid", "partial: both variables are required"
+    if not Path(path).is_absolute():
+        return "invalid", "file path is not absolute"
+    if not Path(path).is_file():
+        return "invalid", "file missing"
+    from integration.local_read_adapter import load_host_policy, schemas
+    try:
+        config = load_host_policy(path, pin, schemas())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return "invalid", "file unreadable or not JSON"
+    except Exception:
+        return "invalid", "pin mismatch or not a host policy envelope"
+    return "pinned", config["policy"].get("policy_id")
+
+
+def _policy_line(status, detail):
+    if status == "demo":
+        return f"  ! read policy: reference demo — {DEMO_POLICY_WARNING}"
+    if status == "invalid":
+        return f"  ✗ read policy: host_policy_invalid ({detail}): every read in an enabled project is denied"
+    return f"  read policy: pinned host policy, pin verified (policy_id={detail})"
+
+
 def cmd_projects(argv): return _script("hooks/adf-projects.py").main(argv)
+
+
+def hook_runtime_problem():
+    """Diagnostic only, never changes a decision: None when `adf hook` can load itself and every gate, else what breaks."""
+    try:
+        hook = _script("hooks/adf-read-hook.py")
+    except Exception as exc:  # cmd_hook turns the same failure into exit 0, no output
+        return (f"NOT PROTECTED: the hook module cannot load ({type(exc).__name__}): `adf hook` makes no decision, "
+                "so every tool call runs under the client's own permissions")
+    try:
+        hook.load_gates()
+    except Exception as exc:  # decide() turns the same failure into adapter_failed for enabled projects
+        return f"hook gates cannot load ({type(exc).__name__}): every gated tool call in an enabled project is denied (adapter_failed)"
+    return None
 
 
 def cmd_hook(argv):
@@ -66,6 +124,11 @@ def cmd_hook_snippet(argv):
     entries = [{"matcher": "Read", "hooks": [hook]}, {"matcher": "Bash", "hooks": [hook]}, {"matcher": "Grep|Glob|Edit|Write|MultiEdit|NotebookEdit|WebFetch", "hooks": [hook]}, {"matcher": "mcp__.*", "hooks": [hook]}] if agent == "claude" else [{"matcher": "^Bash$", "hooks": [{**hook, "statusMessage": "Checking ADF read policy"}]}]
     target = "~/.claude/settings.json" if agent == "claude" else "~/.codex/hooks.json"
     print(f"// add to hooks.PreToolUse in {target}; existing hooks keep running (they add up)", file=sys.stderr)
+    problem = hook_runtime_problem()  # stderr only: the JSON on stdout is unchanged
+    if problem:
+        print(f"// warning: {problem}; reinstall (clone: make install-dev; wheel: pip install it again) and check with `adf doctor`", file=sys.stderr)
+    if all(os.environ.get(name) is None for name in _POLICY_ENV):  # stderr only: the JSON on stdout is unchanged
+        print(f"// warning: {DEMO_POLICY_WARNING}; build one with `adf policy build` and check with `adf doctor`", file=sys.stderr)
     print(json.dumps({"hooks": {"PreToolUse": entries}}, indent=2))
     return 0
 
@@ -193,6 +256,12 @@ def cmd_doctor(argv):
         print(f"pinned {len(snap['files'])} file(s), registration {snap['registration']} -> {adf_home / 'pins.json'}")
         return 0
     print(f"clone: {clone_line(ROOT)}")
+    problem = hook_runtime_problem()
+    if problem:  # diagnostic only: exit codes unchanged
+        print(f"  ✗ {problem}")
+    from integration.control_plane_pins import registered_env
+    registered = registered_env(os.environ.get("HOME") or str(Path.home()))  # shell first, else the registered Claude hook command
+    print(_policy_line(*read_policy_status(lambda name: os.environ[name] if name in os.environ else registered.get(name))))  # diagnostic only: exit codes unchanged
     divergent = check(ROOT, adf_home)
     if divergent is None:
         print("not pinned: run `adf doctor --pin` after reviewing the install (ADR 0027)")
@@ -238,7 +307,12 @@ def cmd_version(argv):
         if candidate.is_file():
             print(candidate.read_text(encoding="utf-8").strip())
             return 0
-    return 1
+    from importlib.metadata import PackageNotFoundError, version  # wheel install: no clone VERSION, the metadata carries it
+    try:
+        print(version("adf-control-plane"))
+    except PackageNotFoundError:
+        return 1
+    return 0
 
 
 COMMANDS = {"projects": cmd_projects, "hook": cmd_hook, "hook-snippet": cmd_hook_snippet, "policy": cmd_policy, "a2a": cmd_a2a, "verify": cmd_verify, "key": cmd_key, "mcp": cmd_mcp, "doctor": cmd_doctor, "version": cmd_version}
@@ -251,7 +325,7 @@ def main(argv=None):
     try:
         return COMMANDS[argv[0]](argv[1:])
     except FileNotFoundError as missing:
-        print(f"adf: {missing} not found; adf runs from an editable clone (make install-dev)", file=sys.stderr)
+        print(f"adf: {missing} not found; this command runs from the source clone (editable install: make install-dev), not from a wheel", file=sys.stderr)
         return 2
 
 

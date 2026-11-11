@@ -7,6 +7,7 @@ import copy
 import json
 import os
 import re
+import stat
 import time
 from datetime import datetime, timezone
 from functools import partial
@@ -17,6 +18,7 @@ from jsonschema import Draft7Validator
 from integration.adapter_attempt import AttemptJournal
 from integration.attempt_timing import call_stage
 from integration.evidence_signing import SigningUnavailable, sign_if_configured
+from integration.extensions import HostPolicyFile
 from integration.local_evidence_bundle import DELIVERY_MODES, compose, digest, verify_offline
 from runtime.local_read_runtime import LocalReadRuntime
 from runtime.pep import PolicyEnforcementPoint
@@ -45,9 +47,13 @@ def schemas(): return {name: _load(path) for name, path in _SCHEMA_FILES.items()
 
 def load_host_policy(path, fingerprint, contract_schemas):
     """Load and pin host-owned artifacts once; never repair hashes or expand grants."""
-    if not isinstance(fingerprint, str) or not re.fullmatch(r"[a-f0-9]{64}", fingerprint) or path is None or not Path(path).is_absolute():
+    return check_host_policy(*HostPolicyFile(path, fingerprint).read(), contract_schemas)
+
+
+def check_host_policy(config, fingerprint, contract_schemas):
+    """ADR 0039: every PolicySource result passes here, so a source cannot bypass the pin or the schemas."""
+    if not isinstance(fingerprint, str) or not re.fullmatch(r"[a-f0-9]{64}", fingerprint):
         raise ValueError("host_policy_invalid")
-    config = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(config, dict) or set(config) != {"schema_version", "profiles", "policy", "context"} or config["schema_version"] != "1.0" or digest(config) != fingerprint:
         raise ValueError("host_policy_invalid")
     if not isinstance(config["profiles"], list) or len(config["profiles"]) != 1:
@@ -95,6 +101,20 @@ def persist_bundle(bundle, evidence_dir, run_id):
     return target
 
 
+def live_path_has_symlink(root, path):
+    """R-09: in `gate_only` the native tool reads the live checkout, not the snapshot ADF decided on, and follows
+    symlinks. A symlink at the file or any parent on the live path means the object read is not the one decided.
+    lstat only, never follows. A missing component is left to the snapshot decision; other errors fail closed."""
+    current = Path(root)
+    for part in path.split("/"):
+        current = current / part
+        try:
+            if stat.S_ISLNK(os.lstat(current).st_mode): return True
+        except (FileNotFoundError, NotADirectoryError): return False
+        except OSError: return True
+    return False
+
+
 def _result(outcome, reason_code, bundle=None, bundle_path=None, content=None, latency_ms=0):
     result = {"adapter_id": ADAPTER_ID, "outcome": outcome, "reason_code": reason_code, "taint": dict(_TAINT), "bundle_id": bundle["bundle_id"] if bundle else None, "bundle_path": str(bundle_path) if bundle_path else None, "decision_latency_ms": latency_ms}
     if content is not None: result["content"] = content
@@ -112,14 +132,19 @@ class _CapturingPEP:
 
 class LocalReadAdapter:
     """Host-configured; agents never supply repository, revision, root, or evidence location."""
-    def __init__(self, trusted_repository, trusted_revision, evidence_dir, workspace_parent=None, *, host_policy_path=None, host_policy_sha256=None):
+    def __init__(self, trusted_repository, trusted_revision, evidence_dir, workspace_parent=None, *, host_policy_path=None, host_policy_sha256=None, policy_source=None):
+        """`policy_source` (ADR 0039): host code, never agent input; None keeps the file + pin pair below."""
         self._repository, self._revision, self._evidence, self._parent = trusted_repository, trusted_revision, Path(evidence_dir), workspace_parent
         self._schemas = schemas()
         self._sensitive = _load("runtime/v1/policies/sensitive-path-policy-v2.json")  # ADR 0036
         self._host_policy, self._host_policy_invalid = None, False
-        if host_policy_path is not None or host_policy_sha256 is not None:
-            try: self._host_policy = load_host_policy(host_policy_path, host_policy_sha256, self._schemas)
-            except Exception: self._host_policy_invalid = True
+        try:
+            if policy_source is not None and (host_policy_path is not None or host_policy_sha256 is not None): raise ValueError("host_policy_invalid")  # ambiguous: two policies
+            loaded = (HostPolicyFile(host_policy_path, host_policy_sha256) if policy_source is None else policy_source).load()
+            if loaded is not None:
+                config, pin = loaded
+                self._host_policy = check_host_policy(copy.deepcopy(config), pin, self._schemas)  # a copy: the source cannot mutate it after the check
+        except Exception: self._host_policy_invalid = True
 
     def read(self, run_id, path, max_output_bytes, *, timing=None, principal=None, delivery_mode=None):
         """Return a closed, tainted result; content is present only when the PEP delivered it.
@@ -145,6 +170,8 @@ class LocalReadAdapter:
         if not isinstance(path, str) or not path or path.startswith("/") or "\x00" in path: return _result("deny", "invalid_scope")
         if type(max_output_bytes) is not int or max_output_bytes < 0: return _result("deny", "invalid_budget")
         if self._host_policy_invalid: return _result("deny", "host_policy_invalid")
+        if delivery_mode == "gate_only" and not {"", ".", ".."} & set(path.split("/")) and live_path_has_symlink(self._repository, path):
+            return _result("deny", "unsafe_file_type")  # R-09: no bundle (nothing was decided); the attempt journal records the deny
         try:
             manager = WorkspaceManager(self._repository, self._revision, self._parent); descriptor = call_stage(timing, "prepare", manager.prepare, run_id)
         except RuntimeError as exc:

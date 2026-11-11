@@ -5,6 +5,7 @@ After AuthN the edge builds a CallerPrincipal; the existing LocalReadAdapter run
 confined read and EvidenceBundle, and the edge links them in an A2AEvidenceRecord.
 """
 import base64
+import copy
 import hashlib
 import hmac
 import json
@@ -23,7 +24,8 @@ from jsonschema import Draft7Validator
 
 from integration.evidence_signing import SigningUnavailable, sign_if_configured
 from integration.local_evidence_bundle import canonical, digest, verify_offline
-from integration.local_read_adapter import LocalReadAdapter, load_host_policy, schemas
+from integration.extensions import HostPolicyFile
+from integration.local_read_adapter import LocalReadAdapter, check_host_policy, schemas
 from integration.otel_export import emit_span
 from runtime.contracts import valid
 
@@ -229,7 +231,7 @@ def agent_card(port, authenticated=False):
     skills = [{"id": skill, "name": skill.replace("_", " "), "description": _SKILL_TEXT[skill], "tags": ["read"], "security": [{"bearer": [scope]}]} for skill, scope in SKILL_SCOPES.items()]
     return {
         "protocolVersion": "0.3.0", "name": "ADF control plane", "description": "Local A2A edge; every request is decided by the ADF PDP (ADR 0013).",
-        "url": f"http://127.0.0.1:{port}/", "version": "0.1.0", "capabilities": {"streaming": False, "pushNotifications": False},
+        "url": f"http://127.0.0.1:{port}/", "version": "0.2.0", "capabilities": {"streaming": False, "pushNotifications": False},
         "defaultInputModes": ["application/json"], "defaultOutputModes": ["application/json"],
         "securitySchemes": {"bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}}, "security": [{"bearer": []}],
         "supportsAuthenticatedExtendedCard": True, "skills": skills if authenticated else [item for item in skills if not item["security"]],
@@ -294,24 +296,39 @@ def verify_record(record, bundle, contract_schemas):
     return verify_offline(bundle, contract_schemas) and (bundle["bundle_id"], bundle["decision_id"]) == (record["bundle_id"], record["decision_id"])
 
 
+class _CheckedPolicy:
+    """In-memory PolicySource for the policy the edge already loaded and checked, so the file is read once."""
+    def __init__(self, config, pin): self._loaded = (config, pin)
+    def load(self): return self._loaded
+
+
 class A2AGateway:
     """Host-configured edge. Requests carry only skill + path; repository, revision, evidence,
     policy and budget are the host's, exactly as for the Claude/Codex gates."""
 
-    def __init__(self, validator, trusted_repository, trusted_revision, evidence_dir, host_policy_path, host_policy_sha256, max_output_bytes, port, workspace_parent=None, confirm_skills=frozenset()):
+    def __init__(self, validator, trusted_repository, trusted_revision, evidence_dir, host_policy_path, host_policy_sha256, max_output_bytes, port, workspace_parent=None, confirm_skills=frozenset(), *, policy_source=None):
+        """`policy_source` (ADR 0039, Proposed): host code, never request input; None keeps the file + pin pair.
+        The source is consulted once, here; there is no reload. The edge never serves the reference demo."""
         self._confirm_skills = frozenset(confirm_skills)  # host-owned, like policy; never from a request
         self._validator, self._budget, self._port, self._evidence = validator, max_output_bytes, port, Path(evidence_dir)
         self._schemas = schemas()
         self._request = Draft7Validator(json.loads((ROOT / "integration/v1/schemas/a2a-request.schema.json").read_text(encoding="utf-8")))
+        self._policy = pinned = None
         try:
-            self._policy = load_host_policy(host_policy_path, host_policy_sha256, self._schemas)
-        except Exception:  # never fall back to the adapter's demo grants
+            if policy_source is not None and (host_policy_path is not None or host_policy_sha256 is not None): raise ValueError("host_policy_invalid")  # ambiguous: two policies
+            loaded = (HostPolicyFile(host_policy_path, host_policy_sha256) if policy_source is None else policy_source).load()
+            if loaded is None: raise ValueError("host_policy_invalid")  # None means the demo; never fall back to its grants here
+            config, pin = loaded
+            self._policy = check_host_policy(copy.deepcopy(config), pin, self._schemas)  # a copy: the source cannot mutate it after the check
+            pinned = _CheckedPolicy(self._policy, pin)
+        except Exception:
             self._policy = None
         if type(max_output_bytes) is not int or max_output_bytes < 0:
             self._policy = None
         # ponytail: in-memory, single process; a restart loses tasks, so resume fails closed (task_not_found).
         self._tasks, self._tasks_lock = {}, threading.Lock()
-        self._adapter = None if self._policy is None else LocalReadAdapter(trusted_repository, trusted_revision, evidence_dir, workspace_parent, host_policy_path=host_policy_path, host_policy_sha256=host_policy_sha256)
+        # One load: the adapter gets the policy checked above and re-checks its own copy (ADR 0039).
+        self._adapter = None if self._policy is None else LocalReadAdapter(trusted_repository, trusted_revision, evidence_dir, workspace_parent, policy_source=pinned)
 
     def card(self, authenticated=False): return agent_card(self._port, authenticated)
 

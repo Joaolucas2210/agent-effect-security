@@ -51,10 +51,11 @@ def emit_local_read(edge, result, start_ns, hook, agent_type=None, tool=None, ac
         pass
 
 
-def _flush_seconds():
-    """ADF_OTEL_FLUSH_MS, default 300, capped at 2000; anything else falls back to the default."""
-    raw = os.environ.get("ADF_OTEL_FLUSH_MS", "300")
-    return min(int(raw), 2000) / 1000 if raw.isascii() and raw.isdecimal() else 0.3
+def _flush_seconds(cfg=None):
+    """ADF_OTEL_FLUSH_MS, default 300, capped at 2000; anything else falls back to the default.
+    Parsed by host_config (ADR 0040); `cfg` defaults to the process environment, read at call time."""
+    from integration.host_config import from_env  # lazy: an import failure stays inside emit_local_read's fail-open try
+    return (cfg or from_env(os.environ)).otel.flush_seconds
 
 
 def _payload(name, attributes, start_ns, end_ns):
